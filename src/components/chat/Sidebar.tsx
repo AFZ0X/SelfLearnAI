@@ -42,11 +42,17 @@ export function Sidebar({
   }
 
   return (
-    <aside className="w-[280px] flex flex-col bg-zinc-950 border-r border-zinc-800">
-      <div className="p-3 border-b border-zinc-800">
+    <aside
+      className="w-[280px] flex flex-col"
+      style={{ backgroundColor: "var(--conv-bg)", borderRight: "1px solid var(--conv-border)" }}
+    >
+      <div className="p-3" style={{ borderBottom: "1px solid var(--conv-border)" }}>
         <button
           onClick={onNew}
-          className="w-full px-3 py-2.5 rounded-lg bg-white text-zinc-900 text-sm font-medium hover:bg-zinc-100 transition-colors"
+          className="w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+          style={{ backgroundColor: "var(--btn-primary-bg)", color: "var(--btn-primary-text)" }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--btn-primary-hover-bg)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "var(--btn-primary-bg)"; }}
         >
           + New conversation
         </button>
@@ -54,19 +60,37 @@ export function Sidebar({
 
       <div className="flex-1 overflow-y-auto">
         {conversations.length === 0 && (
-          <p className="px-4 py-8 text-sm text-zinc-500 text-center">
+          <p
+            className="px-4 py-8 text-sm text-center"
+            style={{ color: "var(--conv-text-muted)" }}
+          >
             No conversations yet.
           </p>
         )}
 
-        {conversations.map((conv) => (
+        {conversations.map((conv) => {
+          const isActive = activeId === conv.id;
+          return (
           <div
             key={conv.id}
-            className={`group flex items-center gap-1 px-3 py-3 cursor-pointer text-sm border-l-[3px] ${
-              activeId === conv.id
-                ? "border-zinc-100 bg-zinc-900 text-zinc-100"
-                : "border-transparent text-zinc-400 hover:bg-zinc-900/50 hover:text-zinc-300"
-            }`}
+            className="group flex items-center gap-1 px-3 py-3 cursor-pointer text-sm border-l-[3px]"
+            style={{
+              borderLeftColor: isActive ? "var(--conv-item-active-border)" : "transparent",
+              backgroundColor: isActive ? "var(--conv-item-active-bg)" : "transparent",
+              color: isActive ? "var(--conv-text)" : "var(--conv-text-muted)",
+            }}
+            onMouseEnter={(e) => {
+              if (!isActive) {
+                e.currentTarget.style.backgroundColor = "var(--conv-item-hover-bg)";
+                e.currentTarget.style.color = "var(--conv-text)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isActive) {
+                e.currentTarget.style.backgroundColor = "transparent";
+                e.currentTarget.style.color = "var(--conv-text-muted)";
+              }
+            }}
             onClick={() => onSelect(conv.id)}
           >
             {editingId === conv.id ? (
@@ -78,7 +102,12 @@ export function Sidebar({
                   if (e.key === "Enter") submitRename();
                   if (e.key === "Escape") setEditingId(null);
                 }}
-                className="flex-1 px-1 py-0.5 rounded border border-zinc-700 bg-zinc-800 text-zinc-100 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                className="flex-1 px-1 py-0.5 rounded text-sm focus:outline-none focus:ring-1"
+                style={{
+                  border: "1px solid var(--conv-border)",
+                  backgroundColor: "var(--subtle-bg)",
+                  color: "var(--conv-text)",
+                }}
                 autoFocus
                 onClick={(e) => e.stopPropagation()}
               />
@@ -86,30 +115,30 @@ export function Sidebar({
               <span className="flex-1 truncate">{conv.title}</span>
             )}
 
-            {activeId === conv.id && editingId !== conv.id && (
+            {isActive && editingId !== conv.id && (
               <div className="hidden group-hover:flex items-center gap-0.5">
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    startRename(conv);
-                  }}
-                  className="px-1.5 py-0.5 text-xs text-zinc-500 hover:text-zinc-300 rounded hover:bg-zinc-800"
+                  onClick={(e) => { e.stopPropagation(); startRename(conv); }}
+                  className="px-1.5 py-0.5 text-xs rounded"
+                  style={{ color: "var(--conv-text-muted)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--conv-item-hover-bg)"; e.currentTarget.style.color = "var(--conv-text)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "var(--conv-text-muted)"; }}
                 >
                   Rename
                 </button>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(conv.id);
-                  }}
-                  className="px-1.5 py-0.5 text-xs text-red-400 hover:text-red-300 rounded hover:bg-zinc-800"
+                  onClick={(e) => { e.stopPropagation(); onDelete(conv.id); }}
+                  className="px-1.5 py-0.5 text-xs text-red-400 hover:text-red-300 rounded"
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--conv-item-hover-bg)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                 >
                   Delete
                 </button>
               </div>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
     </aside>
   );

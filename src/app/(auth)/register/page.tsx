@@ -71,7 +71,7 @@ export default function RegisterPage() {
     <div className="flex flex-1 items-center justify-center px-6 py-24">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold text-center">Create an account</h1>
-        <p className="mt-2 text-sm text-center text-zinc-500">
+        <p className="mt-2 text-sm text-center" style={{ color: "var(--muted-text)" }}>
           Start your journey with SelfLearn AI.
         </p>
         <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
@@ -85,7 +85,8 @@ export default function RegisterPage() {
               type="text"
               required
               autoComplete="name"
-              className="mt-1 block w-full rounded-lg border px-3 py-2 text-sm"
+              className="mt-1 block w-full rounded-lg px-3 py-2 text-sm"
+              style={{ border: "1px solid var(--input-border)", backgroundColor: "var(--input-bg)", color: "var(--input-text)" }}
             />
           </div>
           <div>
@@ -98,7 +99,8 @@ export default function RegisterPage() {
               type="email"
               required
               autoComplete="email"
-              className="mt-1 block w-full rounded-lg border px-3 py-2 text-sm"
+              className="mt-1 block w-full rounded-lg px-3 py-2 text-sm"
+              style={{ border: "1px solid var(--input-border)", backgroundColor: "var(--input-bg)", color: "var(--input-text)" }}
             />
           </div>
           <div>
@@ -112,7 +114,8 @@ export default function RegisterPage() {
               required
               minLength={8}
               autoComplete="new-password"
-              className="mt-1 block w-full rounded-lg border px-3 py-2 text-sm"
+              className="mt-1 block w-full rounded-lg px-3 py-2 text-sm"
+              style={{ border: "1px solid var(--input-border)", backgroundColor: "var(--input-bg)", color: "var(--input-text)" }}
             />
           </div>
           <div>
@@ -125,7 +128,8 @@ export default function RegisterPage() {
               type="password"
               required
               autoComplete="new-password"
-              className="mt-1 block w-full rounded-lg border px-3 py-2 text-sm"
+              className="mt-1 block w-full rounded-lg px-3 py-2 text-sm"
+              style={{ border: "1px solid var(--input-border)", backgroundColor: "var(--input-bg)", color: "var(--input-text)" }}
             />
           </div>
           {error && (
@@ -136,14 +140,18 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
+            className="w-full rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50"
+            style={{
+              backgroundColor: "var(--btn-primary-bg)",
+              color: "var(--btn-primary-text)",
+            }}
           >
             {loading ? "Creating account..." : "Create account"}
           </button>
         </form>
-        <p className="mt-6 text-center text-sm text-zinc-500">
+        <p className="mt-6 text-center text-sm" style={{ color: "var(--muted-text)" }}>
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-zinc-900 underline">
+          <Link href="/login" className="font-medium underline" style={{ color: "var(--foreground)" }}>
             Log in
           </Link>
         </p>

@@ -117,45 +117,65 @@ export function MemoryPageClient({ initialMemories }: MemoryPageClientProps) {
               placeholder="What do you want to remember?"
               rows={3}
               maxLength={5000}
-              className="w-full rounded-lg border px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
+              className="w-full rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2"
+              style={{
+                border: "1px solid var(--input-border)",
+                backgroundColor: "var(--input-bg)",
+                color: "var(--input-text)",
+              }}
             />
           </div>
 
           <div>
-            <label className="block text-xs text-zinc-500 mb-1">
-              Summary <span className="text-zinc-300">(optional)</span>
+            <label className="block text-xs mb-1" style={{ color: "var(--muted-text)" }}>
+              Summary <span style={{ color: "var(--muted-text)" }}>(optional)</span>
             </label>
             <input
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
               placeholder="Short summary..."
               maxLength={500}
-              className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+              className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+              style={{
+                border: "1px solid var(--input-border)",
+                backgroundColor: "var(--input-bg)",
+                color: "var(--input-text)",
+              }}
             />
           </div>
 
           <div>
-            <label className="block text-xs text-zinc-500 mb-1">
-              Source <span className="text-zinc-300">(optional)</span>
+            <label className="block text-xs mb-1" style={{ color: "var(--muted-text)" }}>
+              Source <span style={{ color: "var(--muted-text)" }}>(optional)</span>
             </label>
             <input
               value={source}
               onChange={(e) => setSource(e.target.value)}
               placeholder="Where is this from?"
               maxLength={500}
-              className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+              className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+              style={{
+                border: "1px solid var(--input-border)",
+                backgroundColor: "var(--input-bg)",
+                color: "var(--input-text)",
+              }}
             />
           </div>
 
           <div>
-            <label className="block text-xs text-zinc-500 mb-1">
-              Tags <span className="text-zinc-300">(comma-separated)</span>
+            <label className="block text-xs mb-1" style={{ color: "var(--muted-text)" }}>
+              Tags <span style={{ color: "var(--muted-text)" }}>(comma-separated)</span>
             </label>
             <input
               value={tagsInput}
               onChange={(e) => setTagsInput(e.target.value)}
               placeholder="facts, preferences, ..."
-              className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+              className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+              style={{
+                border: "1px solid var(--input-border)",
+                backgroundColor: "var(--input-bg)",
+                color: "var(--input-text)",
+              }}
             />
           </div>
 
@@ -168,7 +188,13 @@ export function MemoryPageClient({ initialMemories }: MemoryPageClientProps) {
           <button
             onClick={handleSave}
             disabled={saving || !text.trim()}
-            className="w-full px-4 py-2 rounded-lg bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800 disabled:opacity-50"
+            className="w-full px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
+            style={{
+              backgroundColor: "var(--btn-primary-bg)",
+              color: "var(--btn-primary-text)",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--btn-primary-hover-bg)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "var(--btn-primary-bg)"; }}
           >
             {saving ? "Saving..." : "Save Memory"}
           </button>
@@ -177,7 +203,10 @@ export function MemoryPageClient({ initialMemories }: MemoryPageClientProps) {
 
       <div className="flex-1 space-y-3">
         {!initialMemories.length && memories.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-64 text-zinc-400">
+          <div
+            className="flex flex-col items-center justify-center h-64"
+            style={{ color: "var(--muted-text)" }}
+          >
             <p className="text-lg font-medium">No memories yet</p>
             <p className="text-sm mt-1">
               Add your first memory using the form on the left.
@@ -189,13 +218,14 @@ export function MemoryPageClient({ initialMemories }: MemoryPageClientProps) {
           <div
             key={memory.id}
             className="rounded-lg border p-4 flex items-start gap-3"
+            style={{ borderColor: "var(--border-subtle)" }}
           >
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-600 font-medium">
                   {memory.type}
                 </span>
-                <span className="text-xs text-zinc-400">
+                <span className="text-xs" style={{ color: "var(--muted-text)" }}>
                   {formatDateSafe(memory.createdAt)}
                 </span>
                 {memory.tags.length > 0 && (
@@ -211,16 +241,16 @@ export function MemoryPageClient({ initialMemories }: MemoryPageClientProps) {
                   </div>
                 )}
               </div>
-              <p className="text-sm text-zinc-900 whitespace-pre-wrap">
+              <p className="text-sm whitespace-pre-wrap" style={{ color: "var(--foreground)" }}>
                 {memory.text}
               </p>
               {memory.summary && (
-                <p className="text-xs text-zinc-500 mt-1 italic">
+                <p className="text-xs mt-1 italic" style={{ color: "var(--muted-text)" }}>
                   {memory.summary}
                 </p>
               )}
               {memory.source && (
-                <p className="text-xs text-zinc-400 mt-1">
+                <p className="text-xs mt-1" style={{ color: "var(--muted-text)" }}>
                   Source: {memory.source}
                 </p>
               )}

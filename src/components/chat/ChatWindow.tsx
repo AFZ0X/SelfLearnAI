@@ -186,16 +186,22 @@ export function ChatWindow({
       <div className="flex-1 overflow-y-auto px-4">
         <div className="mx-auto max-w-[760px] py-6 space-y-5">
           {messages.length === 0 && !loading && (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] text-zinc-500">
-              <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div
+              className="flex flex-col items-center justify-center min-h-[60vh]"
+              style={{ color: "var(--muted-text)" }}
+            >
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center mb-4"
+                style={{ backgroundColor: "var(--subtle-bg)" }}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
-              <p className="text-lg font-medium text-zinc-400">
+              <p className="text-lg font-medium" style={{ color: "var(--muted-text)" }}>
                 {conversationId ? "No messages yet" : "Start a conversation"}
               </p>
-              <p className="text-sm mt-1 text-zinc-500">
+              <p className="text-sm mt-1" style={{ color: "var(--muted-text)" }}>
                 Send a message to begin chatting with the AI.
               </p>
             </div>
@@ -220,18 +226,21 @@ export function ChatWindow({
 
           {loading && (
             <div className="flex justify-start">
-              <div className="rounded-2xl rounded-bl-md px-4 py-3 bg-zinc-800 text-zinc-400 text-sm">
+              <div
+                className="rounded-2xl rounded-bl-md px-4 py-3 text-sm"
+                style={{ backgroundColor: "var(--subtle-bg)", color: "var(--muted-text)" }}
+              >
                 <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-2 h-2 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-2 h-2 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: "300ms" }} />
+                  <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: "var(--muted-text)", animationDelay: "0ms" }} />
+                  <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: "var(--muted-text)", animationDelay: "150ms" }} />
+                  <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: "var(--muted-text)", animationDelay: "300ms" }} />
                 </span>
               </div>
             </div>
           )}
 
           {error && (
-            <div className="rounded-xl px-4 py-3 bg-red-900/30 border border-red-800 text-red-300 text-sm">
+            <div className="rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: "var(--error-bg, #450a0a)", border: "1px solid var(--error-border, #7f1d1d)", color: "var(--error-text, #fca5a5)" }}>
               {error}
             </div>
           )}
@@ -240,7 +249,13 @@ export function ChatWindow({
         </div>
       </div>
 
-      <div className="border-t border-zinc-800 px-4 py-4 bg-zinc-950">
+      <div
+        className="px-4 py-4"
+        style={{
+          borderTop: "1px solid var(--composer-border)",
+          backgroundColor: "var(--composer-bg)",
+        }}
+      >
         <div className="mx-auto max-w-[760px]">
           <div className="flex gap-2 items-end">
             <textarea
@@ -251,12 +266,23 @@ export function ChatWindow({
               rows={1}
               maxLength={4000}
               disabled={loading}
-              className="flex-1 resize-none rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-3 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-600 focus:border-transparent disabled:opacity-50 leading-relaxed"
+              className="flex-1 resize-none rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 disabled:opacity-50 leading-relaxed"
+              style={{
+                border: "1px solid var(--input-border)",
+                backgroundColor: "var(--input-bg)",
+                color: "var(--input-text)",
+              }}
             />
             <button
               onClick={handleSend}
               disabled={loading || !input.trim()}
-              className="px-4 py-3 rounded-xl bg-zinc-100 text-zinc-900 text-sm font-medium hover:bg-zinc-200 disabled:opacity-40 transition-colors"
+              className="px-4 py-3 rounded-xl text-sm font-medium disabled:opacity-40 transition-colors"
+              style={{
+                backgroundColor: "var(--btn-primary-bg)",
+                color: "var(--btn-primary-text)",
+              }}
+              onMouseEnter={(e) => { if (!loading && input.trim()) e.currentTarget.style.backgroundColor = "var(--btn-primary-hover-bg)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "var(--btn-primary-bg)"; }}
             >
               {loading ? (
                 <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -271,7 +297,7 @@ export function ChatWindow({
             </button>
           </div>
           {isMock && (
-            <p className="text-xs text-zinc-600 text-center mt-2">
+            <p className="text-xs text-center mt-2" style={{ color: "var(--muted-text)" }}>
               Mock mode — no real AI connected. Set AI_PROVIDER=openai or deepseek for real responses.
             </p>
           )}

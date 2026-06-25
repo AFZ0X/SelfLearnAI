@@ -184,7 +184,7 @@ export function AdminDashboardClient() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 text-zinc-400">
+      <div className="flex items-center justify-center h-64" style={{ color: "var(--muted-text)" }}>
         Loading admin panel...
       </div>
     );
@@ -299,7 +299,7 @@ function OverviewTab({ health }: { health: HealthData | null }) {
           </div>
         ))}
       </div>
-      <p className="text-xs text-zinc-400 mt-4">
+      <p className="text-xs mt-4" style={{ color: "var(--muted-text)" }}>
         Status: {health.status} &middot; Last updated:{" "}
         {new Date(health.timestamp).toLocaleString()}
       </p>
@@ -358,7 +358,10 @@ function UsersTab({
                   <div className="flex gap-1">
                     <button
                       onClick={() => onRoleChange(u.id, u.role === "ADMIN" ? "USER" : "ADMIN")}
-                      className="text-xs px-2 py-1 rounded bg-zinc-900 text-white hover:bg-zinc-800"
+                      className="text-xs px-2 py-1 rounded transition-colors"
+                      style={{ backgroundColor: "var(--btn-primary-bg)", color: "var(--btn-primary-text)" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--btn-primary-hover-bg)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "var(--btn-primary-bg)"; }}
                     >
                       {u.role === "ADMIN" ? "Demote to USER" : "Promote to ADMIN"}
                     </button>
@@ -667,7 +670,7 @@ function HealthTab({ health }: { health: HealthData | null }) {
           }`}
         />
         <span className="font-medium capitalize">{health.status}</span>
-        <span className="text-xs text-zinc-400">
+        <span className="text-xs" style={{ color: "var(--muted-text)" }}>
           {new Date(health.timestamp).toLocaleString()}
         </span>
       </div>

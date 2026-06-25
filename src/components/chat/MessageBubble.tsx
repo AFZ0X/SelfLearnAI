@@ -133,56 +133,68 @@ export function MessageBubble({
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
         className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-4 py-3 whitespace-pre-wrap ${
-          isUser
-            ? "bg-zinc-700 text-zinc-100 rounded-br-md"
-            : "bg-zinc-800 text-zinc-100 rounded-bl-md"
+          isUser ? "rounded-br-md" : "rounded-bl-md"
         }`}
+        style={{
+          backgroundColor: isUser ? "var(--bubble-user-bg)" : "var(--bubble-assistant-bg)",
+          color: isUser ? "var(--bubble-user-text)" : "var(--bubble-assistant-text)",
+        }}
       >
         <div dir="auto" className="leading-relaxed text-[15px]">
           {content}
         </div>
 
         {showMeta && (
-          <div className="mt-3 pt-3 border-t border-zinc-700 space-y-1">
+          <div className="mt-3 pt-3 space-y-1" style={{ borderTop: "1px solid var(--border-subtle)" }}>
             {memoryUsed && (
-              <span className="text-xs text-zinc-400 font-medium block">Memory used</span>
+              <span className="text-xs font-medium block" style={{ color: "var(--muted-text)" }}>Memory used</span>
             )}
             {memoriesUsed && memoriesUsed.length > 0 && (
               <details className="mt-1">
-                <summary className="text-xs text-zinc-400 cursor-pointer hover:text-zinc-300">
+                <summary
+                  className="text-xs cursor-pointer"
+                  style={{ color: "var(--muted-text)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--conv-text)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--muted-text)"; }}
+                >
                   Show memories ({memoriesUsed.length})
                 </summary>
                 <ul className="mt-1 space-y-1">
                   {memoriesUsed.map((mu) => (
-                    <li key={mu.id} className="text-xs text-zinc-400">
+                    <li key={mu.id} className="text-xs" style={{ color: "var(--muted-text)" }}>
                       {mu.summary}
-                      <span className="ml-1 text-zinc-500">({mu.relevanceLabel})</span>
+                      <span className="ml-1" style={{ color: "var(--muted-text)" }}>({mu.relevanceLabel})</span>
                     </li>
                   ))}
                 </ul>
               </details>
             )}
             {webSearchUsed && (
-              <span className="text-xs text-zinc-400 font-medium block">Web search used</span>
+              <span className="text-xs font-medium block" style={{ color: "var(--muted-text)" }}>Web search used</span>
             )}
             {citations && citations.length > 0 && (
               <details className="mt-1">
-                <summary className="text-xs text-zinc-400 cursor-pointer hover:text-zinc-300">
+                <summary
+                  className="text-xs cursor-pointer"
+                  style={{ color: "var(--muted-text)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--conv-text)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--muted-text)"; }}
+                >
                   Sources ({citations.length})
                 </summary>
                 <ul className="mt-1 space-y-2">
                   {citations.map((c, i) => (
                     <li key={i} className="text-xs">
                       <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline font-medium">{c.title}</a>
-                      <span className="text-zinc-500 ml-1">({safeHostname(c.url)})</span>
-                      <p className="text-zinc-400 mt-0.5">{c.snippet}</p>
+                      <span className="ml-1" style={{ color: "var(--muted-text)" }}>({safeHostname(c.url)})</span>
+                      <p className="mt-0.5" style={{ color: "var(--muted-text)" }}>{c.snippet}</p>
                     </li>
                   ))}
                 </ul>
               </details>
             )}
             {(candidatesExtracted ?? 0) > 0 && (
-              <span className="text-xs text-zinc-400 font-medium block">
+              <span className="text-xs font-medium block" style={{ color: "var(--muted-text)" }}>
                 Learned {candidatesExtracted} item{candidatesExtracted !== 1 ? "s" : ""}
               </span>
             )}
@@ -192,11 +204,13 @@ export function MessageBubble({
                 <button
                   onClick={() => feedback?.type === "THUMBS_UP" ? removeFeedback() : submitFeedback("THUMBS_UP")}
                   disabled={saving || !conversationId}
-                  className={`text-xs px-2 py-1 rounded transition-colors ${
-                    feedback?.type === "THUMBS_UP"
-                      ? "bg-zinc-600 text-zinc-100"
-                      : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700"
-                  }`}
+                  className="text-xs px-2 py-1 rounded transition-colors"
+                  style={{
+                    backgroundColor: feedback?.type === "THUMBS_UP" ? "var(--subtle-bg)" : "transparent",
+                    color: feedback?.type === "THUMBS_UP" ? "var(--conv-text)" : "var(--muted-text)",
+                  }}
+                  onMouseEnter={(e) => { if (feedback?.type !== "THUMBS_UP") { e.currentTarget.style.backgroundColor = "var(--subtle-bg)"; e.currentTarget.style.color = "var(--conv-text)"; } }}
+                  onMouseLeave={(e) => { if (feedback?.type !== "THUMBS_UP") { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "var(--muted-text)"; } }}
                   title="Thumbs up"
                 >
                   +1
@@ -207,8 +221,11 @@ export function MessageBubble({
                   className={`text-xs px-2 py-1 rounded transition-colors ${
                     feedback?.type === "THUMBS_DOWN"
                       ? "bg-red-900 text-red-200"
-                      : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700"
+                      : ""
                   }`}
+                  style={feedback?.type !== "THUMBS_DOWN" ? { color: "var(--muted-text)" } : undefined}
+                  onMouseEnter={(e) => { if (feedback?.type !== "THUMBS_DOWN") { e.currentTarget.style.backgroundColor = "var(--subtle-bg)"; e.currentTarget.style.color = "var(--conv-text)"; } }}
+                  onMouseLeave={(e) => { if (feedback?.type !== "THUMBS_DOWN") { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "var(--muted-text)"; } }}
                   title="Thumbs down"
                 >
                   -1
@@ -219,8 +236,11 @@ export function MessageBubble({
                   className={`text-xs px-2 py-1 rounded transition-colors ${
                     feedback?.type === "WRONG_ANSWER"
                       ? "bg-red-900 text-red-200"
-                      : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700"
+                      : ""
                   }`}
+                  style={feedback?.type !== "WRONG_ANSWER" ? { color: "var(--muted-text)" } : undefined}
+                  onMouseEnter={(e) => { if (feedback?.type !== "WRONG_ANSWER") { e.currentTarget.style.backgroundColor = "var(--subtle-bg)"; e.currentTarget.style.color = "var(--conv-text)"; } }}
+                  onMouseLeave={(e) => { if (feedback?.type !== "WRONG_ANSWER") { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "var(--muted-text)"; } }}
                   title="Mark as wrong"
                 >
                   Wrong
@@ -231,8 +251,11 @@ export function MessageBubble({
                   className={`text-xs px-2 py-1 rounded transition-colors ${
                     feedback?.type === "CORRECTION"
                       ? "bg-amber-800 text-amber-200"
-                      : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700"
+                      : ""
                   }`}
+                  style={feedback?.type !== "CORRECTION" ? { color: "var(--muted-text)" } : undefined}
+                  onMouseEnter={(e) => { if (feedback?.type !== "CORRECTION") { e.currentTarget.style.backgroundColor = "var(--subtle-bg)"; e.currentTarget.style.color = "var(--conv-text)"; } }}
+                  onMouseLeave={(e) => { if (feedback?.type !== "CORRECTION") { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "var(--muted-text)"; } }}
                   title="Submit correction"
                 >
                   Fix
@@ -241,12 +264,23 @@ export function MessageBubble({
             )}
 
             {showWrongForm && (
-              <div className="mt-2 space-y-2 border border-zinc-700 rounded-xl p-3 bg-zinc-900">
-                <p className="text-xs font-medium text-zinc-300">Why is this wrong?</p>
+              <div
+                className="mt-2 space-y-2 rounded-xl p-3"
+                style={{
+                  border: "1px solid var(--border-subtle)",
+                  backgroundColor: "var(--subtle-bg)",
+                }}
+              >
+                <p className="text-xs font-medium" style={{ color: "var(--conv-text)" }}>Why is this wrong?</p>
                 <select
                   value={wrongReason}
                   onChange={(e) => setWrongReason(e.target.value)}
-                  className="w-full rounded border border-zinc-700 bg-zinc-800 text-zinc-200 px-2 py-1 text-xs"
+                  className="w-full rounded px-2 py-1 text-xs"
+                  style={{
+                    border: "1px solid var(--input-border)",
+                    backgroundColor: "var(--input-bg)",
+                    color: "var(--input-text)",
+                  }}
                 >
                   <option value="">Select a reason...</option>
                   {WRONG_ANSWER_REASONS.map((r) => (
@@ -263,7 +297,10 @@ export function MessageBubble({
                   </button>
                   <button
                     onClick={() => setShowWrongForm(false)}
-                    className="px-3 py-1 text-xs rounded text-zinc-400 hover:bg-zinc-800"
+                    className="px-3 py-1 text-xs rounded"
+                    style={{ color: "var(--muted-text)" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--subtle-bg)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                   >
                     Cancel
                   </button>
@@ -272,15 +309,26 @@ export function MessageBubble({
             )}
 
             {showCorrection && (
-              <div className="mt-2 space-y-2 border border-zinc-700 rounded-xl p-3 bg-zinc-900">
-                <p className="text-xs font-medium text-zinc-300">What should the answer be?</p>
+              <div
+                className="mt-2 space-y-2 rounded-xl p-3"
+                style={{
+                  border: "1px solid var(--border-subtle)",
+                  backgroundColor: "var(--subtle-bg)",
+                }}
+              >
+                <p className="text-xs font-medium" style={{ color: "var(--conv-text)" }}>What should the answer be?</p>
                 <textarea
                   value={correctionText}
                   onChange={(e) => setCorrectionText(e.target.value)}
                   placeholder="Enter the correct answer or note..."
                   rows={2}
                   maxLength={2000}
-                  className="w-full rounded border border-zinc-700 bg-zinc-800 text-zinc-200 px-2 py-1 text-xs resize-none placeholder-zinc-500"
+                  className="w-full rounded px-2 py-1 text-xs resize-none"
+                  style={{
+                    border: "1px solid var(--input-border)",
+                    backgroundColor: "var(--input-bg)",
+                    color: "var(--input-text)",
+                  }}
                 />
                 <div className="flex gap-2">
                   <button
@@ -292,7 +340,10 @@ export function MessageBubble({
                   </button>
                   <button
                     onClick={() => setShowCorrection(false)}
-                    className="px-3 py-1 text-xs rounded text-zinc-400 hover:bg-zinc-800"
+                    className="px-3 py-1 text-xs rounded"
+                    style={{ color: "var(--muted-text)" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--subtle-bg)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                   >
                     Cancel
                   </button>
