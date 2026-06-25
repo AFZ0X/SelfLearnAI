@@ -826,7 +826,7 @@ npm test               # ✅ 83 tests passed (5 files)
 **Status**: Complete (Phase 10)
 
 ### What was implemented
-- **Database**: User `status` (ACTIVE/BANNED), `bannedAt`, `bannedReason` fields; `AdminWarning` model; `AdminActionLog` model
+- **Database**: User `status` (ACTIVE/BANNED), `bannedAt`, `bannedReason` fields; `AdminWarning` model (with `acknowledgedAt`); `AdminActionLog` model
 - **Admin API routes**: users list+detail, ban/unban, warnings CRUD, conversation review, audit log
 - **Ban enforcement**: `requireNotBanned()` helper in chat, memories, feedback, learning candidates APIs
 - **Admin UI**: Tabbed admin dashboard with Users (status badge, ban/unban/warning actions), Conversations (view link), Warnings (list), Audit Log (filterable), Health (system info)
@@ -834,8 +834,16 @@ npm test               # ✅ 83 tests passed (5 files)
 - **Audit logging**: All admin destructive actions logged via `logAdminAction()` helper
 - **Documentation**: README updated with admin capabilities, ban behavior, what admin cannot see
 
+### User-Facing Warning Visibility (Phase 10.5)
+- **Database**: Added `acknowledgedAt` to `AdminWarning` for acknowledgment tracking
+- **User API**: `GET /api/me/warnings` returns own warnings; `PATCH /api/me/warnings/[id]/acknowledge` marks a warning as acknowledged
+- **Warning Banner**: Client component (`WarningBanner.tsx`) shows latest unacknowledged warning at the top of the dashboard across all pages
+- **Warnings Page**: `/dashboard/warnings` shows full warning history with unacknowledged/acknowledged sections
+- **Admin UI**: Admin user detail page shows `acknowledgedAt` and acknowledgment status; admin WarningsTab shows active/acknowledged status
+- **Security**: Users can only see/acknowledge their own warnings; unauthenticated requests return 401; cross-user access returns 403
+
 ### Files created/modified
-- `prisma/schema.prisma` — new fields/models
+- `prisma/schema.prisma` — User status/bannedAt/bannedReason, AdminWarning with acknowledgedAt, AdminActionLog
 - `src/lib/auth/admin-log.ts` — action logging helper
 - `src/lib/auth/ban-check.ts` — ban enforcement helper
 - `src/app/api/admin/users/route.ts` — list users
@@ -852,6 +860,12 @@ npm test               # ✅ 83 tests passed (5 files)
 - `src/app/api/memories/route.ts` — added ban check
 - `src/app/api/feedback/route.ts` — added ban check
 - `src/app/api/learning/candidates/route.ts` — added ban check
+- `src/app/api/me/warnings/route.ts` — user-facing warnings list
+- `src/app/api/me/warnings/[id]/acknowledge/route.ts` — acknowledge warning
+- `src/components/dashboard/WarningBanner.tsx` — dashboard warning banner
+- `src/app/(dashboard)/dashboard/warnings/page.tsx` — user warnings history page
+- `src/app/(dashboard)/layout.tsx` — added WarningBanner
+- `src/components/dashboard/DashboardSidebar.tsx` — added Warnings nav item
 
 ### Important Notes
 - `requireAdmin()` throws 401/403 if not authenticated or not ADMIN

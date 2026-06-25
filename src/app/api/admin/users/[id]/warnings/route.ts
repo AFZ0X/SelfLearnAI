@@ -22,6 +22,7 @@ export async function GET(
       id: true,
       reason: true,
       note: true,
+      acknowledgedAt: true,
       createdAt: true,
       admin: {
         select: {

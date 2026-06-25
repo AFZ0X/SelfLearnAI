@@ -74,12 +74,13 @@ model User {
 }
 
 model AdminWarning {
-  id        String   @id @default(cuid())
-  userId    String
-  adminId   String
-  reason    String
-  note      String?
-  createdAt DateTime @default(now())
+  id             String    @id @default(cuid())
+  userId         String
+  adminId        String
+  reason         String
+  note           String?
+  acknowledgedAt DateTime?
+  createdAt      DateTime  @default(now())
 
   admin  User @relation("admin_warnings_given", fields: [adminId], references: [id], onDelete: Cascade)
   user   User @relation("admin_warnings_received", fields: [userId], references: [id], onDelete: Cascade)

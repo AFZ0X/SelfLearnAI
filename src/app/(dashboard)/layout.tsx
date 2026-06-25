@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth/auth";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import { WarningBanner } from "@/components/dashboard/WarningBanner";
 
 export default async function DashboardLayout({
   children,
@@ -16,7 +17,8 @@ export default async function DashboardLayout({
         userEmail={user?.email}
         isAdmin={user?.role === "ADMIN"}
       />
-      <div className="flex flex-1 min-w-0 overflow-y-auto">
+      <div className="flex flex-1 min-w-0 flex-col overflow-y-auto">
+        <WarningBanner />
         {children}
       </div>
     </div>

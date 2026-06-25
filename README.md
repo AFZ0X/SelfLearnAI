@@ -62,6 +62,10 @@ After promotion, the Admin link appears in the dashboard sidebar.
 | Content management | View/delete memories, learning candidates, feedback, web sources |
 | Health monitoring | System health check with database counts |
 
+### Warning Acknowledgement
+
+Users see unacknowledged admin warnings as a banner at the top of the dashboard. They can acknowledge warnings, which removes the banner but keeps the warning in their history. The `/dashboard/warnings` page shows the full warning history with acknowledgment status.
+
 ### What Admin Cannot See
 
 - Password hashes
@@ -180,6 +184,9 @@ npx prisma validate
 | `/dashboard/learning` | Learning pipeline | Yes |
 | `/dashboard/feedback` | Feedback history | Yes |
 | `/dashboard/admin` | Admin dashboard | ADMIN |
+| `/dashboard/warnings` | User warnings history | Yes |
+| `/api/me/warnings` | Get own warnings | Yes |
+| `/api/me/warnings/[id]/acknowledge` | Acknowledge own warning | Yes |
 | `/api/health` | Health check | No |
 | `/api/auth/[...nextauth]` | NextAuth handlers | No |
 | `/api/auth/register` | Registration | No |
@@ -215,6 +222,7 @@ npx prisma validate
 - Security headers via proxy: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
 - Safety event logging with automatic secret redaction
 - Admin audit logging for role changes and destructive actions
+- Admin warnings with user acknowledgment flow (users see own warnings only)
 - Web fetch URL validation (8 unsafe schemes blocked, http/https only)
 - Content size limits on all inputs (chat 4KB, memory 5KB, corrections 2KB)
 

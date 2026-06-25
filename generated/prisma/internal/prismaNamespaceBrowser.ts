@@ -110,6 +110,7 @@ export const AdminWarningScalarFieldEnum = {
   adminId: 'adminId',
   reason: 'reason',
   note: 'note',
+  acknowledgedAt: 'acknowledgedAt',
   createdAt: 'createdAt'
 } as const
 

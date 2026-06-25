@@ -107,6 +107,7 @@ interface WarningItem {
   id: string;
   reason: string;
   note: string | null;
+  acknowledgedAt: string | null;
   createdAt: string;
   admin: { id: string; email: string; name: string | null };
   user?: { id: string; email: string; name: string | null };
@@ -804,6 +805,7 @@ function WarningsTab({ warnings }: { warnings: WarningItem[] }) {
             <th className="pb-2 pr-4">Admin</th>
             <th className="pb-2 pr-4">Reason</th>
             <th className="pb-2 pr-4">Note</th>
+            <th className="pb-2 pr-4">Status</th>
             <th className="pb-2">Created</th>
           </tr>
         </thead>
@@ -814,6 +816,13 @@ function WarningsTab({ warnings }: { warnings: WarningItem[] }) {
               <td className="py-2 pr-4 text-zinc-500">{w.admin?.email || "-"}</td>
               <td className="py-2 pr-4 max-w-[200px] truncate">{w.reason}</td>
               <td className="py-2 pr-4 max-w-[150px] truncate text-zinc-500">{w.note || "-"}</td>
+              <td className="py-2 pr-4">
+                {w.acknowledgedAt ? (
+                  <span className="text-xs text-green-600">Acknowledged</span>
+                ) : (
+                  <span className="text-xs text-amber-600">Active</span>
+                )}
+              </td>
               <td className="py-2 text-zinc-500 text-xs">
                 {formatDateSafe(w.createdAt)}
               </td>

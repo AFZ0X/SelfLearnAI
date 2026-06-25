@@ -30,6 +30,7 @@ export type AdminWarningMinAggregateOutputType = {
   adminId: string | null
   reason: string | null
   note: string | null
+  acknowledgedAt: Date | null
   createdAt: Date | null
 }
 
@@ -39,6 +40,7 @@ export type AdminWarningMaxAggregateOutputType = {
   adminId: string | null
   reason: string | null
   note: string | null
+  acknowledgedAt: Date | null
   createdAt: Date | null
 }
 
@@ -48,6 +50,7 @@ export type AdminWarningCountAggregateOutputType = {
   adminId: number
   reason: number
   note: number
+  acknowledgedAt: number
   createdAt: number
   _all: number
 }
@@ -59,6 +62,7 @@ export type AdminWarningMinAggregateInputType = {
   adminId?: true
   reason?: true
   note?: true
+  acknowledgedAt?: true
   createdAt?: true
 }
 
@@ -68,6 +72,7 @@ export type AdminWarningMaxAggregateInputType = {
   adminId?: true
   reason?: true
   note?: true
+  acknowledgedAt?: true
   createdAt?: true
 }
 
@@ -77,6 +82,7 @@ export type AdminWarningCountAggregateInputType = {
   adminId?: true
   reason?: true
   note?: true
+  acknowledgedAt?: true
   createdAt?: true
   _all?: true
 }
@@ -159,6 +165,7 @@ export type AdminWarningGroupByOutputType = {
   adminId: string
   reason: string
   note: string | null
+  acknowledgedAt: Date | null
   createdAt: Date
   _count: AdminWarningCountAggregateOutputType | null
   _min: AdminWarningMinAggregateOutputType | null
@@ -189,6 +196,7 @@ export type AdminWarningWhereInput = {
   adminId?: Prisma.StringFilter<"AdminWarning"> | string
   reason?: Prisma.StringFilter<"AdminWarning"> | string
   note?: Prisma.StringNullableFilter<"AdminWarning"> | string | null
+  acknowledgedAt?: Prisma.DateTimeNullableFilter<"AdminWarning"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"AdminWarning"> | Date | string
   admin?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -200,6 +208,7 @@ export type AdminWarningOrderByWithRelationInput = {
   adminId?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   note?: Prisma.SortOrderInput | Prisma.SortOrder
+  acknowledgedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   admin?: Prisma.UserOrderByWithRelationInput
   user?: Prisma.UserOrderByWithRelationInput
@@ -214,6 +223,7 @@ export type AdminWarningWhereUniqueInput = Prisma.AtLeast<{
   adminId?: Prisma.StringFilter<"AdminWarning"> | string
   reason?: Prisma.StringFilter<"AdminWarning"> | string
   note?: Prisma.StringNullableFilter<"AdminWarning"> | string | null
+  acknowledgedAt?: Prisma.DateTimeNullableFilter<"AdminWarning"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"AdminWarning"> | Date | string
   admin?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -225,6 +235,7 @@ export type AdminWarningOrderByWithAggregationInput = {
   adminId?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   note?: Prisma.SortOrderInput | Prisma.SortOrder
+  acknowledgedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.AdminWarningCountOrderByAggregateInput
   _max?: Prisma.AdminWarningMaxOrderByAggregateInput
@@ -240,6 +251,7 @@ export type AdminWarningScalarWhereWithAggregatesInput = {
   adminId?: Prisma.StringWithAggregatesFilter<"AdminWarning"> | string
   reason?: Prisma.StringWithAggregatesFilter<"AdminWarning"> | string
   note?: Prisma.StringNullableWithAggregatesFilter<"AdminWarning"> | string | null
+  acknowledgedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"AdminWarning"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"AdminWarning"> | Date | string
 }
 
@@ -247,6 +259,7 @@ export type AdminWarningCreateInput = {
   id?: string
   reason: string
   note?: string | null
+  acknowledgedAt?: Date | string | null
   createdAt?: Date | string
   admin: Prisma.UserCreateNestedOneWithoutWarningsGivenInput
   user: Prisma.UserCreateNestedOneWithoutWarningsReceivedInput
@@ -258,6 +271,7 @@ export type AdminWarningUncheckedCreateInput = {
   adminId: string
   reason: string
   note?: string | null
+  acknowledgedAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -265,6 +279,7 @@ export type AdminWarningUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   admin?: Prisma.UserUpdateOneRequiredWithoutWarningsGivenNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutWarningsReceivedNestedInput
@@ -276,6 +291,7 @@ export type AdminWarningUncheckedUpdateInput = {
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -285,6 +301,7 @@ export type AdminWarningCreateManyInput = {
   adminId: string
   reason: string
   note?: string | null
+  acknowledgedAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -292,6 +309,7 @@ export type AdminWarningUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -301,6 +319,7 @@ export type AdminWarningUncheckedUpdateManyInput = {
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -320,6 +339,7 @@ export type AdminWarningCountOrderByAggregateInput = {
   adminId?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   note?: Prisma.SortOrder
+  acknowledgedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -329,6 +349,7 @@ export type AdminWarningMaxOrderByAggregateInput = {
   adminId?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   note?: Prisma.SortOrder
+  acknowledgedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -338,6 +359,7 @@ export type AdminWarningMinOrderByAggregateInput = {
   adminId?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   note?: Prisma.SortOrder
+  acknowledgedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -429,6 +451,7 @@ export type AdminWarningCreateWithoutAdminInput = {
   id?: string
   reason: string
   note?: string | null
+  acknowledgedAt?: Date | string | null
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutWarningsReceivedInput
 }
@@ -438,6 +461,7 @@ export type AdminWarningUncheckedCreateWithoutAdminInput = {
   userId: string
   reason: string
   note?: string | null
+  acknowledgedAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -455,6 +479,7 @@ export type AdminWarningCreateWithoutUserInput = {
   id?: string
   reason: string
   note?: string | null
+  acknowledgedAt?: Date | string | null
   createdAt?: Date | string
   admin: Prisma.UserCreateNestedOneWithoutWarningsGivenInput
 }
@@ -464,6 +489,7 @@ export type AdminWarningUncheckedCreateWithoutUserInput = {
   adminId: string
   reason: string
   note?: string | null
+  acknowledgedAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -502,6 +528,7 @@ export type AdminWarningScalarWhereInput = {
   adminId?: Prisma.StringFilter<"AdminWarning"> | string
   reason?: Prisma.StringFilter<"AdminWarning"> | string
   note?: Prisma.StringNullableFilter<"AdminWarning"> | string | null
+  acknowledgedAt?: Prisma.DateTimeNullableFilter<"AdminWarning"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"AdminWarning"> | Date | string
 }
 
@@ -526,6 +553,7 @@ export type AdminWarningCreateManyAdminInput = {
   userId: string
   reason: string
   note?: string | null
+  acknowledgedAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -534,6 +562,7 @@ export type AdminWarningCreateManyUserInput = {
   adminId: string
   reason: string
   note?: string | null
+  acknowledgedAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -541,6 +570,7 @@ export type AdminWarningUpdateWithoutAdminInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutWarningsReceivedNestedInput
 }
@@ -550,6 +580,7 @@ export type AdminWarningUncheckedUpdateWithoutAdminInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -558,6 +589,7 @@ export type AdminWarningUncheckedUpdateManyWithoutAdminInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -565,6 +597,7 @@ export type AdminWarningUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   admin?: Prisma.UserUpdateOneRequiredWithoutWarningsGivenNestedInput
 }
@@ -574,6 +607,7 @@ export type AdminWarningUncheckedUpdateWithoutUserInput = {
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -582,6 +616,7 @@ export type AdminWarningUncheckedUpdateManyWithoutUserInput = {
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -593,6 +628,7 @@ export type AdminWarningSelect<ExtArgs extends runtime.Types.Extensions.Internal
   adminId?: boolean
   reason?: boolean
   note?: boolean
+  acknowledgedAt?: boolean
   createdAt?: boolean
   admin?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -604,6 +640,7 @@ export type AdminWarningSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   adminId?: boolean
   reason?: boolean
   note?: boolean
+  acknowledgedAt?: boolean
   createdAt?: boolean
   admin?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -615,6 +652,7 @@ export type AdminWarningSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   adminId?: boolean
   reason?: boolean
   note?: boolean
+  acknowledgedAt?: boolean
   createdAt?: boolean
   admin?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -626,10 +664,11 @@ export type AdminWarningSelectScalar = {
   adminId?: boolean
   reason?: boolean
   note?: boolean
+  acknowledgedAt?: boolean
   createdAt?: boolean
 }
 
-export type AdminWarningOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "adminId" | "reason" | "note" | "createdAt", ExtArgs["result"]["adminWarning"]>
+export type AdminWarningOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "adminId" | "reason" | "note" | "acknowledgedAt" | "createdAt", ExtArgs["result"]["adminWarning"]>
 export type AdminWarningInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   admin?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -655,6 +694,7 @@ export type $AdminWarningPayload<ExtArgs extends runtime.Types.Extensions.Intern
     adminId: string
     reason: string
     note: string | null
+    acknowledgedAt: Date | null
     createdAt: Date
   }, ExtArgs["result"]["adminWarning"]>
   composites: {}
@@ -1086,6 +1126,7 @@ export interface AdminWarningFieldRefs {
   readonly adminId: Prisma.FieldRef<"AdminWarning", 'String'>
   readonly reason: Prisma.FieldRef<"AdminWarning", 'String'>
   readonly note: Prisma.FieldRef<"AdminWarning", 'String'>
+  readonly acknowledgedAt: Prisma.FieldRef<"AdminWarning", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"AdminWarning", 'DateTime'>
 }
     

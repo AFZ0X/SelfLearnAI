@@ -40,6 +40,7 @@ export default async function AdminUserDetailPage({
           id: true,
           reason: true,
           note: true,
+          acknowledgedAt: true,
           createdAt: true,
           admin: {
             select: { email: true, name: true },
@@ -181,6 +182,14 @@ export default async function AdminUserDetailPage({
                   <p className="text-xs text-zinc-400 mt-1">
                     By: {w.admin?.name || w.admin?.email || "Unknown"}
                   </p>
+                  {w.acknowledgedAt && (
+                    <p className="text-xs text-green-600 mt-1">
+                      Acknowledged on {new Date(w.acknowledgedAt).toLocaleDateString()}
+                    </p>
+                  )}
+                  {!w.acknowledgedAt && (
+                    <p className="text-xs text-amber-600 mt-1">Not acknowledged</p>
+                  )}
                 </div>
               ))}
             </div>
