@@ -1,0 +1,135 @@
+### Phase 8 — Feedback Negative Security Tests
+### Run via VS Code REST Client or any HTTP client.
+### Requires DB running (docker compose up -d) and two registered users.
+
+### ==========================================
+### 1. Unauthenticated feedback request fails
+### ==========================================
+POST {{baseUrl}}/api/feedback
+Content-Type: application/json
+
+{
+  "conversationId": "any-id",
+  "messageId": "any-id",
+  "type": "THUMBS_UP"
+}
+// Expected: 401 { "error": "Authentication required." }
+
+### ==========================================
+### 2. User A cannot feedback on User B message
+### ==========================================
+### Step 1: User A creates a conversation and gets a messageId
+# POST {{baseUrl}}/api/conversations (as User A)
+# POST {{baseUrl}}/api/chat (as User A, get assistant messageId)
+
+### Step 2: User B tries to POST feedback on User A's messageId
+# POST {{baseUrl}}/api/feedback (as User B)
+# Expected: 404 { "error": "Conversation not found." }
+# (User B cannot access User A's conversation)
+
+### ==========================================
+### 3. User A cannot read User B feedback
+### ==========================================
+### GET /api/feedback (as User A)
+### Expected: only User A's feedback, never User B's
+# Implementation: listFeedback queries WHERE userId = session.user.id
+
+### ==========================================
+### 4. Correction with password-like text rejected
+### ==========================================
+POST {{baseUrl}}/api/feedback
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "conversationId": "{{convId}}",
+  "messageId": "{{msgId}}",
+  "type": "CORRECTION",
+  "correction": "My password is MyP@ssw0rd123"
+}
+// Expected: 400 { "error": "Correction contains sensitive content and cannot be stored." }
+
+### ==========================================
+### 5. Correction with API-key-like text rejected
+### ==========================================
+POST {{baseUrl}}/api/feedback
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "conversationId": "{{convId}}",
+  "messageId": "{{msgId}}",
+  "type": "CORRECTION",
+  "correction": "The API key is sk-abc123def456ghijklmnopqrstuvwxyz"
+}
+// Expected: 400 { "error": "Correction contains sensitive content and cannot be stored." }
+
+### ==========================================
+### 6. Oversized correction rejected
+### ==========================================
+POST {{baseUrl}}/api/feedback
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "conversationId": "{{convId}}",
+  "messageId": "{{msgId}}",
+  "type": "CORRECTION",
+  "correction": "{{repeat(2001, 'x')}}"
+}
+// Expected: 400 { "error": "Correction must be 2000 characters or fewer." }
+
+### ==========================================
+### 7. Invalid messageId rejected
+### ==========================================
+POST {{baseUrl}}/api/feedback
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "conversationId": "{{convId}}",
+  "messageId": "nonexistent-message-id",
+  "type": "THUMBS_UP"
+}
+// Expected: 404 { "error": "Message not found in this conversation." }
+
+### ==========================================
+### 8. Invalid feedback type rejected
+### ==========================================
+POST {{baseUrl}}/api/feedback
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "conversationId": "{{convId}}",
+  "messageId": "{{msgId}}",
+  "type": "INVALID_TYPE"
+}
+// Expected: 400 { "error": "Invalid feedback type. Must be one of: THUMBS_UP, THUMBS_DOWN, CORRECTION, WRONG_ANSWER" }
+
+### ==========================================
+### 9. Invalid reason rejected
+### ==========================================
+POST {{baseUrl}}/api/feedback
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "conversationId": "{{convId}}",
+  "messageId": "{{msgId}}",
+  "type": "WRONG_ANSWER",
+  "reason": "invalid_reason_value"
+}
+// Expected: 400 { "error": "Invalid reason. Must be one of: incorrect, outdated, irrelevant, unsafe, hallucinated, ignored_memory, bad_citation, other" }
+
+### ==========================================
+### 10. Feedback does not create memory automatically
+### ==========================================
+### Submit any feedback, then check GET /api/memories
+### Expected: no new memory created linked to the feedback
+
+### ==========================================
+### 11. Feedback does not trigger fine-tuning
+### ==========================================
+### No fine-tuning endpoint exists; no references in feedback code.
+### Verification: grep for "finetune|fine.?tune|train" in feedback-related files — zero matches.

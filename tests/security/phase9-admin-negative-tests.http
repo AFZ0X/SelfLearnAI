@@ -1,0 +1,95 @@
+### Phase 9 — Admin Dashboard Negative Security Tests
+### Run via VS Code REST Client or any HTTP client.
+### Requires DB running (docker compose up -d).
+### Requires one ADMIN user and one USER user.
+
+### Variables (set these)
+@adminToken = <ADMIN_JWT_TOKEN>
+@userToken = <USER_JWT_TOKEN>
+@baseUrl = http://localhost:3000
+
+### ==========================================
+### 1. Unauthenticated admin API request fails
+### ==========================================
+GET {{baseUrl}}/api/admin/health
+// Expected: 401 { "error": "Authentication required." }
+
+### ==========================================
+### 2. USER role admin API request fails
+### ==========================================
+GET {{baseUrl}}/api/admin/health
+Authorization: Bearer {{userToken}}
+// Expected: 403 { "error": "Forbidden. Admin access required." }
+
+### ==========================================
+### 3. ADMIN request succeeds
+### ==========================================
+GET {{baseUrl}}/api/admin/health
+Authorization: Bearer {{adminToken}}
+// Expected: 200 { "status": "healthy", "counts": { ... } }
+
+### ==========================================
+### 4. Invalid id rejected (memory delete)
+### ==========================================
+DELETE {{baseUrl}}/api/admin/memories/nonexistent-id
+Authorization: Bearer {{adminToken}}
+// Expected: 404 { "error": "Memory not found." }
+
+### ==========================================
+### 5. Invalid id rejected (candidate delete)
+### ==========================================
+DELETE {{baseUrl}}/api/admin/learning-candidates/nonexistent-id
+Authorization: Bearer {{adminToken}}
+// Expected: 404 { "error": "Learning candidate not found." }
+
+### ==========================================
+### 6. Admin API does not return passwordHash
+### ==========================================
+GET {{baseUrl}}/api/admin/users
+Authorization: Bearer {{adminToken}}
+// Expected: 200 { "users": [...] }
+// Verify: NO user object has "passwordHash" field
+
+### ==========================================
+### 7. Admin API does not return session tokens
+### ==========================================
+// Session tokens are in the Session model.
+// No admin API reads the Session model. Verified by code review.
+
+### ==========================================
+### 8. Admin cannot set invalid role
+### ==========================================
+PATCH {{baseUrl}}/api/admin/users/{{someUserId}}/role
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "role": "SUPER_ADMIN" }
+// Expected: 400 { "error": "Role must be ADMIN or USER." }
+
+### ==========================================
+### 9. Admin cannot demote self if zero admins remain
+### ==========================================
+### Step 1: Get the admin user's ID from GET /api/admin/users
+### Step 2: Try to demote that admin to USER
+// PATCH /api/admin/users/{adminId}/role (as that admin)
+// Expected: 400 { "error": "Cannot demote self. No other admin exists." }
+
+### ==========================================
+### 10. Client-side role spoofing does not work
+### ==========================================
+### The admin check is server-side (requireAdmin() in every route handler).
+### Client role is not trusted — session.role from JWT is verified server-side.
+### Verified by code review.
+
+### ==========================================
+### 11. Admin dashboard redirect for non-admin users
+### ==========================================
+### GET /dashboard/admin (as USER role)
+### Expected: 302 redirect to /dashboard
+### Implementation: session.user.role !== "ADMIN" → redirect("/dashboard")
+
+### ==========================================
+### 12. Unauthenticated GET /dashboard/admin redirects to login
+### ==========================================
+### GET /dashboard/admin (unauthenticated)
+### Expected: 302 redirect to /login

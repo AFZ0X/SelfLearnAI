@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+:root,
+[data-theme="light"] {
+  --background: #ffffff;
+  --foreground: #171717;
+
+  --sidebar-bg: #f4f4f5;
+  --sidebar-text: #27272a;
+  --sidebar-text-muted: #71717a;
+  --sidebar-border: #e4e4e7;
+  --sidebar-hover-bg: #e4e4e7;
+  --sidebar-hover-text: #18181b;
+  --sidebar-active-bg: #d4d4d8;
+  --sidebar-active-text: #09090b;
+
+  --surface-bg: #ffffff;
+  --surface-border: #e4e4e7;
+  --surface-text: #18181b;
+
+  --header-bg: #ffffff;
+  --header-border: #e4e4e7;
+
+  --card-bg: #ffffff;
+  --card-border: #e4e4e7;
+
+  --input-bg: #ffffff;
+  --input-border: #d4d4d8;
+  --input-text: #18181b;
+
+  --bubble-user-bg: #e4e4e7;
+  --bubble-user-text: #18181b;
+  --bubble-assistant-bg: #f4f4f5;
+  --bubble-assistant-text: #27272a;
+}
+
+[data-theme="dark"] {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+
+  --sidebar-bg: #09090b;
+  --sidebar-text: #f4f4f5;
+  --sidebar-text-muted: #a1a1aa;
+  --sidebar-border: #27272a;
+  --sidebar-hover-bg: #27272a;
+  --sidebar-hover-text: #fafafa;
+  --sidebar-active-bg: #18181b;
+  --sidebar-active-text: #fafafa;
+
+  --surface-bg: #09090b;
+  --surface-border: #27272a;
+  --surface-text: #f4f4f5;
+
+  --header-bg: #09090b;
+  --header-border: #27272a;
+
+  --card-bg: #18181b;
+  --card-border: #27272a;
+
+  --input-bg: #18181b;
+  --input-border: #3f3f46;
+  --input-text: #f4f4f5;
+
+  --bubble-user-bg: #3f3f46;
+  --bubble-user-text: #fafafa;
+  --bubble-assistant-bg: #27272a;
+  --bubble-assistant-text: #f4f4f5;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}

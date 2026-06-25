@@ -1,0 +1,356 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum SensitivityLevel {
+  LOW
+  MEDIUM
+  HIGH
+  SECRET
+}
+
+enum CandidateStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum FeedbackType {
+  THUMBS_UP
+  THUMBS_DOWN
+  CORRECTION
+  WRONG_ANSWER
+}
+
+enum FeedbackRating {
+  POSITIVE
+  NEGATIVE
+  NEUTRAL
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  name         String?
+  passwordHash String?
+  role         UserRole       @default(USER)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  accounts          Account[]
+  sessions          Session[]
+  conversations     Conversation[]
+  memories          Memory[]
+  webSources        WebSource[]
+  learningCandidates LearningCandidate[]
+  learningConfig     LearningConfig?
+  feedback           Feedback[]
+  neuralExperiments  NeuralExperiment[]
+  trainingRuns       TrainingRun[]
+  modelSnapshots     ModelSnapshot[]
+  activityTraces     ActivityTrace[]
+}
+
+enum MemoryType {
+  USER
+  PROJECT
+  GENERAL
+  WEB_RESEARCH
+}
+
+model Memory {
+  id        String     @id @default(cuid())
+  userId    String
+  type      MemoryType @default(USER)
+  text      String
+  summary   String?
+  source    String?
+  confidence Float?
+  visibility String   @default("private")
+  tags      String[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  embedding MemoryEmbedding?
+
+  @@index([userId])
+}
+
+model MemoryEmbedding {
+  id         String   @id @default(cuid())
+  memoryId   String   @unique
+  embedding  Unsupported("vector(1536)")?
+  model      String
+  dimensions Int
+  createdAt  DateTime @default(now())
+
+  memory Memory @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+
+  @@index([memoryId])
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String   @default("New conversation")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages   Message[]
+  webSources WebSource[]
+  feedback   Feedback[]
+
+  @@index([userId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String
+  content        String
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  feedback      Feedback[]
+
+  @@index([conversationId, createdAt])
+}
+
+model WebSource {
+  id             String   @id @default(cuid())
+  userId         String
+  conversationId String?
+  url            String
+  title          String?
+  snippet        String?
+  summary        String?
+  fetchedAt      DateTime?
+  provider       String
+  createdAt      DateTime @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([conversationId])
+}
+
+model LearningCandidate {
+  id              String          @id @default(cuid())
+  userId          String
+  conversationId  String?
+  messageId       String?
+  text            String
+  summary         String?
+  source          String?
+  sensitivity     SensitivityLevel @default(LOW)
+  status          CandidateStatus  @default(PENDING)
+  confidence      Float?
+  tags            String[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([userId, createdAt])
+}
+
+model LearningConfig {
+  id                String  @id @default(cuid())
+  userId            String  @unique
+  learningEnabled   Boolean @default(true)
+  autoStoreLow      Boolean @default(false)
+  requireApproval   Boolean @default(true)
+  maxCandidates     Int     @default(50)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Feedback {
+  id             String         @id @default(cuid())
+  userId         String
+  conversationId String
+  messageId      String
+  type           FeedbackType
+  rating         FeedbackRating
+  reason         String?
+  correction     String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  message      Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, messageId])
+  @@index([userId])
+  @@index([conversationId])
+  @@index([messageId])
+}
+
+enum TrainingStatus {
+  IDLE
+  RUNNING
+  PAUSED
+  COMPLETED
+  ERROR
+}
+
+enum ActivationFunction {
+  SIGMOID
+  TANH
+  RELU
+  LINEAR
+}
+
+model NeuralExperiment {
+  id           String          @id @default(cuid())
+  userId       String
+  name         String          @default("Untitled Experiment")
+  datasetName  String
+  architecture Json
+  status       TrainingStatus  @default(IDLE)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trainingRuns TrainingRun[]
+  snapshots    ModelSnapshot[]
+
+  @@index([userId])
+  @@index([userId, createdAt])
+}
+
+model TrainingRun {
+  id             String         @id @default(cuid())
+  userId         String
+  experimentId   String
+  status         TrainingStatus @default(IDLE)
+  currentEpoch   Int            @default(0)
+  maxEpochs      Int            @default(100)
+  architecture   Json
+  lossHistory    Json           @default("[]")
+  accuracyHistory Json          @default("[]")
+  logs           Json           @default("[]")
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experiment   NeuralExperiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  snapshots    ModelSnapshot[]
+
+  @@index([userId])
+  @@index([experimentId])
+  @@index([userId, createdAt])
+}
+
+model ModelSnapshot {
+  id             String   @id @default(cuid())
+  userId         String
+  experimentId   String
+  trainingRunId  String
+  name           String
+  architecture   Json
+  weights        Json
+  metrics        Json
+  createdAt      DateTime @default(now())
+
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experiment   NeuralExperiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  trainingRun  TrainingRun      @relation(fields: [trainingRunId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([experimentId])
+  @@index([trainingRunId])
+}
+
+enum TraceStatus {
+  RUNNING
+  COMPLETED
+  ERROR
+}
+
+model ActivityTrace {
+  id              String      @id @default(cuid())
+  userId          String
+  conversationId  String?
+  status          TraceStatus @default(RUNNING)
+  startedAt       DateTime    @default(now())
+  completedAt     DateTime?
+  createdAt       DateTime    @default(now())
+  totalDurationMs Int?
+  stepsCount      Int         @default(0)
+
+  user  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  steps ActivityTraceStep[]
+
+  @@index([userId, createdAt])
+  @@index([conversationId])
+}
+
+model ActivityTraceStep {
+  id          String      @id @default(cuid())
+  traceId     String
+  stepName    String
+  status      TraceStatus @default(RUNNING)
+  startedAt   DateTime    @default(now())
+  completedAt DateTime?
+  durationMs  Int?
+  metadata    Json?
+
+  trace ActivityTrace @relation(fields: [traceId], references: [id], onDelete: Cascade)
+
+  @@index([traceId])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refreshToken      String? @map("refresh_token")
+  accessToken       String? @map("access_token")
+  expiresAt         Int?    @map("expires_at")
+  tokenType         String? @map("token_type")
+  scope             String?
+  idToken           String? @map("id_token")
+  sessionState      String? @map("session_state")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}

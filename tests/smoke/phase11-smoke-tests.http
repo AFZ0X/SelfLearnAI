@@ -1,0 +1,188 @@
+### Phase 11 — Consolidated Smoke + Security Test Suite
+### Run via VS Code REST Client or any HTTP client.
+### Requires DB running (docker compose up -d).
+### Requires one ADMIN user and one USER user.
+###
+### Setup:
+###   1. docker compose up -d
+###   2. npx prisma migrate dev --name init
+###   3. npm run dev
+###   4. Register two users via /api/auth/register
+###   5. Get JWT tokens via next-auth (or manually set below)
+
+@baseUrl = http://localhost:3000
+@adminToken = <ADMIN_JWT_TOKEN>
+@userToken = <USER_JWT_TOKEN>
+@nonexistentId = 000000000000000000000000000000
+
+### ==========================================
+### 1. HEALTH CHECKS
+### ==========================================
+
+### 1a. Health endpoint returns ok
+GET {{baseUrl}}/api/health
+// Expected: 200 { "ok": true, "service": "selflearn-ai", "version": "0.1.0" }
+
+### 1b. Landing page loads
+GET {{baseUrl}}/
+// Expected: 200 text/html
+
+### 1c. Login page loads
+GET {{baseUrl}}/login
+// Expected: 200 text/html
+
+### ==========================================
+### 2. AUTH TESTS
+### ==========================================
+
+### 2a. Unauthenticated chat fails
+POST {{baseUrl}}/api/chat
+Content-Type: application/json
+{ "messages": [{ "role": "user", "content": "hello" }] }
+// Expected: 401 { "error": "Authentication required." }
+
+### 2b. Unauthenticated memories fails
+GET {{baseUrl}}/api/memories
+// Expected: 401 { "error": "Authentication required." }
+
+### 2c. Unauthenticated conversations fails
+GET {{baseUrl}}/api/conversations
+// Expected: 401 { "error": "Authentication required." }
+
+### 2d. Unauthenticated feedback fails
+POST {{baseUrl}}/api/feedback
+Content-Type: application/json
+{ "conversationId": "any", "messageId": "any", "type": "THUMBS_UP" }
+// Expected: 401 { "error": "Authentication required." }
+
+### 2e. Unauthenticated learning fails
+GET {{baseUrl}}/api/learning/candidates
+// Expected: 401 { "error": "Authentication required." }
+
+### ==========================================
+### 3. RATE LIMITING TESTS
+### ==========================================
+
+### 3a. Rapid register requests trigger rate limit (5/hr)
+# POST {{baseUrl}}/api/auth/register 6x in quick succession
+# Expected on 6th: 429 { "error": "Too many requests. Please try again later." }
+
+### 3b. Rapid chat requests trigger rate limit (30/min)
+# POST {{baseUrl}}/api/chat 31x with valid auth in quick succession
+# Expected on 31st: 429
+
+### ==========================================
+### 4. SENSITIVE DATA TESTS
+### ==========================================
+
+### 4a. Secret-like memory rejected
+POST {{baseUrl}}/api/memories
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+{ "text": "My API key is sk-abc123def456ghijklmnopqrstuvwxyz" }
+// Expected: 400 { "error": "Text contains sensitive content and cannot be stored." }
+
+### 4b. Password-like candidate rejected
+POST {{baseUrl}}/api/learning/candidates
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+{ "text": "The password is P@ssw0rd123", "sensitivity": "LOW" }
+// Expected: 400 { "error": "Candidate contains sensitive content..." }
+
+### 4c. Password-like feedback correction rejected
+POST {{baseUrl}}/api/feedback
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+{ "conversationId": "{{convId}}", "messageId": "{{msgId}}", "type": "CORRECTION", "correction": "My password is MyP@ssw0rd123" }
+// Expected: 400 { "error": "Correction contains sensitive content..." }
+
+### ==========================================
+### 5. PROMPT INJECTION TESTS
+### ==========================================
+
+### 5a. Web source "ignore all instructions" (verified via code review)
+# Web content wrapped in <web_search_results> with preamble
+# AI sees: "The following information was retrieved from web search..."
+# Content is reference data, not system instructions
+
+### 5b. Memory "reveal system prompt" (verified via code review)
+# Memory content wrapped in <user_memory_context>
+# AI sees: "The following memories may be relevant. Use them only if helpful."
+
+### 5c. Feedback "change system prompt" (verified via code review)
+# Feedback corrections are stored in DB only, never sent to LLM
+
+### ==========================================
+### 6. INPUT VALIDATION TESTS
+### ==========================================
+
+### 6a. Oversized chat message rejected (4000 chars)
+POST {{baseUrl}}/api/chat
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+{ "messages": [{ "role": "user", "content": "x" }}"
+// Expected: 400
+
+### 6b. Oversized memory rejected (5000 chars)
+POST {{baseUrl}}/api/memories
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+{ "text": "x" }
+// Set text to 5001 chars
+// Expected: 400
+
+### 6c. Invalid role rejected
+PATCH {{baseUrl}}/api/admin/users/{{someUserId}}/role
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+{ "role": "SUPER_ADMIN" }
+// Expected: 400 { "error": "Role must be ADMIN or USER." }
+
+### ==========================================
+### 7. ADMIN ACCESS CONTROL
+### ==========================================
+
+### 7a. USER blocked from admin
+GET {{baseUrl}}/api/admin/health
+Authorization: Bearer {{userToken}}
+// Expected: 403 { "error": "Forbidden. Admin access required." }
+
+### 7b. ADMIN allowed
+GET {{baseUrl}}/api/admin/health
+Authorization: Bearer {{adminToken}}
+// Expected: 200 { "status": "healthy", ... }
+
+### 7c. Invalid memory id returns 404
+DELETE {{baseUrl}}/api/admin/memories/nonexistent-id
+Authorization: Bearer {{adminToken}}
+// Expected: 404 { "error": "Memory not found." }
+
+### ==========================================
+### 8. SECURITY HEADERS
+### ==========================================
+
+### 8a. X-Frame-Options is set
+GET {{baseUrl}}/
+// Expected header: X-Frame-Options: DENY
+
+### 8b. X-Content-Type-Options is set
+GET {{baseUrl}}/
+// Expected header: X-Content-Type-Options: nosniff
+
+### 8c. Referrer-Policy is set
+GET {{baseUrl}}/
+// Expected header: Referrer-Policy: strict-origin-when-cross-origin
+
+### ==========================================
+### 9. EXISTING FUNCTIONALITY — MANUAL TESTS
+### ==========================================
+
+### 9a. Register new user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+{ "email": "test-user@example.com", "password": "TestP@ssword123", "name": "Test User" }
+// Expected: 201 { "ok": true }
+
+### 9b. Health check works without auth
+GET {{baseUrl}}/api/health
+// Expected: 200 { "ok": true }
