@@ -21,6 +21,7 @@ import { saveEmbedding } from "@/lib/db/embeddings";
 import { rateLimitGuard } from "@/lib/safety/route-guard";
 import { validateChatMessage } from "@/lib/safety/safety-validator";
 import { ActivityTraceService } from "@/lib/ai/trace/ActivityTraceService";
+import { requireNotBanned } from "@/lib/auth/ban-check";
 
 const MAX_MESSAGE_LENGTH = 4000;
 const MAX_MESSAGES = 50;
@@ -119,6 +120,13 @@ export async function POST(request: NextRequest) {
   if (guard) return guard;
 
   const userId = session.user.id;
+
+  try {
+    await requireNotBanned(userId);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Access denied.";
+    return NextResponse.json({ error: msg }, { status: 403 });
+  }
   const traceService = new ActivityTraceService();
   let traceId: string | null = null;
   let stepId: string | null = null;

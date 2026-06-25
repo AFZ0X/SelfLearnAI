@@ -55,6 +55,14 @@ export const FeedbackRating = {
 export type FeedbackRating = (typeof FeedbackRating)[keyof typeof FeedbackRating]
 
 
+export const UserStatus = {
+  ACTIVE: 'ACTIVE',
+  BANNED: 'BANNED'
+} as const
+
+export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus]
+
+
 export const MemoryType = {
   USER: 'USER',
   PROJECT: 'PROJECT',

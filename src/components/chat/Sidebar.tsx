@@ -16,6 +16,7 @@ interface SidebarProps {
   onNew: () => void;
   onRename: (id: string, title: string) => void;
   onDelete: (id: string) => void;
+  creating?: boolean;
 }
 
 export function Sidebar({
@@ -25,6 +26,7 @@ export function Sidebar({
   onNew,
   onRename,
   onDelete,
+  creating = false,
 }: SidebarProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
@@ -49,12 +51,13 @@ export function Sidebar({
       <div className="p-3" style={{ borderBottom: "1px solid var(--conv-border)" }}>
         <button
           onClick={onNew}
-          className="w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+          disabled={creating}
+          className="w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
           style={{ backgroundColor: "var(--btn-primary-bg)", color: "var(--btn-primary-text)" }}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--btn-primary-hover-bg)"; }}
+          onMouseEnter={(e) => { if (!creating) e.currentTarget.style.backgroundColor = "var(--btn-primary-hover-bg)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "var(--btn-primary-bg)"; }}
         >
-          + New conversation
+          {creating ? "Creating..." : "+ New conversation"}
         </button>
       </div>
 

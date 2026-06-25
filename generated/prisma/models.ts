@@ -9,6 +9,8 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/User'
+export type * from './models/AdminWarning'
+export type * from './models/AdminActionLog'
 export type * from './models/Memory'
 export type * from './models/MemoryEmbedding'
 export type * from './models/Conversation'

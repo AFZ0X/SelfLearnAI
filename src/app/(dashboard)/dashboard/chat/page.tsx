@@ -17,6 +17,7 @@ export default async function ChatPageServer() {
     title: c.title,
     createdAt: c.createdAt.toISOString(),
     updatedAt: c.updatedAt.toISOString(),
+    messageCount: c.messageCount ?? 0,
   }));
 
   return (

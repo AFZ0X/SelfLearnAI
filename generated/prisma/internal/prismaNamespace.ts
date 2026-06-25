@@ -385,6 +385,8 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   User: 'User',
+  AdminWarning: 'AdminWarning',
+  AdminActionLog: 'AdminActionLog',
   Memory: 'Memory',
   MemoryEmbedding: 'MemoryEmbedding',
   Conversation: 'Conversation',
@@ -416,7 +418,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "memory" | "memoryEmbedding" | "conversation" | "message" | "webSource" | "learningCandidate" | "learningConfig" | "feedback" | "neuralExperiment" | "trainingRun" | "modelSnapshot" | "activityTrace" | "activityTraceStep" | "account" | "session" | "verificationToken"
+    modelProps: "user" | "adminWarning" | "adminActionLog" | "memory" | "memoryEmbedding" | "conversation" | "message" | "webSource" | "learningCandidate" | "learningConfig" | "feedback" | "neuralExperiment" | "trainingRun" | "modelSnapshot" | "activityTrace" | "activityTraceStep" | "account" | "session" | "verificationToken"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -491,6 +493,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.UserCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.UserCountAggregateOutputType> | number
+        }
+      }
+    }
+    AdminWarning: {
+      payload: Prisma.$AdminWarningPayload<ExtArgs>
+      fields: Prisma.AdminWarningFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AdminWarningFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminWarningPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AdminWarningFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminWarningPayload>
+        }
+        findFirst: {
+          args: Prisma.AdminWarningFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminWarningPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AdminWarningFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminWarningPayload>
+        }
+        findMany: {
+          args: Prisma.AdminWarningFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminWarningPayload>[]
+        }
+        create: {
+          args: Prisma.AdminWarningCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminWarningPayload>
+        }
+        createMany: {
+          args: Prisma.AdminWarningCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AdminWarningCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminWarningPayload>[]
+        }
+        delete: {
+          args: Prisma.AdminWarningDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminWarningPayload>
+        }
+        update: {
+          args: Prisma.AdminWarningUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminWarningPayload>
+        }
+        deleteMany: {
+          args: Prisma.AdminWarningDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AdminWarningUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AdminWarningUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminWarningPayload>[]
+        }
+        upsert: {
+          args: Prisma.AdminWarningUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminWarningPayload>
+        }
+        aggregate: {
+          args: Prisma.AdminWarningAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAdminWarning>
+        }
+        groupBy: {
+          args: Prisma.AdminWarningGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AdminWarningGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AdminWarningCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AdminWarningCountAggregateOutputType> | number
+        }
+      }
+    }
+    AdminActionLog: {
+      payload: Prisma.$AdminActionLogPayload<ExtArgs>
+      fields: Prisma.AdminActionLogFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AdminActionLogFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActionLogPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AdminActionLogFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActionLogPayload>
+        }
+        findFirst: {
+          args: Prisma.AdminActionLogFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActionLogPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AdminActionLogFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActionLogPayload>
+        }
+        findMany: {
+          args: Prisma.AdminActionLogFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActionLogPayload>[]
+        }
+        create: {
+          args: Prisma.AdminActionLogCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActionLogPayload>
+        }
+        createMany: {
+          args: Prisma.AdminActionLogCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AdminActionLogCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActionLogPayload>[]
+        }
+        delete: {
+          args: Prisma.AdminActionLogDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActionLogPayload>
+        }
+        update: {
+          args: Prisma.AdminActionLogUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActionLogPayload>
+        }
+        deleteMany: {
+          args: Prisma.AdminActionLogDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AdminActionLogUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AdminActionLogUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActionLogPayload>[]
+        }
+        upsert: {
+          args: Prisma.AdminActionLogUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActionLogPayload>
+        }
+        aggregate: {
+          args: Prisma.AdminActionLogAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAdminActionLog>
+        }
+        groupBy: {
+          args: Prisma.AdminActionLogGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AdminActionLogGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AdminActionLogCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AdminActionLogCountAggregateOutputType> | number
         }
       }
     }
@@ -1723,11 +1873,38 @@ export const UserScalarFieldEnum = {
   name: 'name',
   passwordHash: 'passwordHash',
   role: 'role',
+  status: 'status',
+  bannedAt: 'bannedAt',
+  bannedReason: 'bannedReason',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const AdminWarningScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  adminId: 'adminId',
+  reason: 'reason',
+  note: 'note',
+  createdAt: 'createdAt'
+} as const
+
+export type AdminWarningScalarFieldEnum = (typeof AdminWarningScalarFieldEnum)[keyof typeof AdminWarningScalarFieldEnum]
+
+
+export const AdminActionLogScalarFieldEnum = {
+  id: 'id',
+  adminId: 'adminId',
+  targetUserId: 'targetUserId',
+  action: 'action',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+} as const
+
+export type AdminActionLogScalarFieldEnum = (typeof AdminActionLogScalarFieldEnum)[keyof typeof AdminActionLogScalarFieldEnum]
 
 
 export const MemoryScalarFieldEnum = {
@@ -2043,6 +2220,20 @@ export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
 
 
 /**
+ * Reference to a field of type 'UserStatus'
+ */
+export type EnumUserStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'UserStatus[]'
+ */
+export type ListEnumUserStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'DateTime'
  */
 export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
@@ -2053,6 +2244,20 @@ export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel
  * Reference to a field of type 'DateTime[]'
  */
 export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Json'
+ */
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+/**
+ * Reference to a field of type 'QueryMode'
+ */
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
@@ -2158,20 +2363,6 @@ export type EnumFeedbackRatingFieldRefInput<$PrismaModel> = FieldRefInputType<$P
  * Reference to a field of type 'FeedbackRating[]'
  */
 export type ListEnumFeedbackRatingFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'FeedbackRating[]'>
-    
-
-
-/**
- * Reference to a field of type 'Json'
- */
-export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
-    
-
-
-/**
- * Reference to a field of type 'QueryMode'
- */
-export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
@@ -2313,6 +2504,8 @@ export type PrismaClientOptions = ({
 }
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
+  adminWarning?: Prisma.AdminWarningOmit
+  adminActionLog?: Prisma.AdminActionLogOmit
   memory?: Prisma.MemoryOmit
   memoryEmbedding?: Prisma.MemoryEmbeddingOmit
   conversation?: Prisma.ConversationOmit

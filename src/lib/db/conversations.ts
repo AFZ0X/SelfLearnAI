@@ -6,6 +6,7 @@ export interface ConversationData {
   title: string;
   createdAt: Date;
   updatedAt: Date;
+  messageCount?: number;
 }
 
 export interface MessageData {
@@ -17,7 +18,7 @@ export interface MessageData {
 }
 
 export async function listConversations(userId: string): Promise<ConversationData[]> {
-  return prisma.conversation.findMany({
+  const rows = await prisma.conversation.findMany({
     where: { userId },
     orderBy: { updatedAt: "desc" },
     select: {
@@ -26,8 +27,17 @@ export async function listConversations(userId: string): Promise<ConversationDat
       title: true,
       createdAt: true,
       updatedAt: true,
+      _count: { select: { messages: true } },
     },
   });
+  return rows.map((r) => ({
+    id: r.id,
+    userId: r.userId,
+    title: r.title,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+    messageCount: r._count.messages,
+  }));
 }
 
 export async function createConversation(
@@ -132,4 +142,33 @@ export async function deleteConversation(
 
   await prisma.conversation.delete({ where: { id: conversationId } });
   return true;
+}
+
+export async function findEmptyConversation(
+  userId: string
+): Promise<ConversationData | null> {
+  const conv = await prisma.conversation.findFirst({
+    where: {
+      userId,
+      title: "New conversation",
+      messages: { none: {} },
+    },
+    select: {
+      id: true,
+      userId: true,
+      title: true,
+      createdAt: true,
+      updatedAt: true,
+      _count: { select: { messages: true } },
+    },
+  });
+  if (!conv) return null;
+  return {
+    id: conv.id,
+    userId: conv.userId,
+    title: conv.title,
+    createdAt: conv.createdAt,
+    updatedAt: conv.updatedAt,
+    messageCount: conv._count.messages,
+  };
 }

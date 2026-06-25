@@ -513,10 +513,6 @@ export type WebSourceUncheckedUpdateManyWithoutConversationNestedInput = {
   deleteMany?: Prisma.WebSourceScalarWhereInput | Prisma.WebSourceScalarWhereInput[]
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type WebSourceCreateWithoutUserInput = {
   id?: string
   url: string

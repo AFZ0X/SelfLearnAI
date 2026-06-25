@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth/auth";
 import { getConversation } from "@/lib/db/conversations";
 import { createFeedback, listFeedback } from "@/lib/db/feedback";
 import { rateLimitGuard } from "@/lib/safety/route-guard";
+import { requireNotBanned } from "@/lib/auth/ban-check";
 
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -13,6 +14,13 @@ export async function POST(request: NextRequest) {
 
   const guard = rateLimitGuard(userId, request, "/api/feedback");
   if (guard) return guard;
+
+  try {
+    await requireNotBanned(userId);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Access denied.";
+    return NextResponse.json({ error: msg }, { status: 403 });
+  }
 
   try {
     const body = await request.json();

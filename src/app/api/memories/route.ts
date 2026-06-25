@@ -6,6 +6,7 @@ import { saveEmbedding } from "@/lib/db/embeddings";
 import { rateLimitGuard } from "@/lib/safety/route-guard";
 import { validateMemoryText } from "@/lib/safety/safety-validator";
 import { logSafetyEvent } from "@/lib/safety/safety-event-logger";
+import { requireNotBanned } from "@/lib/auth/ban-check";
 
 export async function GET() {
   const session = await auth();
@@ -25,6 +26,13 @@ export async function POST(request: NextRequest) {
 
   const guard = rateLimitGuard(session.user.id, request, "/api/memories");
   if (guard) return guard;
+
+  try {
+    await requireNotBanned(session.user.id);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Access denied.";
+    return NextResponse.json({ error: msg }, { status: 403 });
+  }
 
   try {
     const body = await request.json();

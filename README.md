@@ -38,7 +38,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 To promote an existing user to ADMIN for local development:
 
 ```bash
-npm run make-admin user@example.com
+npm run make-admin -- user@example.com
 ```
 
 Requirements:
@@ -47,6 +47,40 @@ Requirements:
 - Safe output only (no secrets or password hashes printed).
 
 After promotion, the Admin link appears in the dashboard sidebar.
+
+### Admin Capabilities
+
+| Feature | Description |
+|---|---|
+| View users | See all registered users with name, email, role, status, account metadata |
+| User details | View user profile, content summary, conversations, warning history |
+| Ban/Unban | Ban users with a reason; unban them later |
+| Warnings | Issue admin warnings with reason and optional note; view warning history |
+| Role management | Promote/demote between USER and ADMIN (with self-demotion guard) |
+| Conversation review | View any conversation's messages for moderation |
+| Audit log | Traceable admin actions (ban, unban, warnings, role changes) |
+| Content management | View/delete memories, learning candidates, feedback, web sources |
+| Health monitoring | System health check with database counts |
+
+### What Admin Cannot See
+
+- Password hashes
+- Session tokens
+- API keys
+- OAuth provider tokens
+- Hidden system prompts
+
+### Ban Behavior
+
+When an admin bans a user:
+- The user's status changes to `BANNED`
+- The user can still log in but sees a ban notice
+- Chat API rejects the user with: "Your account is restricted. Contact the administrator."
+- Memory creation, learning candidates, and feedback submission are all rejected
+- Admin APIs remain blocked unless the user is ADMIN and not banned
+- An admin cannot ban themselves
+
+When an admin unbans a user, all functionality is restored.
 
 ## Testing
 

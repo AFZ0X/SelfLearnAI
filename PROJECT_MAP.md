@@ -820,3 +820,43 @@ npm test               # ✅ 83 tests passed (5 files)
 | Parameter | Value | Description |
 |-----------|-------|-------------|
 | `MAX_WEB_CONTEXT_CHARS` | 4,000 | Max total chars for web context in prompt |
+
+## [ADMIN_MODERATION_SYSTEM_STATUS]
+
+**Status**: Complete (Phase 10)
+
+### What was implemented
+- **Database**: User `status` (ACTIVE/BANNED), `bannedAt`, `bannedReason` fields; `AdminWarning` model; `AdminActionLog` model
+- **Admin API routes**: users list+detail, ban/unban, warnings CRUD, conversation review, audit log
+- **Ban enforcement**: `requireNotBanned()` helper in chat, memories, feedback, learning candidates APIs
+- **Admin UI**: Tabbed admin dashboard with Users (status badge, ban/unban/warning actions), Conversations (view link), Warnings (list), Audit Log (filterable), Health (system info)
+- **Detail pages**: User detail page (`/dashboard/admin/users/[id]`) with account info, content summary, conversations, warnings; Conversation review page (`/dashboard/admin/conversations/[id]`) with full message list
+- **Audit logging**: All admin destructive actions logged via `logAdminAction()` helper
+- **Documentation**: README updated with admin capabilities, ban behavior, what admin cannot see
+
+### Files created/modified
+- `prisma/schema.prisma` — new fields/models
+- `src/lib/auth/admin-log.ts` — action logging helper
+- `src/lib/auth/ban-check.ts` — ban enforcement helper
+- `src/app/api/admin/users/route.ts` — list users
+- `src/app/api/admin/users/[id]/route.ts` — user detail
+- `src/app/api/admin/users/[id]/ban/route.ts` — ban user
+- `src/app/api/admin/users/[id]/unban/route.ts` — unban user
+- `src/app/api/admin/users/[id]/warnings/route.ts` — warnings CRUD
+- `src/app/api/admin/conversations/[id]/route.ts` — conversation review
+- `src/app/api/admin/audit-log/route.ts` — audit log
+- `src/app/(dashboard)/dashboard/admin/AdminDashboardClient.tsx` — UI rewrite
+- `src/app/(dashboard)/dashboard/admin/users/[id]/page.tsx` — user detail page
+- `src/app/(dashboard)/dashboard/admin/conversations/[id]/page.tsx` — conversation review page
+- `src/app/api/chat/route.ts` — added ban check
+- `src/app/api/memories/route.ts` — added ban check
+- `src/app/api/feedback/route.ts` — added ban check
+- `src/app/api/learning/candidates/route.ts` — added ban check
+
+### Important Notes
+- `requireAdmin()` throws 401/403 if not authenticated or not ADMIN
+- `requireNotBanned()` throws `BanError` if user.status === "BANNED"
+- `logAdminAction()` creates `AdminActionLog` record with safe metadata
+- Admin cannot ban self
+- Admin cannot demote self if zero admins remain
+- Hidden prompts and secrets are never exposed in conversation review

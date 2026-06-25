@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Sidebar } from "./Sidebar";
 import { ChatWindow } from "./ChatWindow";
 
@@ -9,6 +9,7 @@ interface Conversation {
   title: string;
   createdAt: string;
   updatedAt: string;
+  messageCount: number;
 }
 
 interface ChatPageProps {
@@ -19,6 +20,7 @@ interface ChatPageProps {
 export function ChatPage({ provider, initialConversations }: ChatPageProps) {
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
 
   async function fetchConversations() {
     try {
@@ -32,8 +34,17 @@ export function ChatPage({ provider, initialConversations }: ChatPageProps) {
     }
   }
 
-  async function handleNew() {
+  const handleNew = useCallback(async () => {
+    if (creating) return;
+    setCreating(true);
     try {
+      const empty = conversations.find(
+        (c) => c.messageCount === 0 && c.title === "New conversation"
+      );
+      if (empty) {
+        setActiveId(empty.id);
+        return;
+      }
       const res = await fetch("/api/conversations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -46,8 +57,10 @@ export function ChatPage({ provider, initialConversations }: ChatPageProps) {
       }
     } catch {
       // ignore
+    } finally {
+      setCreating(false);
     }
-  }
+  }, [creating, conversations]);
 
   async function handleRename(id: string, title: string) {
     try {
@@ -99,6 +112,7 @@ export function ChatPage({ provider, initialConversations }: ChatPageProps) {
         onNew={handleNew}
         onRename={handleRename}
         onDelete={handleDelete}
+        creating={creating}
       />
       <div className="flex flex-1 flex-col min-h-0">
         <header

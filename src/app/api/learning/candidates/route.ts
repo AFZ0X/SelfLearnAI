@@ -5,6 +5,7 @@ import { LearningConfigService } from "@/lib/ai/learning/LearningConfigService";
 import { SensitivityClassifier, isBlockedSensitivity } from "@/lib/ai/learning/SensitivityClassifier";
 import { rateLimitGuard } from "@/lib/safety/route-guard";
 import { logSafetyEvent } from "@/lib/safety/safety-event-logger";
+import { requireNotBanned } from "@/lib/auth/ban-check";
 
 const candidateService = new LearningCandidateService();
 const configService = new LearningConfigService();
@@ -31,6 +32,13 @@ export async function POST(request: NextRequest) {
 
   const guard = rateLimitGuard(session.user.id, request, "/api/learning");
   if (guard) return guard;
+
+  try {
+    await requireNotBanned(session.user.id);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Access denied.";
+    return NextResponse.json({ error: msg }, { status: 403 });
+  }
 
   try {
     const config = await configService.getConfig(session.user.id);

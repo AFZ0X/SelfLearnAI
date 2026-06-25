@@ -52,6 +52,8 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   User: 'User',
+  AdminWarning: 'AdminWarning',
+  AdminActionLog: 'AdminActionLog',
   Memory: 'Memory',
   MemoryEmbedding: 'MemoryEmbedding',
   Conversation: 'Conversation',
@@ -92,11 +94,38 @@ export const UserScalarFieldEnum = {
   name: 'name',
   passwordHash: 'passwordHash',
   role: 'role',
+  status: 'status',
+  bannedAt: 'bannedAt',
+  bannedReason: 'bannedReason',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const AdminWarningScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  adminId: 'adminId',
+  reason: 'reason',
+  note: 'note',
+  createdAt: 'createdAt'
+} as const
+
+export type AdminWarningScalarFieldEnum = (typeof AdminWarningScalarFieldEnum)[keyof typeof AdminWarningScalarFieldEnum]
+
+
+export const AdminActionLogScalarFieldEnum = {
+  id: 'id',
+  adminId: 'adminId',
+  targetUserId: 'targetUserId',
+  action: 'action',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+} as const
+
+export type AdminActionLogScalarFieldEnum = (typeof AdminActionLogScalarFieldEnum)[keyof typeof AdminActionLogScalarFieldEnum]
 
 
 export const MemoryScalarFieldEnum = {

@@ -38,12 +38,20 @@ enum FeedbackRating {
   NEUTRAL
 }
 
+enum UserStatus {
+  ACTIVE
+  BANNED
+}
+
 model User {
   id           String         @id @default(cuid())
   email        String         @unique
   name         String?
   passwordHash String?
   role         UserRole       @default(USER)
+  status       UserStatus     @default(ACTIVE)
+  bannedAt     DateTime?
+  bannedReason String?
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
@@ -59,6 +67,42 @@ model User {
   trainingRuns       TrainingRun[]
   modelSnapshots     ModelSnapshot[]
   activityTraces     ActivityTrace[]
+  warningsGiven     AdminWarning[]   @relation("admin_warnings_given")
+  warningsReceived  AdminWarning[]   @relation("admin_warnings_received")
+  adminActions       AdminActionLog[] @relation("admin_actions")
+  targetedActions    AdminActionLog[] @relation("targeted_actions")
+}
+
+model AdminWarning {
+  id        String   @id @default(cuid())
+  userId    String
+  adminId   String
+  reason    String
+  note      String?
+  createdAt DateTime @default(now())
+
+  admin  User @relation("admin_warnings_given", fields: [adminId], references: [id], onDelete: Cascade)
+  user   User @relation("admin_warnings_received", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([adminId])
+  @@index([createdAt])
+}
+
+model AdminActionLog {
+  id           String   @id @default(cuid())
+  adminId      String
+  targetUserId String?
+  action       String
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now())
+
+  admin       User  @relation("admin_actions", fields: [adminId], references: [id], onDelete: Cascade)
+  targetUser  User? @relation("targeted_actions", fields: [targetUserId], references: [id], onDelete: SetNull)
+
+  @@index([adminId])
+  @@index([targetUserId])
+  @@index([createdAt])
 }
 
 enum MemoryType {

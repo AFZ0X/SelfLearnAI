@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/auth";
-import { listConversations, createConversation } from "@/lib/db/conversations";
+import {
+  listConversations,
+  createConversation,
+  findEmptyConversation,
+} from "@/lib/db/conversations";
 
 export async function GET() {
   const session = await auth();
@@ -27,6 +31,13 @@ export async function POST(request: NextRequest) {
         { error: "Title must be 200 characters or fewer." },
         { status: 400 }
       );
+    }
+
+    if (!title) {
+      const existing = await findEmptyConversation(session.user.id);
+      if (existing) {
+        return NextResponse.json({ conversation: existing });
+      }
     }
 
     const conversation = await createConversation(session.user.id, title);

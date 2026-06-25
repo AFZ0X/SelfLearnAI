@@ -7,6 +7,8 @@ type TabId =
   | "overview"
   | "users"
   | "conversations"
+  | "warnings"
+  | "audit-log"
   | "memories"
   | "learning"
   | "feedback"
@@ -17,6 +19,8 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "users", label: "Users" },
   { id: "conversations", label: "Conversations" },
+  { id: "warnings", label: "Warnings" },
+  { id: "audit-log", label: "Audit Log" },
   { id: "memories", label: "Memories" },
   { id: "learning", label: "Learning" },
   { id: "feedback", label: "Feedback" },
@@ -29,8 +33,17 @@ interface User {
   email: string;
   name: string | null;
   role: string;
+  status: string;
+  bannedAt: string | null;
+  bannedReason: string | null;
   createdAt: string;
   updatedAt: string;
+  _count: {
+    conversations: number;
+    memories: number;
+    feedback: number;
+    warningsReceived: number;
+  };
 }
 
 interface Conversation {
@@ -90,6 +103,24 @@ interface WebSource {
   createdAt: string;
 }
 
+interface WarningItem {
+  id: string;
+  reason: string;
+  note: string | null;
+  createdAt: string;
+  admin: { id: string; email: string; name: string | null };
+  user?: { id: string; email: string; name: string | null };
+}
+
+interface AuditLogItem {
+  id: string;
+  action: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  admin: { id: string; email: string; name: string | null };
+  targetUser?: { id: string; email: string; name: string | null } | null;
+}
+
 interface HealthData {
   status: string;
   timestamp: string;
@@ -109,6 +140,8 @@ export function AdminDashboardClient() {
   const [health, setHealth] = useState<HealthData | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [warnings, setWarnings] = useState<WarningItem[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
   const [memories, setMemories] = useState<MemoryItem[]>([]);
   const [candidates, setCandidates] = useState<LearningCandidate[]>([]);
   const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
@@ -118,6 +151,14 @@ export function AdminDashboardClient() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
   const [roleChangeId, setRoleChangeId] = useState<string | null>(null);
+  const [banConfirm, setBanConfirm] = useState<string | null>(null);
+  const [banReasons, setBanReasons] = useState<Record<string, string>>({});
+  const [unbanConfirm, setUnbanConfirm] = useState<string | null>(null);
+  const [warnUserId, setWarnUserId] = useState<string | null>(null);
+  const [warnReason, setWarnReason] = useState("");
+  const [warnNote, setWarnNote] = useState("");
+  const [userSearch, setUserSearch] = useState("");
+  const [userFilter, setUserFilter] = useState<"ALL" | "ACTIVE" | "BANNED">("ALL");
 
   const apiFetch = useCallback(async (url: string) => {
     const res = await fetch(url);
@@ -143,6 +184,38 @@ export function AdminDashboardClient() {
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [apiFetch]);
+
+  useEffect(() => {
+    if (activeTab === "warnings") {
+      apiFetch("/api/admin/users?all_warnings=1")
+        .then(() => {})
+        .catch(() => {});
+    }
+  }, [activeTab, apiFetch]);
+
+  useEffect(() => {
+    if (activeTab === "warnings") {
+      Promise.all(
+        users.map((u) =>
+          apiFetch(`/api/admin/users/${u.id}/warnings`)
+            .then((d) => d.warnings || [])
+            .catch(() => [] as WarningItem[])
+        )
+      ).then((nested) => {
+        setWarnings(nested.flat().sort((a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ));
+      });
+    }
+  }, [activeTab, users, apiFetch]);
+
+  useEffect(() => {
+    if (activeTab === "audit-log") {
+      apiFetch("/api/admin/audit-log")
+        .then((d) => { if (d.logs) setAuditLogs(d.logs); })
+        .catch(() => {});
+    }
+  }, [activeTab, apiFetch]);
 
   async function handleDelete(type: "memories" | "learning-candidates", id: string) {
     setActionMsg(null);
@@ -181,6 +254,85 @@ export function AdminDashboardClient() {
       setActionMsg(e instanceof Error ? e.message : "Role update failed.");
     }
   }
+
+  async function handleBan(userId: string) {
+    const reason = banReasons[userId];
+    if (!reason?.trim()) {
+      setActionMsg("Ban reason is required.");
+      return;
+    }
+    setActionMsg(null);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/ban`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: reason.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Ban failed.");
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, ...data.user } : u))
+      );
+      setActionMsg(`User banned.`);
+      setBanConfirm(null);
+    } catch (e) {
+      setActionMsg(e instanceof Error ? e.message : "Ban failed.");
+    }
+  }
+
+  async function handleUnban(userId: string) {
+    setActionMsg(null);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/unban`, {
+        method: "PATCH",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Unban failed.");
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, ...data.user } : u))
+      );
+      setActionMsg(`User unbanned.`);
+      setUnbanConfirm(null);
+    } catch (e) {
+      setActionMsg(e instanceof Error ? e.message : "Unban failed.");
+    }
+  }
+
+  async function handleWarn(userId: string) {
+    if (!warnReason.trim()) {
+      setActionMsg("Warning reason is required.");
+      return;
+    }
+    setActionMsg(null);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/warnings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reason: warnReason.trim(),
+          note: warnNote.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Warning failed.");
+      setActionMsg("Warning issued.");
+      setWarnUserId(null);
+      setWarnReason("");
+      setWarnNote("");
+    } catch (e) {
+      setActionMsg(e instanceof Error ? e.message : "Warning failed.");
+    }
+  }
+
+  const filteredUsers = users.filter((u) => {
+    if (userFilter === "ACTIVE" && u.status !== "ACTIVE") return false;
+    if (userFilter === "BANNED" && u.status !== "BANNED") return false;
+    if (userSearch) {
+      const q = userSearch.toLowerCase();
+      if (!u.email.toLowerCase().includes(q) && !(u.name || "").toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
 
   if (loading) {
     return (
@@ -236,14 +388,39 @@ export function AdminDashboardClient() {
       )}
       {activeTab === "users" && (
         <UsersTab
-          users={users}
+          users={filteredUsers}
           roleChangeId={roleChangeId}
           setRoleChangeId={setRoleChangeId}
           onRoleChange={handleRoleChange}
+          banConfirm={banConfirm}
+          setBanConfirm={setBanConfirm}
+          banReasons={banReasons}
+          setBanReasons={setBanReasons}
+          onBan={handleBan}
+          unbanConfirm={unbanConfirm}
+          setUnbanConfirm={setUnbanConfirm}
+          onUnban={handleUnban}
+          warnUserId={warnUserId}
+          setWarnUserId={setWarnUserId}
+          warnReason={warnReason}
+          setWarnReason={setWarnReason}
+          warnNote={warnNote}
+          setWarnNote={setWarnNote}
+          onWarn={handleWarn}
+          userSearch={userSearch}
+          setUserSearch={setUserSearch}
+          userFilter={userFilter}
+          setUserFilter={setUserFilter}
         />
       )}
       {activeTab === "conversations" && (
         <ConversationsTab conversations={conversations} />
+      )}
+      {activeTab === "warnings" && (
+        <WarningsTab warnings={warnings} />
+      )}
+      {activeTab === "audit-log" && (
+        <AuditLogTab logs={auditLogs} />
       )}
       {activeTab === "memories" && (
         <MemoriesTab
@@ -312,88 +489,266 @@ function UsersTab({
   roleChangeId,
   setRoleChangeId,
   onRoleChange,
+  banConfirm,
+  setBanConfirm,
+  banReasons,
+  setBanReasons,
+  onBan,
+  unbanConfirm,
+  setUnbanConfirm,
+  onUnban,
+  warnUserId,
+  setWarnUserId,
+  warnReason,
+  setWarnReason,
+  warnNote,
+  setWarnNote,
+  onWarn,
+  userSearch,
+  setUserSearch,
+  userFilter,
+  setUserFilter,
 }: {
   users: User[];
   roleChangeId: string | null;
   setRoleChangeId: (id: string | null) => void;
   onRoleChange: (userId: string, role: string) => void;
+  banConfirm: string | null;
+  setBanConfirm: (id: string | null) => void;
+  banReasons: Record<string, string>;
+  setBanReasons: (r: Record<string, string>) => void;
+  onBan: (userId: string) => void;
+  unbanConfirm: string | null;
+  setUnbanConfirm: (id: string | null) => void;
+  onUnban: (userId: string) => void;
+  warnUserId: string | null;
+  setWarnUserId: (id: string | null) => void;
+  warnReason: string;
+  setWarnReason: (r: string) => void;
+  warnNote: string;
+  setWarnNote: (n: string) => void;
+  onWarn: (userId: string) => void;
+  userSearch: string;
+  setUserSearch: (s: string) => void;
+  userFilter: "ALL" | "ACTIVE" | "BANNED";
+  setUserFilter: (f: "ALL" | "ACTIVE" | "BANNED") => void;
 }) {
-  if (users.length === 0) {
-    return <p className="text-zinc-500 text-sm">No users found.</p>;
-  }
-
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b text-left text-zinc-500">
-            <th className="pb-2 pr-4">Email</th>
-            <th className="pb-2 pr-4">Name</th>
-            <th className="pb-2 pr-4">Role</th>
-            <th className="pb-2 pr-4">Created</th>
-            <th className="pb-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr key={u.id} className="border-b last:border-0">
-              <td className="py-2 pr-4">{u.email}</td>
-              <td className="py-2 pr-4">{u.name || "-"}</td>
-              <td className="py-2 pr-4">
-                <span
-                  className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                    u.role === "ADMIN"
-                      ? "bg-amber-100 text-amber-800"
-                      : "bg-zinc-100 text-zinc-600"
-                  }`}
-                >
-                  {u.role}
-                </span>
-              </td>
-              <td className="py-2 pr-4 text-zinc-500">
-                {formatDateSafe(u.createdAt)}
-              </td>
-              <td className="py-2">
-                {roleChangeId === u.id ? (
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => onRoleChange(u.id, u.role === "ADMIN" ? "USER" : "ADMIN")}
-                      className="text-xs px-2 py-1 rounded transition-colors"
-                      style={{ backgroundColor: "var(--btn-primary-bg)", color: "var(--btn-primary-text)" }}
-                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--btn-primary-hover-bg)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "var(--btn-primary-bg)"; }}
+    <div className="space-y-4">
+      <div className="flex gap-3 items-center">
+        <input
+          type="text"
+          placeholder="Search by email or name..."
+          value={userSearch}
+          onChange={(e) => setUserSearch(e.target.value)}
+          className="flex-1 max-w-xs rounded-lg px-3 py-1.5 text-sm border"
+          style={{ borderColor: "var(--border-subtle)" }}
+        />
+        <select
+          value={userFilter}
+          onChange={(e) => setUserFilter(e.target.value as "ALL" | "ACTIVE" | "BANNED")}
+          className="rounded-lg px-3 py-1.5 text-sm border"
+          style={{ borderColor: "var(--border-subtle)" }}
+        >
+          <option value="ALL">All</option>
+          <option value="ACTIVE">Active</option>
+          <option value="BANNED">Banned</option>
+        </select>
+      </div>
+
+      {users.length === 0 ? (
+        <p className="text-zinc-500 text-sm">No users found.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b text-left text-zinc-500">
+                <th className="pb-2 pr-4">Email</th>
+                <th className="pb-2 pr-4">Name</th>
+                <th className="pb-2 pr-4">Role</th>
+                <th className="pb-2 pr-4">Status</th>
+                <th className="pb-2 pr-4">Conversations</th>
+                <th className="pb-2 pr-4">Warnings</th>
+                <th className="pb-2 pr-4">Created</th>
+                <th className="pb-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id} className="border-b last:border-0">
+                  <td className="py-2 pr-4">{u.email}</td>
+                  <td className="py-2 pr-4">{u.name || "-"}</td>
+                  <td className="py-2 pr-4">
+                    <span
+                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                        u.role === "ADMIN"
+                          ? "bg-amber-100 text-amber-800"
+                          : "bg-zinc-100 text-zinc-600"
+                      }`}
                     >
-                      {u.role === "ADMIN" ? "Demote to USER" : "Promote to ADMIN"}
-                    </button>
-                    <button
-                      onClick={() => setRoleChangeId(null)}
-                      className="text-xs px-2 py-1 rounded text-zinc-500 hover:bg-zinc-100"
+                      {u.role}
+                    </span>
+                  </td>
+                  <td className="py-2 pr-4">
+                    <span
+                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                        u.status === "BANNED"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-green-100 text-green-800"
+                      }`}
                     >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setRoleChangeId(u.id)}
-                    className="text-xs px-2 py-1 rounded border hover:bg-zinc-50"
-                  >
-                    Change Role
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                      {u.status}
+                    </span>
+                  </td>
+                  <td className="py-2 pr-4 text-zinc-500">{u._count?.conversations ?? "-"}</td>
+                  <td className="py-2 pr-4 text-zinc-500">{u._count?.warningsReceived ?? 0}</td>
+                  <td className="py-2 pr-4 text-zinc-500 text-xs">
+                    {formatDateSafe(u.createdAt)}
+                  </td>
+                  <td className="py-2">
+                    <div className="flex gap-1 flex-wrap">
+                      {/* Role change */}
+                      {roleChangeId === u.id ? (
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => onRoleChange(u.id, u.role === "ADMIN" ? "USER" : "ADMIN")}
+                            className="text-xs px-2 py-1 rounded transition-colors"
+                            style={{ backgroundColor: "var(--btn-primary-bg)", color: "var(--btn-primary-text)" }}
+                          >
+                            {u.role === "ADMIN" ? "Demote" : "Promote"}
+                          </button>
+                          <button
+                            onClick={() => setRoleChangeId(null)}
+                            className="text-xs px-2 py-1 rounded text-zinc-500 hover:bg-zinc-100"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setRoleChangeId(u.id)}
+                          className="text-xs px-2 py-1 rounded border hover:bg-zinc-50"
+                        >
+                          Role
+                        </button>
+                      )}
+
+                      {/* Ban/Unban */}
+                      {u.status === "BANNED" ? (
+                        unbanConfirm === u.id ? (
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => onUnban(u.id)}
+                              className="text-xs px-2 py-1 rounded bg-green-600 text-white"
+                            >
+                              Confirm Unban
+                            </button>
+                            <button
+                              onClick={() => setUnbanConfirm(null)}
+                              className="text-xs px-2 py-1 rounded text-zinc-500 hover:bg-zinc-100"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setUnbanConfirm(u.id)}
+                            className="text-xs px-2 py-1 rounded border text-green-600 hover:bg-green-50"
+                          >
+                            Unban
+                          </button>
+                        )
+                      ) : (
+                        banConfirm === u.id ? (
+                          <div className="flex flex-col gap-1">
+                            <input
+                              type="text"
+                              placeholder="Ban reason..."
+                              value={banReasons[u.id] || ""}
+                              onChange={(e) => setBanReasons({ ...banReasons, [u.id]: e.target.value })}
+                              className="text-xs px-2 py-1 rounded border w-40"
+                              style={{ borderColor: "var(--border-subtle)" }}
+                            />
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => onBan(u.id)}
+                                className="text-xs px-2 py-1 rounded bg-red-600 text-white"
+                              >
+                                Confirm Ban
+                              </button>
+                              <button
+                                onClick={() => setBanConfirm(null)}
+                                className="text-xs px-2 py-1 rounded text-zinc-500 hover:bg-zinc-100"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setBanConfirm(u.id)}
+                            className="text-xs px-2 py-1 rounded border text-red-600 hover:bg-red-50"
+                          >
+                            Ban
+                          </button>
+                        )
+                      )}
+
+                      {/* Warn */}
+                      {warnUserId === u.id ? (
+                        <div className="flex flex-col gap-1">
+                          <input
+                            type="text"
+                            placeholder="Warning reason..."
+                            value={warnReason}
+                            onChange={(e) => setWarnReason(e.target.value)}
+                            className="text-xs px-2 py-1 rounded border w-40"
+                            style={{ borderColor: "var(--border-subtle)" }}
+                          />
+                          <textarea
+                            placeholder="Note (optional)"
+                            value={warnNote}
+                            onChange={(e) => setWarnNote(e.target.value)}
+                            className="text-xs px-2 py-1 rounded border w-40 resize-none"
+                            style={{ borderColor: "var(--border-subtle)" }}
+                            rows={2}
+                          />
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => onWarn(u.id)}
+                              className="text-xs px-2 py-1 rounded bg-amber-600 text-white"
+                            >
+                              Issue Warning
+                            </button>
+                            <button
+                              onClick={() => { setWarnUserId(null); setWarnReason(""); setWarnNote(""); }}
+                              className="text-xs px-2 py-1 rounded text-zinc-500 hover:bg-zinc-100"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => { setWarnUserId(u.id); setWarnReason(""); setWarnNote(""); }}
+                          className="text-xs px-2 py-1 rounded border text-amber-600 hover:bg-amber-50"
+                        >
+                          Warn
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
 
-function ConversationsTab({
-  conversations,
-}: {
-  conversations: Conversation[];
-}) {
+function ConversationsTab({ conversations }: { conversations: Conversation[] }) {
   if (conversations.length === 0) {
     return <p className="text-zinc-500 text-sm">No conversations found.</p>;
   }
@@ -407,7 +762,7 @@ function ConversationsTab({
             <th className="pb-2 pr-4">User ID</th>
             <th className="pb-2 pr-4">Messages</th>
             <th className="pb-2 pr-4">Created</th>
-            <th className="pb-2">Updated</th>
+            <th className="pb-2">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -416,11 +771,94 @@ function ConversationsTab({
               <td className="py-2 pr-4 max-w-[200px] truncate">{c.title}</td>
               <td className="py-2 pr-4 text-zinc-500 font-mono text-xs">{c.userId.slice(0, 12)}...</td>
               <td className="py-2 pr-4">{c._count.messages}</td>
-              <td className="py-2 pr-4 text-zinc-500">
+              <td className="py-2 pr-4 text-zinc-500 text-xs">
                 {formatDateSafe(c.createdAt)}
               </td>
-              <td className="py-2 text-zinc-500">
-                {formatDateSafe(c.updatedAt)}
+              <td className="py-2">
+                <a
+                  href={`/dashboard/admin/conversations/${c.id}`}
+                  className="text-xs px-2 py-1 rounded border hover:bg-zinc-50"
+                >
+                  View
+                </a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function WarningsTab({ warnings }: { warnings: WarningItem[] }) {
+  if (warnings.length === 0) {
+    return <p className="text-zinc-500 text-sm">No warnings issued.</p>;
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b text-left text-zinc-500">
+            <th className="pb-2 pr-4">User</th>
+            <th className="pb-2 pr-4">Admin</th>
+            <th className="pb-2 pr-4">Reason</th>
+            <th className="pb-2 pr-4">Note</th>
+            <th className="pb-2">Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {warnings.map((w) => (
+            <tr key={w.id} className="border-b last:border-0">
+              <td className="py-2 pr-4">{w.user?.email || w.admin?.email || "-"}</td>
+              <td className="py-2 pr-4 text-zinc-500">{w.admin?.email || "-"}</td>
+              <td className="py-2 pr-4 max-w-[200px] truncate">{w.reason}</td>
+              <td className="py-2 pr-4 max-w-[150px] truncate text-zinc-500">{w.note || "-"}</td>
+              <td className="py-2 text-zinc-500 text-xs">
+                {formatDateSafe(w.createdAt)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function AuditLogTab({ logs }: { logs: AuditLogItem[] }) {
+  if (logs.length === 0) {
+    return <p className="text-zinc-500 text-sm">No audit log entries.</p>;
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b text-left text-zinc-500">
+            <th className="pb-2 pr-4">Admin</th>
+            <th className="pb-2 pr-4">Action</th>
+            <th className="pb-2 pr-4">Target</th>
+            <th className="pb-2 pr-4">Details</th>
+            <th className="pb-2">Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {logs.map((l) => (
+            <tr key={l.id} className="border-b last:border-0">
+              <td className="py-2 pr-4">{l.admin?.email || "-"}</td>
+              <td className="py-2 pr-4">
+                <span className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-100">
+                  {l.action}
+                </span>
+              </td>
+              <td className="py-2 pr-4 text-zinc-500 text-xs">
+                {String(l.targetUser?.email ?? "") || String((l.metadata as Record<string, string>)?.targetUserId ?? "") || "-"}
+              </td>
+              <td className="py-2 pr-4 max-w-[200px] truncate text-xs text-zinc-500">
+                {JSON.stringify(l.metadata)}
+              </td>
+              <td className="py-2 text-zinc-500 text-xs">
+                {formatDateSafe(l.createdAt)}
               </td>
             </tr>
           ))}
