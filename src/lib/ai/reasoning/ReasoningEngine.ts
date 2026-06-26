@@ -9,6 +9,7 @@ import { ConfidenceScorer, type ConfidenceResult } from "./ConfidenceScorer";
 import type { ResponseMode } from "../retrieval/ResponseStyleService";
 import type { RetrievedMemory } from "../retrieval/MemoryRetrievalService";
 import type { WebSearchOutcome } from "../web/WebSearchService";
+import type { DateContext } from "../retrieval/PromptContextBuilder";
 
 export interface ReasoningEvent {
   stepName: string;
@@ -61,6 +62,7 @@ export class ReasoningEngine {
     citationsCount: number;
     webContext?: string;
     hasWeakEvidence: boolean;
+    currentDateContext?: DateContext;
   }): Promise<ReasoningOutput> {
     const events: ReasoningEvent[] = [];
 
@@ -128,6 +130,7 @@ export class ReasoningEngine {
       evidence,
       taskClassification,
       confidence,
+      currentDateContext: options.currentDateContext,
     };
 
     const systemPrompt = this.draftBuilder.buildSystemPrompt(draftOptions);

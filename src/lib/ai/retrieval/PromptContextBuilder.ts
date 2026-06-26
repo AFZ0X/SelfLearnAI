@@ -8,6 +8,14 @@ interface MemoryContextItem {
   relevanceLabel?: string;
 }
 
+export interface DateContext {
+  dateISO: string;
+  year: number;
+  month: string;
+  day: number;
+  timezone: string;
+}
+
 export interface BuildPromptOptions {
   memoryContext?: MemoryContextItem[];
   webContext?: string;
@@ -16,6 +24,23 @@ export interface BuildPromptOptions {
   forcedSearch?: boolean;
   responseStyle?: ResponseMode;
   hasWeakEvidence?: boolean;
+  currentDateContext?: DateContext;
+}
+
+export function buildCurrentDateContext(): DateContext {
+  const now = new Date();
+  const tz = process.env.APP_TIMEZONE || "Asia/Riyadh";
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+  ];
+  return {
+    dateISO: now.toISOString().split("T")[0],
+    year: now.getFullYear(),
+    month: months[now.getMonth()],
+    day: now.getDate(),
+    timezone: tz,
+  };
 }
 
 const BASE_SYSTEM_PROMPT = `You are SelfLearn AI. You have: persistent memory, web search, and a learning pipeline.
@@ -51,9 +76,13 @@ Rules:
 export class PromptContextBuilder {
   buildSystemPrompt(options: BuildPromptOptions = {}): string {
     const base = options.baseSystemPrompt || BASE_SYSTEM_PROMPT;
-    const { memoryContext, webContext, webSearchUsed, forcedSearch, responseStyle, hasWeakEvidence } = options;
+    const { memoryContext, webContext, webSearchUsed, forcedSearch, responseStyle, hasWeakEvidence, currentDateContext } = options;
 
     let prompt = base;
+
+    if (currentDateContext) {
+      prompt += `\n\n${this.buildDateContextBlock(currentDateContext)}`;
+    }
 
     if (memoryContext && memoryContext.length > 0) {
       prompt += `\n\n${this.buildMemoryBlock(memoryContext)}`;
@@ -74,6 +103,17 @@ export class PromptContextBuilder {
     }
 
     return prompt;
+  }
+
+  private buildDateContextBlock(ctx: DateContext): string {
+    return [
+      `CURRENT DATE CONTEXT — CRITICAL: Use this for ALL date/time reasoning:`,
+      `Current date: ${ctx.dateISO}`,
+      `Current year: ${ctx.year}`,
+      `Current month: ${ctx.month}`,
+      `Current day: ${ctx.day}`,
+      `Timezone: ${ctx.timezone}`,
+    ].join("\n");
   }
 
   private buildMemoryBlock(memories: MemoryContextItem[]): string {

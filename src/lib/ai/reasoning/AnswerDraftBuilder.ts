@@ -1,4 +1,4 @@
-import { PromptContextBuilder } from "../retrieval/PromptContextBuilder";
+import { PromptContextBuilder, type DateContext } from "../retrieval/PromptContextBuilder";
 import type { ResponseMode } from "../retrieval/ResponseStyleService";
 import type { ReasoningPlan } from "./ReasoningPlanner";
 import type { ToolDecision } from "./ToolOrchestratorV1";
@@ -19,6 +19,7 @@ export interface DraftOptions {
   evidence?: EvidenceResult;
   taskClassification?: TaskClassification;
   confidence?: ConfidenceResult;
+  currentDateContext?: DateContext;
 }
 
 export class AnswerDraftBuilder {
@@ -38,6 +39,7 @@ export class AnswerDraftBuilder {
       hasWeakEvidence,
       reasoningPlan,
       confidence,
+      currentDateContext,
     } = options;
 
     const basePrompt = this.promptBuilder.buildSystemPrompt({
@@ -47,6 +49,7 @@ export class AnswerDraftBuilder {
       forcedSearch,
       responseStyle,
       hasWeakEvidence,
+      currentDateContext,
     });
 
     const parts: string[] = [basePrompt];

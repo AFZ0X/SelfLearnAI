@@ -7,6 +7,8 @@ import { createMessage } from "@/lib/db/messages";
 import { MemoryRetrievalService } from "@/lib/ai/retrieval/MemoryRetrievalService";
 
 import { ProfileMemoryService } from "@/lib/ai/memory/ProfileMemoryService";
+import { ConversationContextBuilder } from "@/lib/ai/context/ConversationContextBuilder";
+import { buildCurrentDateContext } from "@/lib/ai/retrieval/PromptContextBuilder";
 import { ResponseStyleService } from "@/lib/ai/retrieval/ResponseStyleService";
 import { WebSearchService } from "@/lib/ai/web/WebSearchService";
 import { ReasoningEngine } from "@/lib/ai/reasoning/ReasoningEngine";
@@ -232,6 +234,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let conversationHistory: ChatMessage[] = [];
     if (conversationId) {
       const ownership = await getConversation(conversationId, userId);
       if (!ownership) {
@@ -240,9 +243,12 @@ export async function POST(request: NextRequest) {
           { status: 404 }
         );
       }
+      const ctxBuilder = new ConversationContextBuilder();
+      const ctx = await ctxBuilder.loadConversationHistory(conversationId);
+      conversationHistory = ctx.history;
     }
 
-    const typedMessages: ChatMessage[] = [];
+    const typedMessages: ChatMessage[] = [...conversationHistory];
     const lastUserMessage = messages[messages.length - 1];
 
     for (const msg of messages) {
@@ -576,6 +582,8 @@ export async function POST(request: NextRequest) {
       originalDecision === "FORCED_SEARCH" ||
       (searchOutcome.decisionResult?.detectedTriggers?.includes("action_keyword") ?? false);
 
+    const currentDateContext = buildCurrentDateContext();
+
     const reasoningEngine = new ReasoningEngine();
     const reasoningOutput = await reasoningEngine.reason({
       query: userContent || "",
@@ -586,6 +594,7 @@ export async function POST(request: NextRequest) {
       citationsCount: citations.length,
       webContext: webContextStr || undefined,
       hasWeakEvidence,
+      currentDateContext,
     });
 
     let systemPrompt = reasoningOutput.systemPrompt;
