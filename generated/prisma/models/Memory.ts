@@ -43,6 +43,9 @@ export type MemoryMinAggregateOutputType = {
   source: string | null
   confidence: number | null
   visibility: string | null
+  memoryKey: string | null
+  status: string | null
+  supersededById: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -56,6 +59,9 @@ export type MemoryMaxAggregateOutputType = {
   source: string | null
   confidence: number | null
   visibility: string | null
+  memoryKey: string | null
+  status: string | null
+  supersededById: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -70,6 +76,9 @@ export type MemoryCountAggregateOutputType = {
   confidence: number
   visibility: number
   tags: number
+  memoryKey: number
+  status: number
+  supersededById: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -93,6 +102,9 @@ export type MemoryMinAggregateInputType = {
   source?: true
   confidence?: true
   visibility?: true
+  memoryKey?: true
+  status?: true
+  supersededById?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -106,6 +118,9 @@ export type MemoryMaxAggregateInputType = {
   source?: true
   confidence?: true
   visibility?: true
+  memoryKey?: true
+  status?: true
+  supersededById?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -120,6 +135,9 @@ export type MemoryCountAggregateInputType = {
   confidence?: true
   visibility?: true
   tags?: true
+  memoryKey?: true
+  status?: true
+  supersededById?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -221,6 +239,9 @@ export type MemoryGroupByOutputType = {
   confidence: number | null
   visibility: string
   tags: string[]
+  memoryKey: string | null
+  status: string
+  supersededById: string | null
   createdAt: Date
   updatedAt: Date
   _count: MemoryCountAggregateOutputType | null
@@ -258,6 +279,9 @@ export type MemoryWhereInput = {
   confidence?: Prisma.FloatNullableFilter<"Memory"> | number | null
   visibility?: Prisma.StringFilter<"Memory"> | string
   tags?: Prisma.StringNullableListFilter<"Memory">
+  memoryKey?: Prisma.StringNullableFilter<"Memory"> | string | null
+  status?: Prisma.StringFilter<"Memory"> | string
+  supersededById?: Prisma.StringNullableFilter<"Memory"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Memory"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Memory"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -274,6 +298,9 @@ export type MemoryOrderByWithRelationInput = {
   confidence?: Prisma.SortOrderInput | Prisma.SortOrder
   visibility?: Prisma.SortOrder
   tags?: Prisma.SortOrder
+  memoryKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  status?: Prisma.SortOrder
+  supersededById?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -293,6 +320,9 @@ export type MemoryWhereUniqueInput = Prisma.AtLeast<{
   confidence?: Prisma.FloatNullableFilter<"Memory"> | number | null
   visibility?: Prisma.StringFilter<"Memory"> | string
   tags?: Prisma.StringNullableListFilter<"Memory">
+  memoryKey?: Prisma.StringNullableFilter<"Memory"> | string | null
+  status?: Prisma.StringFilter<"Memory"> | string
+  supersededById?: Prisma.StringNullableFilter<"Memory"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Memory"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Memory"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -309,6 +339,9 @@ export type MemoryOrderByWithAggregationInput = {
   confidence?: Prisma.SortOrderInput | Prisma.SortOrder
   visibility?: Prisma.SortOrder
   tags?: Prisma.SortOrder
+  memoryKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  status?: Prisma.SortOrder
+  supersededById?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.MemoryCountOrderByAggregateInput
@@ -331,6 +364,9 @@ export type MemoryScalarWhereWithAggregatesInput = {
   confidence?: Prisma.FloatNullableWithAggregatesFilter<"Memory"> | number | null
   visibility?: Prisma.StringWithAggregatesFilter<"Memory"> | string
   tags?: Prisma.StringNullableListFilter<"Memory">
+  memoryKey?: Prisma.StringNullableWithAggregatesFilter<"Memory"> | string | null
+  status?: Prisma.StringWithAggregatesFilter<"Memory"> | string
+  supersededById?: Prisma.StringNullableWithAggregatesFilter<"Memory"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Memory"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Memory"> | Date | string
 }
@@ -344,6 +380,9 @@ export type MemoryCreateInput = {
   confidence?: number | null
   visibility?: string
   tags?: Prisma.MemoryCreatetagsInput | string[]
+  memoryKey?: string | null
+  status?: string
+  supersededById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutMemoriesInput
@@ -360,6 +399,9 @@ export type MemoryUncheckedCreateInput = {
   confidence?: number | null
   visibility?: string
   tags?: Prisma.MemoryCreatetagsInput | string[]
+  memoryKey?: string | null
+  status?: string
+  supersededById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   embedding?: Prisma.MemoryEmbeddingUncheckedCreateNestedOneWithoutMemoryInput
@@ -374,6 +416,9 @@ export type MemoryUpdateInput = {
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   visibility?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.MemoryUpdatetagsInput | string[]
+  memoryKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  supersededById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutMemoriesNestedInput
@@ -390,6 +435,9 @@ export type MemoryUncheckedUpdateInput = {
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   visibility?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.MemoryUpdatetagsInput | string[]
+  memoryKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  supersededById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   embedding?: Prisma.MemoryEmbeddingUncheckedUpdateOneWithoutMemoryNestedInput
@@ -405,6 +453,9 @@ export type MemoryCreateManyInput = {
   confidence?: number | null
   visibility?: string
   tags?: Prisma.MemoryCreatetagsInput | string[]
+  memoryKey?: string | null
+  status?: string
+  supersededById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -418,6 +469,9 @@ export type MemoryUpdateManyMutationInput = {
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   visibility?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.MemoryUpdatetagsInput | string[]
+  memoryKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  supersededById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -432,6 +486,9 @@ export type MemoryUncheckedUpdateManyInput = {
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   visibility?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.MemoryUpdatetagsInput | string[]
+  memoryKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  supersededById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -464,6 +521,9 @@ export type MemoryCountOrderByAggregateInput = {
   confidence?: Prisma.SortOrder
   visibility?: Prisma.SortOrder
   tags?: Prisma.SortOrder
+  memoryKey?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  supersededById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -481,6 +541,9 @@ export type MemoryMaxOrderByAggregateInput = {
   source?: Prisma.SortOrder
   confidence?: Prisma.SortOrder
   visibility?: Prisma.SortOrder
+  memoryKey?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  supersededById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -494,6 +557,9 @@ export type MemoryMinOrderByAggregateInput = {
   source?: Prisma.SortOrder
   confidence?: Prisma.SortOrder
   visibility?: Prisma.SortOrder
+  memoryKey?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  supersededById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -593,6 +659,9 @@ export type MemoryCreateWithoutUserInput = {
   confidence?: number | null
   visibility?: string
   tags?: Prisma.MemoryCreatetagsInput | string[]
+  memoryKey?: string | null
+  status?: string
+  supersededById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   embedding?: Prisma.MemoryEmbeddingCreateNestedOneWithoutMemoryInput
@@ -607,6 +676,9 @@ export type MemoryUncheckedCreateWithoutUserInput = {
   confidence?: number | null
   visibility?: string
   tags?: Prisma.MemoryCreatetagsInput | string[]
+  memoryKey?: string | null
+  status?: string
+  supersededById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   embedding?: Prisma.MemoryEmbeddingUncheckedCreateNestedOneWithoutMemoryInput
@@ -651,6 +723,9 @@ export type MemoryScalarWhereInput = {
   confidence?: Prisma.FloatNullableFilter<"Memory"> | number | null
   visibility?: Prisma.StringFilter<"Memory"> | string
   tags?: Prisma.StringNullableListFilter<"Memory">
+  memoryKey?: Prisma.StringNullableFilter<"Memory"> | string | null
+  status?: Prisma.StringFilter<"Memory"> | string
+  supersededById?: Prisma.StringNullableFilter<"Memory"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Memory"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Memory"> | Date | string
 }
@@ -664,6 +739,9 @@ export type MemoryCreateWithoutEmbeddingInput = {
   confidence?: number | null
   visibility?: string
   tags?: Prisma.MemoryCreatetagsInput | string[]
+  memoryKey?: string | null
+  status?: string
+  supersededById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutMemoriesInput
@@ -679,6 +757,9 @@ export type MemoryUncheckedCreateWithoutEmbeddingInput = {
   confidence?: number | null
   visibility?: string
   tags?: Prisma.MemoryCreatetagsInput | string[]
+  memoryKey?: string | null
+  status?: string
+  supersededById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -708,6 +789,9 @@ export type MemoryUpdateWithoutEmbeddingInput = {
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   visibility?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.MemoryUpdatetagsInput | string[]
+  memoryKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  supersededById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutMemoriesNestedInput
@@ -723,6 +807,9 @@ export type MemoryUncheckedUpdateWithoutEmbeddingInput = {
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   visibility?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.MemoryUpdatetagsInput | string[]
+  memoryKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  supersededById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -736,6 +823,9 @@ export type MemoryCreateManyUserInput = {
   confidence?: number | null
   visibility?: string
   tags?: Prisma.MemoryCreatetagsInput | string[]
+  memoryKey?: string | null
+  status?: string
+  supersededById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -749,6 +839,9 @@ export type MemoryUpdateWithoutUserInput = {
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   visibility?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.MemoryUpdatetagsInput | string[]
+  memoryKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  supersededById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   embedding?: Prisma.MemoryEmbeddingUpdateOneWithoutMemoryNestedInput
@@ -763,6 +856,9 @@ export type MemoryUncheckedUpdateWithoutUserInput = {
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   visibility?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.MemoryUpdatetagsInput | string[]
+  memoryKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  supersededById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   embedding?: Prisma.MemoryEmbeddingUncheckedUpdateOneWithoutMemoryNestedInput
@@ -777,6 +873,9 @@ export type MemoryUncheckedUpdateManyWithoutUserInput = {
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   visibility?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.MemoryUpdatetagsInput | string[]
+  memoryKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  supersededById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -793,6 +892,9 @@ export type MemorySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   confidence?: boolean
   visibility?: boolean
   tags?: boolean
+  memoryKey?: boolean
+  status?: boolean
+  supersededById?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -809,6 +911,9 @@ export type MemorySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   confidence?: boolean
   visibility?: boolean
   tags?: boolean
+  memoryKey?: boolean
+  status?: boolean
+  supersededById?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -824,6 +929,9 @@ export type MemorySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   confidence?: boolean
   visibility?: boolean
   tags?: boolean
+  memoryKey?: boolean
+  status?: boolean
+  supersededById?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -839,11 +947,14 @@ export type MemorySelectScalar = {
   confidence?: boolean
   visibility?: boolean
   tags?: boolean
+  memoryKey?: boolean
+  status?: boolean
+  supersededById?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type MemoryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "type" | "text" | "summary" | "source" | "confidence" | "visibility" | "tags" | "createdAt" | "updatedAt", ExtArgs["result"]["memory"]>
+export type MemoryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "type" | "text" | "summary" | "source" | "confidence" | "visibility" | "tags" | "memoryKey" | "status" | "supersededById" | "createdAt" | "updatedAt", ExtArgs["result"]["memory"]>
 export type MemoryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   embedding?: boolean | Prisma.Memory$embeddingArgs<ExtArgs>
@@ -871,6 +982,9 @@ export type $MemoryPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     confidence: number | null
     visibility: string
     tags: string[]
+    memoryKey: string | null
+    status: string
+    supersededById: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["memory"]>
@@ -1307,6 +1421,9 @@ export interface MemoryFieldRefs {
   readonly confidence: Prisma.FieldRef<"Memory", 'Float'>
   readonly visibility: Prisma.FieldRef<"Memory", 'String'>
   readonly tags: Prisma.FieldRef<"Memory", 'String[]'>
+  readonly memoryKey: Prisma.FieldRef<"Memory", 'String'>
+  readonly status: Prisma.FieldRef<"Memory", 'String'>
+  readonly supersededById: Prisma.FieldRef<"Memory", 'String'>
   readonly createdAt: Prisma.FieldRef<"Memory", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Memory", 'DateTime'>
 }

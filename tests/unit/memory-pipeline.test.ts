@@ -5,6 +5,8 @@ import { IntentAnalyzer } from "@/lib/ai/reasoning/IntentAnalyzer";
 import { TaskClassifier } from "@/lib/ai/reasoning/TaskClassifier";
 import { ReasoningPlanner } from "@/lib/ai/reasoning/ReasoningPlanner";
 import { NameExtractorService } from "@/lib/ai/memory/NameExtractorService";
+import { ProfileFactExtractor } from "@/lib/ai/memory/ProfileFactExtractor";
+import { MemoryConflictResolver } from "@/lib/ai/memory/MemoryConflictResolver";
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
@@ -212,5 +214,246 @@ describe("NameExtractorService", () => {
       expect(extractor.isNameQuery("كيف حالك")).toBe(false);
       expect(extractor.isNameQuery("ما هو الطقس")).toBe(false);
     });
+  });
+});
+
+describe("ProfileFactExtractor", () => {
+  const extractor = new ProfileFactExtractor();
+
+  describe("extract — Arabic patterns", () => {
+    it("extracts age from 'عمري 20'", () => {
+      const fact = extractor.extract("عمري 20");
+      expect(fact).not.toBeNull();
+      expect(fact!.key).toBe("age");
+      expect(fact!.value).toBe("20");
+    });
+
+    it("extracts age from 'عمري هو 20'", () => {
+      const fact = extractor.extract("عمري هو 20");
+      expect(fact).not.toBeNull();
+      expect(fact!.key).toBe("age");
+      expect(fact!.value).toBe("20");
+    });
+
+    it("extracts age from 'أنا عمري 20'", () => {
+      const fact = extractor.extract("أنا عمري 20");
+      expect(fact).not.toBeNull();
+      expect(fact!.key).toBe("age");
+      expect(fact!.value).toBe("20");
+    });
+
+    it("extracts age from 'اقولك عمري هو 20'", () => {
+      const fact = extractor.extract("اقولك عمري هو 20");
+      expect(fact).not.toBeNull();
+      expect(fact!.key).toBe("age");
+      expect(fact!.value).toBe("20");
+    });
+
+    it("extracts age from 'اقولك عمري 20'", () => {
+      const fact = extractor.extract("اقولك عمري 20");
+      expect(fact).not.toBeNull();
+      expect(fact!.key).toBe("age");
+      expect(fact!.value).toBe("20");
+    });
+
+    it("extracts age from 'I am 20 years old'", () => {
+      const fact = extractor.extract("I am 20 years old");
+      expect(fact).not.toBeNull();
+      expect(fact!.key).toBe("age");
+      expect(fact!.value).toBe("20");
+    });
+
+    it("extracts city from 'ساكن في الخبر'", () => {
+      const fact = extractor.extract("ساكن في الخبر");
+      expect(fact).not.toBeNull();
+      expect(fact!.key).toBe("city");
+      expect(fact!.value).toBe("الخبر");
+    });
+
+    it("extracts interests from 'أحب السيارات'", () => {
+      const fact = extractor.extract("أحب السيارات");
+      expect(fact).not.toBeNull();
+      expect(fact!.key).toBe("interests");
+      expect(fact!.value).toBe("السيارات");
+    });
+
+    it("extracts goal from 'هدفي أدخل أرامكو'", () => {
+      const fact = extractor.extract("هدفي أدخل أرامكو");
+      expect(fact).not.toBeNull();
+      expect(fact!.key).toBe("goal");
+      expect(fact!.value).toContain("أرامكو");
+    });
+
+    it("extracts name from 'اسمي عبدالعزيز'", () => {
+      const fact = extractor.extract("اسمي عبدالعزيز");
+      expect(fact).not.toBeNull();
+      expect(fact!.key).toBe("name");
+      expect(fact!.value).toBe("عبدالعزيز");
+    });
+
+    it("extracts location from 'i live in Riyadh'", () => {
+      const fact = extractor.extract("i live in Riyadh");
+      expect(fact).not.toBeNull();
+      expect(fact!.key).toBe("location");
+      expect(fact!.value).toBe("Riyadh");
+    });
+  });
+
+  describe("detectQuery — Arabic/English profile queries", () => {
+    it("detects 'كم عمري' as age query", () => {
+      const q = extractor.detectQuery("كم عمري");
+      expect(q).not.toBeNull();
+      expect(q!.key).toBe("age");
+    });
+
+    it("detects 'كم عمري؟' as age query", () => {
+      const q = extractor.detectQuery("كم عمري؟");
+      expect(q).not.toBeNull();
+      expect(q!.key).toBe("age");
+    });
+
+    it("detects 'how old am i' as age query", () => {
+      const q = extractor.detectQuery("how old am i");
+      expect(q).not.toBeNull();
+      expect(q!.key).toBe("age");
+    });
+
+    it("detects 'وش اسمي' as name query", () => {
+      const q = extractor.detectQuery("وش اسمي");
+      expect(q).not.toBeNull();
+      expect(q!.key).toBe("name");
+    });
+
+    it("detects 'وين ساكن' as city query", () => {
+      const q = extractor.detectQuery("وين ساكن");
+      expect(q).not.toBeNull();
+      expect(q!.key).toBe("city");
+    });
+
+    it("detects 'وش أحب' as interests query", () => {
+      const q = extractor.detectQuery("وش أحب");
+      expect(q).not.toBeNull();
+      expect(q!.key).toBe("interests");
+    });
+
+    it("detects 'وش هدفي' as goal query", () => {
+      const q = extractor.detectQuery("وش هدفي");
+      expect(q).not.toBeNull();
+      expect(q!.key).toBe("goal");
+    });
+
+    it("returns null for non-profile query", () => {
+      expect(extractor.detectQuery("كيف الطقس اليوم")).toBeNull();
+      expect(extractor.detectQuery("ما هو TypeScript")).toBeNull();
+    });
+  });
+});
+
+describe("MemoryConflictResolver", () => {
+  const resolver = new MemoryConflictResolver();
+
+  describe("resolve", () => {
+    it("returns null when no active memory exists for key", async () => {
+      const { prisma } = await import("@/lib/db/prisma");
+      (prisma.memory.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+      const result = await resolver.resolve("user1", "age", "mem2");
+      expect(result).toBeNull();
+    });
+
+    it("supersedes existing active memory when conflict found", async () => {
+      const { prisma } = await import("@/lib/db/prisma");
+      (prisma.memory.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "mem1", text: "14" });
+      const updateMock = vi.fn().mockResolvedValue({});
+      prisma.memory.update = updateMock;
+      const result = await resolver.resolve("user1", "age", "mem2");
+      expect(result).not.toBeNull();
+      expect(result!.oldId).toBe("mem1");
+      expect(result!.newId).toBe("mem2");
+      expect(result!.key).toBe("age");
+      expect(result!.resolved).toBe(true);
+      expect(updateMock).toHaveBeenCalledWith({
+        where: { id: "mem1" },
+        data: { status: "SUPERSEDED", supersededById: "mem2", confidence: 0.1 },
+      });
+    });
+  });
+});
+
+describe("IntentAnalyzer — profile query detection", () => {
+  const intentAnalyzer = new IntentAnalyzer();
+
+  it("classifies 'كم عمري' as ASK_PERSONAL", () => {
+    const result = intentAnalyzer.analyze("كم عمري");
+    expect(result.goal).toBe("ASK_PERSONAL");
+  });
+
+  it("classifies 'how old am i' as ASK_PERSONAL", () => {
+    const result = intentAnalyzer.analyze("how old am i");
+    expect(result.goal).toBe("ASK_PERSONAL");
+  });
+
+  it("classifies 'وين ساكن' as ASK_PERSONAL", () => {
+    const result = intentAnalyzer.analyze("وين ساكن");
+    expect(result.goal).toBe("ASK_PERSONAL");
+  });
+
+  it("classifies 'وش أحب' as ASK_PERSONAL", () => {
+    const result = intentAnalyzer.analyze("وش أحب");
+    expect(result.goal).toBe("ASK_PERSONAL");
+  });
+
+  it("classifies 'وش هدفي' as ASK_PERSONAL", () => {
+    const result = intentAnalyzer.analyze("وش هدفي");
+    expect(result.goal).toBe("ASK_PERSONAL");
+  });
+});
+
+describe("LearningExtractionService — Arabic age/location/preference patterns", () => {
+  const extractionService = new LearningExtractionService();
+
+  it("extracts age from 'عمري 20'", () => {
+    const candidates = extractionService.extractCandidates("عمري 20");
+    const ageCandidates = candidates.filter((c) => c.tags.includes("age"));
+    expect(ageCandidates.length).toBeGreaterThanOrEqual(1);
+    expect(ageCandidates[0].text).toContain("20");
+    expect(ageCandidates[0].confidence).toBeGreaterThanOrEqual(0.9);
+  });
+
+  it("extracts age from 'عمري هو 20'", () => {
+    const candidates = extractionService.extractCandidates("عمري هو 20");
+    const ageCandidates = candidates.filter((c) => c.tags.includes("age"));
+    expect(ageCandidates.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("extracts location from 'ساكن في الخبر'", () => {
+    const candidates = extractionService.extractCandidates("ساكن في الخبر");
+    const locCandidates = candidates.filter((c) => c.tags.includes("location"));
+    expect(locCandidates.length).toBeGreaterThanOrEqual(1);
+    expect(locCandidates[0].text).toContain("الخبر");
+  });
+
+  it("extracts preference from 'أحب السيارات'", () => {
+    const candidates = extractionService.extractCandidates("أحب السيارات");
+    const prefCandidates = candidates.filter((c) => c.tags.includes("preference"));
+    expect(prefCandidates.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("extracts goal from 'هدفي أدخل أرامكو'", () => {
+    const candidates = extractionService.extractCandidates("هدفي أدخل أرامكو");
+    const goalCandidates = candidates.filter((c) => c.tags.includes("goal"));
+    expect(goalCandidates.length).toBeGreaterThanOrEqual(1);
+    expect(goalCandidates[0].text).toContain("أرامكو");
+  });
+
+  it("extracts work from 'أشتغل في شركة'", () => {
+    const candidates = extractionService.extractCandidates("أشتغل في شركة");
+    const workCandidates = candidates.filter((c) => c.tags.includes("work"));
+    expect(workCandidates.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("extracts education from 'أدرس هندسة'", () => {
+    const candidates = extractionService.extractCandidates("أدرس هندسة");
+    const eduCandidates = candidates.filter((c) => c.tags.includes("education"));
+    expect(eduCandidates.length).toBeGreaterThanOrEqual(1);
   });
 });

@@ -1919,6 +1919,9 @@ export const MemoryScalarFieldEnum = {
   confidence: 'confidence',
   visibility: 'visibility',
   tags: 'tags',
+  memoryKey: 'memoryKey',
+  status: 'status',
+  supersededById: 'supersededById',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

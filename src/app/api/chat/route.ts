@@ -6,7 +6,7 @@ import { getConversation } from "@/lib/db/conversations";
 import { createMessage } from "@/lib/db/messages";
 import { MemoryRetrievalService } from "@/lib/ai/retrieval/MemoryRetrievalService";
 
-import { NameExtractorService } from "@/lib/ai/memory/NameExtractorService";
+import { ProfileMemoryService } from "@/lib/ai/memory/ProfileMemoryService";
 import { ResponseStyleService } from "@/lib/ai/retrieval/ResponseStyleService";
 import { WebSearchService } from "@/lib/ai/web/WebSearchService";
 import { ReasoningEngine } from "@/lib/ai/reasoning/ReasoningEngine";
@@ -324,25 +324,29 @@ export async function POST(request: NextRequest) {
       stepId = null;
     }
 
-    const nameService = new NameExtractorService();
+    const profileService = new ProfileMemoryService();
+    let profileFactKey: string | null = null;
+    let profileFactAction: string | null = null;
+    let profileConflictResolved = false;
     if (userContent) {
-      const nameResult = await nameService.process(userId, userContent);
-      if (nameResult.action === "saved" || nameResult.action === "query_found") {
-        if (nameResult.memory) {
-          const alreadyInMemories = retrievalResult.memories.some(
-            (m) => m.tags.includes("name") || m.id === nameResult.memory!.id
-          );
-          if (!alreadyInMemories) {
-            retrievalResult.memories.unshift({
-              id: nameResult.memory.id,
-              text: nameResult.memory.text,
-              summary: nameResult.memory.summary || nameResult.memory.text,
-              tags: nameResult.memory.tags,
-              similarity: 1.0,
-              relevanceLabel: "high",
-            });
-            retrievalResult.memoryUsed = true;
-          }
+      const profileResult = await profileService.process(userId, userContent);
+      profileFactKey = profileResult.key;
+      profileFactAction = profileResult.action;
+      profileConflictResolved = profileResult.conflictResolved;
+      if ((profileResult.action === "saved" || profileResult.action === "found") && profileResult.value && profileResult.memoryId) {
+        const alreadyInMemories = retrievalResult.memories.some(
+          (m) => m.id === profileResult.memoryId || m.tags.includes(profileResult.key || "")
+        );
+        if (!alreadyInMemories) {
+          retrievalResult.memories.unshift({
+            id: profileResult.memoryId,
+            text: profileResult.value,
+            summary: `${profileResult.key}: ${profileResult.value}`,
+            tags: profileResult.key ? ["profile", profileResult.key] : ["profile"],
+            similarity: 1.0,
+            relevanceLabel: "high",
+          });
+          retrievalResult.memoryUsed = true;
         }
       }
     }
@@ -615,6 +619,9 @@ export async function POST(request: NextRequest) {
         webContextChars: webContextStr.length,
         webSearchUsed: searchOutcome.webSearchUsed,
         forcedSearch: forcedSearch || undefined,
+        profileFactKey: profileFactKey || undefined,
+        profileFactAction: profileFactAction || undefined,
+        profileConflictResolved: profileConflictResolved || undefined,
       };
       await traceService.completeStep(stepId, rcMeta);
       stepId = null;

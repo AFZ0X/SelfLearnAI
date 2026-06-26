@@ -124,6 +124,9 @@ model Memory {
   confidence Float?
   visibility String   @default("private")
   tags      String[]
+  memoryKey String?
+  status    String     @default("ACTIVE")
+  supersededById String?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
@@ -131,6 +134,7 @@ model Memory {
   embedding MemoryEmbedding?
 
   @@index([userId])
+  @@index([userId, memoryKey, status])
 }
 
 model MemoryEmbedding {

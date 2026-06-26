@@ -94,6 +94,22 @@ const NAME_QUERY_PATTERNS = [
   /ناديني\s+/i,
 ];
 
+const PROFILE_QUERY_PATTERNS = [
+  /كم\s+عمري/i,
+  /عمر\s+كم/i,
+  /how\s+old\s+am\s+i/i,
+  /what(?:'s| is)\s+my\s+age/i,
+  /وين\s+ساكن/i,
+  /أين\s+أسكن/i,
+  /where\s+do\s+i\s+live/i,
+  /وش\s+أحب/i,
+  /ما\s+هدفي/i,
+  /وش\s+هدفي/i,
+  /what(?:'s| is)\s+my\s+goal/i,
+  /وش\s+أشتغل/i,
+  /what(?:'s| is)\s+my\s+job/i,
+];
+
 const ARABIC_DETECT = /[\u0600-\u06FF]/;
 
 export class IntentAnalyzer {
@@ -109,7 +125,7 @@ export class IntentAnalyzer {
       return { goal: "SAVE_MEMORY", language, urgency: "LOW", requiresFollowUpContext: false };
     }
 
-    if (NAME_QUERY_PATTERNS.some((p) => p.test(t))) {
+    if (NAME_QUERY_PATTERNS.some((p) => p.test(t)) || PROFILE_QUERY_PATTERNS.some((p) => p.test(t))) {
       return { goal: "ASK_PERSONAL", language, urgency: "LOW", requiresFollowUpContext: false };
     }
 

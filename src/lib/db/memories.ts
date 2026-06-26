@@ -13,6 +13,9 @@ export interface MemoryResponse {
   confidence: number | null;
   visibility: string;
   tags: string[];
+  memoryKey: string | null;
+  status: string;
+  supersededById: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,6 +28,9 @@ export interface MemoryCreateData {
   confidence?: number;
   visibility?: string;
   tags?: string[];
+  memoryKey?: string;
+  status?: string;
+  supersededById?: string;
 }
 
 export function validateMemoryText(text: string): string | null {
@@ -68,6 +74,9 @@ export async function listMemories(userId: string): Promise<MemoryResponse[]> {
       confidence: true,
       visibility: true,
       tags: true,
+      memoryKey: true,
+      status: true,
+      supersededById: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -101,6 +110,9 @@ export async function createMemory(
       confidence: typeof data.confidence === "number" ? data.confidence : null,
       visibility: data.visibility || "private",
       tags: Array.isArray(data.tags) ? data.tags : [],
+      memoryKey: data.memoryKey?.trim() || null,
+      status: data.status || "ACTIVE",
+      supersededById: data.supersededById || null,
     },
     select: {
       id: true,
@@ -112,6 +124,9 @@ export async function createMemory(
       confidence: true,
       visibility: true,
       tags: true,
+      memoryKey: true,
+      status: true,
+      supersededById: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -134,6 +149,9 @@ export async function getMemory(
       confidence: true,
       visibility: true,
       tags: true,
+      memoryKey: true,
+      status: true,
+      supersededById: true,
       createdAt: true,
       updatedAt: true,
     },
