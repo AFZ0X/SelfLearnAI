@@ -55,7 +55,7 @@ function FeatureCard({
 }) {
   const content = (
     <div
-      className="rounded-xl border p-5 transition-all duration-200 h-full flex flex-col"
+      className="rounded-xl border p-5 transition-all duration-200 h-full flex flex-col feature-card-hover"
       style={{
         backgroundColor: "var(--card-bg)",
         borderColor: "var(--card-border)",
@@ -84,23 +84,7 @@ function FeatureCard({
   if (href) {
     return (
       <a href={href} className="block group">
-        <div
-          className="transition-all duration-200 group-hover:scale-[1.02]"
-          onMouseEnter={(e) => {
-            const target = e.currentTarget.querySelector("div");
-            if (target) {
-              target.style.borderColor = "var(--border-default)";
-              target.style.boxShadow = "var(--shadow-md)";
-            }
-          }}
-          onMouseLeave={(e) => {
-            const target = e.currentTarget.querySelector("div");
-            if (target) {
-              target.style.borderColor = "var(--card-border)";
-              target.style.boxShadow = "none";
-            }
-          }}
-        >
+        <div className="transition-all duration-200 group-hover:scale-[1.02]">
           {content}
         </div>
       </a>

@@ -273,6 +273,15 @@ body {
   background: var(--border-default);
 }
 
+/* Feature card hover effect (pure CSS, no JS event handlers needed) */
+.feature-card-hover {
+  transition: border-color var(--duration-normal) var(--ease-out), box-shadow var(--duration-normal) var(--ease-out);
+}
+.group:hover .feature-card-hover {
+  border-color: var(--border-default);
+  box-shadow: var(--shadow-md);
+}
+
 /* Placeholder styling */
 .conv-search-input::placeholder {
   color: var(--conv-text-muted);
