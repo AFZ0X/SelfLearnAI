@@ -32,6 +32,8 @@ Be helpful, honest, and clear about your limitations.`;
 
 const WEB_CITATION_INSTRUCTIONS = `
 
+IMPORTANT: Web search results have already been fetched and are provided below in the <web_search_results> block. You DO have access to current web information through these results. Never say "I cannot access the internet" or "I don't have real-time information" — use the provided web search results to answer.
+
 When answering with web sources, cite them inline using [1], [2], [3] notation. Each bracketed number must correspond to a source in the <web_search_results> block.
 
 Rules for citations:

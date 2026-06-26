@@ -352,6 +352,10 @@ export async function POST(request: NextRequest) {
       if (searchOutcome.decisionResult?.detectedTriggers && searchOutcome.decisionResult.detectedTriggers.length > 0) {
         decisionMeta.detectedTriggers = searchOutcome.decisionResult.detectedTriggers;
       }
+      if (searchOutcome.searchFailed) {
+        decisionMeta.searchFailed = true;
+        decisionMeta.originalDecision = searchOutcome.originalDecision;
+      }
       const providerInfo = getProviderStatus();
       decisionMeta.searchProvider = providerInfo.name;
       await traceService.completeStep(stepId, decisionMeta);
@@ -362,6 +366,24 @@ export async function POST(request: NextRequest) {
     let citations: Array<{ title: string; url: string; snippet: string }> = [];
 
     const isMockProvider = searchOutcome.usingMock === true;
+
+    const originalDecision = searchOutcome.originalDecision || searchOutcome.decisionResult?.decision;
+    const searchRequired = originalDecision === "REQUIRED_SEARCH" || originalDecision === "UNCERTAIN_SEARCH";
+    const searchFailed = searchOutcome.searchFailed === true;
+
+    if (searchRequired && (searchFailed || !searchOutcome.webSearchUsed)) {
+      if (traceId) {
+        await traceService.failTrace(traceId);
+      }
+      return NextResponse.json({
+        role: "assistant",
+        content: "Web search is required for this question, but no real search provider is configured. To enable real-time information retrieval, set SEARCH_PROVIDER=tavily with a valid TAVILY_API_KEY in your environment variables.",
+        webSearchUsed: false,
+        webSearchDecision: originalDecision,
+        webSearchReason: searchOutcome.decisionResult?.reason || "Search required but no real provider configured",
+        searchFailed: true,
+      });
+    }
 
     if (searchOutcome.webSearchUsed && searchOutcome.results.length > 0) {
       if (traceId) {
@@ -446,25 +468,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (isMockProvider && searchOutcome.webSearchUsed) {
-      systemPrompt += `\n\n[SYSTEM NOTE: The web search provider is set to "mock" (development mode). The search results below are fake/mock data, not real web content. Do NOT present them as real facts. Tell the user that web search is not available because no real search provider is configured.]`;
-      webContextStr = "";
-      citations = [];
-    }
-
-    const missingProviderNote =
-      searchOutcome.decisionResult?.decision === "REQUIRED_SEARCH" && !searchOutcome.webSearchUsed
-        ? "\n\n[SYSTEM NOTE: Web search is required to answer this question accurately, but no real search provider is configured. Explain to the user that you cannot access current information and suggest they set up a search provider (SEARCH_PROVIDER=tavily with TAVILY_API_KEY).]"
-        : "";
-
-    systemPrompt += missingProviderNote;
-
     if (stepId) {
       await traceService.completeStep(stepId, {
         memoryContextChars: systemPrompt.length,
         webContextChars: webContextStr.length,
-        usingMock: isMockProvider,
-        citationsSuppressed: isMockProvider && searchOutcome.webSearchUsed,
+        webSearchUsed: searchOutcome.webSearchUsed,
       });
       stepId = null;
     }

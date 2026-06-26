@@ -22,6 +22,8 @@ export interface WebSearchOutcome {
   webSearchUsed: boolean;
   decisionResult?: SearchDecisionResult;
   usingMock: boolean;
+  searchFailed?: boolean;
+  originalDecision?: SearchDecisionResult["decision"];
 }
 
 export class WebSearchService {
@@ -44,6 +46,8 @@ export class WebSearchService {
       return { results: [], webSearchUsed: false, decisionResult, usingMock: false };
     }
 
+    const originalDecision = decisionResult.decision;
+
     if (!isSearchConfigured()) {
       return {
         results: [],
@@ -54,10 +58,27 @@ export class WebSearchService {
           reason: "Search provider not configured. Set SEARCH_PROVIDER to \"tavily\" or \"brave\" with a valid API key.",
         },
         usingMock: false,
+        searchFailed: true,
+        originalDecision,
       };
     }
 
     const isMock = isUsingMockProvider();
+
+    if (isMock) {
+      return {
+        results: [],
+        webSearchUsed: false,
+        decisionResult: {
+          ...decisionResult,
+          decision: "NO_SEARCH",
+          reason: "Web search is set to mock provider. Configure a real provider (SEARCH_PROVIDER=tavily) for real results.",
+        },
+        usingMock: true,
+        searchFailed: true,
+        originalDecision,
+      };
+    }
 
     const redactedQuery = this.decisionService.generateSearchQuery(query);
     let provider;
@@ -73,7 +94,9 @@ export class WebSearchService {
           decision: "NO_SEARCH",
           reason: msg,
         },
-        usingMock: isMock,
+        usingMock: false,
+        searchFailed: true,
+        originalDecision,
       };
     }
 
@@ -90,7 +113,9 @@ export class WebSearchService {
           decision: "NO_SEARCH",
           reason: msg,
         },
-        usingMock: isMock,
+        usingMock: false,
+        searchFailed: true,
+        originalDecision,
       };
     }
 
@@ -103,7 +128,9 @@ export class WebSearchService {
           decision: "NO_SEARCH",
           reason: "Search returned no results",
         },
-        usingMock: isMock,
+        usingMock: false,
+        searchFailed: true,
+        originalDecision,
       };
     }
 
@@ -121,6 +148,7 @@ export class WebSearchService {
       webSearchUsed: results.length > 0,
       decisionResult,
       usingMock: isMock,
+      originalDecision,
     };
   }
 }
