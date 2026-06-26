@@ -1034,3 +1034,144 @@ npm run build:        ✅ Compiled (42 routes)
 - `npm run lint` — PASS (0 errors, 3 pre-existing warnings)
 - `npm run build` — PASS (41 pages generated)
 - `npm test` — PASS (83 tests passed)
+
+## [REASONING_ENGINE_V1_STATUS]
+
+**Status**: Complete
+
+### Overview
+
+Reasoning Engine V1 transforms the chat runtime from a direct prompt-to-LLM flow into a reasoning-first pipeline. Every chat request now goes through a structured reasoning process before the LLM is called.
+
+### Architecture
+
+```
+User message
+↓
+Memory Retrieval + Web Search (existing services — unchanged)
+↓
+ReasoningEngine (new orchestrator)
+├── IntentAnalyzer — detects user goal, language, urgency
+├── TaskClassifier — maps goal to task type (FACTUAL_STABLE, FACTUAL_CURRENT, etc.)
+├── ReasoningPlanner — creates execution plan (DIRECT_ANSWER, WEB_ONLY, MEMORY_ONLY, etc.)
+├── ToolOrchestratorV1 — selects tools (memory, web, internal knowledge)
+├── EvidenceCollector — gathers evidence from memory + search
+├── AnswerDraftBuilder — builds the system prompt with all context + style constraints
+├── SelfVerifier — checks for unsupported claims, missing citations, low confidence
+└── ConfidenceScorer — scores 0–100 with HIGH/MEDIUM/LOW/UNKNOWN label
+↓
+LLM (existing provider — unchanged)
+↓
+Answer
+```
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `src/lib/ai/reasoning/IntentAnalyzer.ts` | Pattern-based goal detection (14 goal types), language detection, urgency |
+| `src/lib/ai/reasoning/TaskClassifier.ts` | Maps intent goals to 12 task types with tool requirements |
+| `src/lib/ai/reasoning/ReasoningPlanner.ts` | Creates execution plan based on task + explicit search trigger + memory availability |
+| `src/lib/ai/reasoning/ToolOrchestratorV1.ts` | Selects memory/web/internal knowledge tools per plan |
+| `src/lib/ai/reasoning/EvidenceCollector.ts` | Collects memory evidence for the LLM context |
+| `src/lib/ai/reasoning/AnswerDraftBuilder.ts` | Builds complete system prompt with memory, web, style, and evidence constraints |
+| `src/lib/ai/reasoning/SelfVerifier.ts` | 7 verification checks before LLM call |
+| `src/lib/ai/reasoning/ConfidenceScorer.ts` | Weighted scoring combining evidence quality, memory relevance, task clarity |
+| `src/lib/ai/reasoning/ReasoningEngine.ts` | Main orchestrator combining all services |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/app/api/chat/route.ts` | Imports ReasoningEngine; replaces manual style+prompt builder with engine; adds reasoning metadata to traces and response payload |
+| `src/lib/ai/trace/ActivityTraceService.ts` | Added reasoning metadata fields to `TraceStepMetadata` (responseMode, userPreference, userWantsShort, userWantsDetailed, userWantsAction, intentGoal, intentLanguage, taskType, reasoningPlanType, toolsUsed, verificationPassed, confidenceScore, confidenceLabel) |
+
+### Tool Orchestration Behavior
+
+| Task Type | Memory | Web Search | Internal Knowledge |
+|-----------|--------|------------|-------------------|
+| FACTUAL_STABLE | ✓ (if relevant available) | ✗ | ✓ |
+| FACTUAL_CURRENT | ✗ | ✓ | ✗ |
+| PERSONAL_MEMORY | ✓ | ✗ | ✗ |
+| TROUBLESHOOTING | ✓ (if relevant available) | ✗ | ✓ |
+| CODING | ✓ (if relevant available) | ✗ | ✓ |
+| CREATIVE | ✗ | ✗ | ✓ |
+| SUMMARIZATION | ✗ | ✗ | ✓ |
+| TRANSLATION | ✗ | ✗ | ✓ |
+| OPINION_ADVICE | ✓ (if relevant available) | ✗ | ✓ |
+| PLANNING | ✓ (if relevant available) | ✗ | ✓ |
+| UNKNOWN | ✗ | ✗ | ✓ |
+
+- Explicit search keyword overrides: forces WEB_ONLY plan
+- Web search disabled in settings: all web tools return empty
+
+### Self-Verification Behavior
+
+Seven checks performed before every answer:
+
+| Check | What It Validates |
+|-------|------------------|
+| question_addressed | Confidence is not UNKNOWN for a non-uncertain plan |
+| unsupported_claims | Web plan has web context; memory plan has memories |
+| web_search_ignored | Web-required plan actually has web results |
+| over_explained | Passes by default (style rules handled by prompt) |
+| fabricated_citations | Web context exists but no citations collected |
+| evidence_contradiction | Confidence reasons contain contradiction |
+| low_confidence | Score < 25 for non-uncertain plans |
+
+- If verification fails AND score < 30: returns `shouldRetry: false` with failure reason
+- If verification fails AND score >= 30: returns `shouldRetry: true` for possible revision
+- All checks must pass for `verification.passed = true`
+
+### Confidence Scoring Behavior
+
+| Factor | Weight |
+|--------|--------|
+| Web evidence sufficient | +25 |
+| High-confidence web sources | +10 |
+| No web search needed (stable knowledge) | +15 |
+| Memory found | +10 |
+| High-confidence memory (>0.85) | +10 |
+| Medium memory (0.7–0.85) | +5 |
+| Source contradiction | -10 each |
+| Task type unclear | -10 |
+| Creative/opinion task | Cap at 70 |
+| No memory for personal query | 20 (LOW) |
+
+**Label thresholds:** ≥75 = HIGH, ≥45 = MEDIUM, ≥15 = LOW, <15 = UNKNOWN
+
+### Neural Activity Integration
+
+A single `Reasoning_Engine` trace step replaces the old `Response_Style` + `Prompt_Builder` steps. It records:
+
+- `responseMode`, `userPreference`, `userWantsShort/Detailed/Action`
+- `intentGoal`, `intentLanguage`
+- `taskType`, `reasoningPlanType`, `toolsUsed`
+- `verificationPassed`, `confidenceScore`, `confidenceLabel`
+
+### Response Payload Metadata
+
+```json
+{
+  "reasoningPlan": "WEB_ONLY",
+  "reasoningSummary": "Used: web search + internal knowledge. Confidence: HIGH",
+  "confidenceLabel": "HIGH",
+  "confidenceScore": 85
+}
+```
+
+### Design Decisions
+
+- **No chain-of-thought exposure**: Internal reasoning plan, tool decisions, and verification details are NOT shown to the user
+- **Plan summary**: Short safe summary like "Used: web search + memory. Confidence: HIGH"
+- **Deterministic services**: All reasoning services use pattern matching / rules — no LLM calls inside the reasoning pipeline
+- **Preserved existing services**: Memory retrieval, web search, web fetch, summarization, freshness gates, and evidence validation all remain unchanged — the reasoning engine calls them as tools
+- **Non-blocking**: If reasoning engine fails, the chat route still returns an error gracefully
+
+### Remaining Risks
+
+- Reasoning engine adds ~5ms overhead per request (synchronous pattern matching only)
+- SelfVerifier `over_explained` check is a no-op (always passes) — cannot currently detect verbosity
+- No unit tests yet for reasoning services (intent, classification, planning, verification, confidence)
+- No LLM-based validation (all checks are pattern-based — may miss edge cases)
+- The `hasWeakEvidence` flag relies on the existing sufficiency validation

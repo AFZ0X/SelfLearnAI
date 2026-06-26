@@ -35,6 +35,19 @@ export interface TraceStepMetadata {
   responseLength?: number;
   totalDurationMs?: number;
   stepsCount?: number;
+  responseMode?: string;
+  userPreference?: string;
+  userWantsShort?: boolean;
+  userWantsDetailed?: boolean;
+  userWantsAction?: boolean;
+  intentGoal?: string;
+  intentLanguage?: string;
+  taskType?: string;
+  reasoningPlanType?: string;
+  toolsUsed?: string;
+  verificationPassed?: boolean;
+  confidenceScore?: number;
+  confidenceLabel?: string;
 }
 
 export class ActivityTraceService {

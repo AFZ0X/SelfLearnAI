@@ -5,9 +5,10 @@ import type { ChatMessage } from "@/lib/ai/providers/AIProvider";
 import { getConversation } from "@/lib/db/conversations";
 import { createMessage } from "@/lib/db/messages";
 import { MemoryRetrievalService } from "@/lib/ai/retrieval/MemoryRetrievalService";
-import { PromptContextBuilder } from "@/lib/ai/retrieval/PromptContextBuilder";
+
 import { ResponseStyleService } from "@/lib/ai/retrieval/ResponseStyleService";
 import { WebSearchService } from "@/lib/ai/web/WebSearchService";
+import { ReasoningEngine } from "@/lib/ai/reasoning/ReasoningEngine";
 import { WebFetchService, type FetchedPage } from "@/lib/ai/web/WebFetchService";
 import { SourceSummarizer, type SourceSummary } from "@/lib/ai/web/SourceSummarizer";
 import { WebContextBuilder } from "@/lib/ai/web/WebContextBuilder";
@@ -361,7 +362,7 @@ export async function POST(request: NextRequest) {
       }));
     } else {
       console.log("[CHAT] web search disabled by user setting");
-      searchOutcome = { results: [], webSearchUsed: false, decisionResult: undefined };
+      searchOutcome = { results: [], webSearchUsed: false, decisionResult: undefined, usingMock: false };
     }
     const searchDurationMs = Date.now() - searchDecisionStart;
 
@@ -537,36 +538,29 @@ export async function POST(request: NextRequest) {
     }
 
     if (traceId) {
-      stepId = (await traceService.startStep(traceId, "Response_Style"))?.id ?? null;
+      stepId = (await traceService.startStep(traceId, "Reasoning_Engine"))?.id ?? null;
     }
     const styleService = new ResponseStyleService();
     const stylePreference = await getUserResponseStyleSetting(userId);
     const styleResult = styleService.detectStyle(userContent || "", stylePreference);
     const hasWeakEvidence = searchOutcome.sufficiencyResult?.confidence === "LOW";
-    if (stepId) {
-      await traceService.completeStep(stepId, {
-        responseMode: styleResult.mode,
-        userPreference: stylePreference,
-        userWantsShort: styleResult.userWantsShort,
-        userWantsDetailed: styleResult.userWantsDetailed,
-        userWantsAction: styleResult.userWantsAction,
-      });
-      stepId = null;
-    }
+    const hasExplicitSearchTrigger =
+      originalDecision === "FORCED_SEARCH" ||
+      (searchOutcome.decisionResult?.detectedTriggers?.includes("action_keyword") ?? false);
 
-    if (traceId) {
-      stepId = (await traceService.startStep(traceId, "Prompt_Builder"))?.id ?? null;
-    }
-    const promptBuilder = new PromptContextBuilder();
-    let systemPrompt = promptBuilder.buildSystemPrompt({
-      memoryContext: retrievalResult.memories,
-      webContext: webContextStr || undefined,
-      webSearchUsed: searchOutcome.webSearchUsed,
-      forcedSearch: forcedSearch || undefined,
+    const reasoningEngine = new ReasoningEngine();
+    const reasoningOutput = await reasoningEngine.reason({
+      query: userContent || "",
+      memoryRetrievalResult: retrievalResult,
+      webSearchOutcome: searchOutcome.webSearchUsed ? searchOutcome : undefined,
+      hasExplicitSearchTrigger,
       responseStyle: styleResult.mode,
+      citationsCount: citations.length,
+      hasWebContext: webContextStr.length > 0,
       hasWeakEvidence,
     });
-    console.log("[CHAT] systemPrompt length:", systemPrompt.length, "| webSearchUsed:", searchOutcome.webSearchUsed, "| hasWebContextStr:", webContextStr.length > 0, "| webContextStr.length:", webContextStr.length, "| citations.length:", citations.length, "| styleMode:", styleResult.mode);
+
+    let systemPrompt = reasoningOutput.systemPrompt;
 
     if (saveActionResult.handled) {
       if (saveActionResult.action === "saved") {
@@ -579,14 +573,29 @@ export async function POST(request: NextRequest) {
     }
 
     if (stepId) {
-      await traceService.completeStep(stepId, {
+      const rcMeta: Record<string, unknown> = {
+        responseMode: styleResult.mode,
+        userPreference: stylePreference,
+        userWantsShort: styleResult.userWantsShort,
+        userWantsDetailed: styleResult.userWantsDetailed,
+        userWantsAction: styleResult.userWantsAction,
+        intentGoal: reasoningOutput.intent.goal,
+        intentLanguage: reasoningOutput.intent.language,
+        taskType: reasoningOutput.taskClassification.type,
+        reasoningPlanType: reasoningOutput.reasoningPlan.planType,
+        toolsUsed: `${reasoningOutput.toolDecision.useMemory ? "memory," : ""}${reasoningOutput.toolDecision.useWebSearch ? "web," : ""}${reasoningOutput.toolDecision.useInternalKnowledge ? "internal," : ""}`.replace(/,$/, ""),
+        verificationPassed: reasoningOutput.verification.passed,
+        confidenceScore: reasoningOutput.confidence.score,
+        confidenceLabel: reasoningOutput.confidence.label,
         memoryContextChars: systemPrompt.length,
         webContextChars: webContextStr.length,
         webSearchUsed: searchOutcome.webSearchUsed,
         forcedSearch: forcedSearch || undefined,
-      });
+      };
+      await traceService.completeStep(stepId, rcMeta);
       stepId = null;
     }
+    console.log("[CHAT] systemPrompt length:", systemPrompt.length, "| webSearchUsed:", searchOutcome.webSearchUsed, "| hasWebContextStr:", webContextStr.length > 0, "| webContextStr.length:", webContextStr.length, "| citations.length:", citations.length, "| styleMode:", styleResult.mode, "| plan:", reasoningOutput.reasoningPlan.planType, "| confidence:", reasoningOutput.confidence.label);
 
     if (traceId) {
       stepId = (await traceService.startStep(traceId, "LLM_Provider"))?.id ?? null;
@@ -736,6 +745,10 @@ export async function POST(request: NextRequest) {
       ...(searchOutcome.sufficiencyResult ? { evidenceConfidence: searchOutcome.sufficiencyResult.confidence } : {}),
       ...(searchOutcome.rejectionSummary ? { rejectedSourcesCount: searchOutcome.rejectionSummary.total } : {}),
       responseMode: styleResult.mode,
+      reasoningPlan: reasoningOutput.reasoningPlan.planType,
+      reasoningSummary: reasoningOutput.planSummary,
+      confidenceLabel: reasoningOutput.confidence.label,
+      confidenceScore: reasoningOutput.confidence.score,
     });
   } catch {
     if (traceId) {
