@@ -112,7 +112,7 @@ export function Sidebar({
 
   return (
     <aside
-      className="flex flex-col shrink-0"
+      className="flex flex-col shrink-0 h-full"
       style={{
         width: "320px",
         backgroundColor: "var(--conv-bg)",

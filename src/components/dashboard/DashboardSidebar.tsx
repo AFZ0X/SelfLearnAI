@@ -97,7 +97,7 @@ export function DashboardSidebar({ userName, userEmail, isAdmin }: DashboardSide
 
   return (
     <aside
-      className="flex flex-col shrink-0 transition-all duration-200"
+      className="flex flex-col shrink-0 h-full transition-all duration-200"
       style={{
         width: "220px",
         backgroundColor: "var(--sidebar-bg)",
