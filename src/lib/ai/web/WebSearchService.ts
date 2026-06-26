@@ -1,5 +1,6 @@
 import { getSearchProvider, isSearchConfigured, isUsingMockProvider, type SearchResult } from "@/lib/ai/search/SearchProvider";
 import { SearchDecisionService, type SearchDecisionResult } from "./SearchDecisionService";
+import { SourceRanker } from "./SourceRanker";
 
 export interface WebSearchConfig {
   maxResults: number;
@@ -9,12 +10,18 @@ const DEFAULT_CONFIG: WebSearchConfig = {
   maxResults: 5,
 };
 
+export type SourceReliability = "high" | "medium" | "low";
+
 export interface WebSearchResult {
   title: string;
   url: string;
   snippet: string;
   fetchedAt: string;
   isMock: boolean;
+  sourceReliability?: SourceReliability;
+  sourceDate?: string;
+  isStale?: boolean;
+  domainCredibility?: number;
 }
 
 export interface WebSearchOutcome {
@@ -145,15 +152,29 @@ export class WebSearchService {
     }
 
     const now = new Date().toISOString();
-    const results: WebSearchResult[] = searchResults.map((r) => ({
-      title: r.title,
-      url: r.url,
-      snippet: r.snippet,
+
+    const ranker = new SourceRanker();
+    const ranked = ranker.rank(
+      searchResults.map((r) => ({ title: r.title, url: r.url, snippet: r.snippet })),
+      redactedQuery
+    );
+    const qualityFiltered = ranker.filterLowQuality(ranked);
+
+    console.log("[WEB_SEARCH] ranked:", ranked.length, "| after quality filter:", qualityFiltered.length, "| total from tavily:", searchResults.length);
+
+    const results: WebSearchResult[] = qualityFiltered.map((r) => ({
+      title: r.source.title,
+      url: r.source.url,
+      snippet: r.source.snippet,
       fetchedAt: now,
       isMock,
+      sourceReliability: r.score.reliability,
+      sourceDate: r.score.extractedDate || undefined,
+      isStale: r.score.isStale,
+      domainCredibility: r.score.domainScore,
     }));
 
-    console.log("[WEB_SEARCH] success: returning", results.length, "results, webSearchUsed: true, originalDecision:", originalDecision);
+    console.log("[WEB_SEARCH] success: returning", results.length, "ranked results, webSearchUsed: true, originalDecision:", originalDecision);
     return {
       results,
       webSearchUsed: results.length > 0,

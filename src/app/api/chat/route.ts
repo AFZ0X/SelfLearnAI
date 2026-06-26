@@ -439,7 +439,7 @@ export async function POST(request: NextRequest) {
       const built = contextBuilder.buildContext(searchOutcome.results, fetchedPages, summaries);
       webContextStr = built.webContext;
       citations = built.citations;
-      console.log("[CHAT] webContextStr length:", webContextStr.length, "| citations count:", citations.length);
+      console.log("[CHAT] webContextStr length:", webContextStr.length, "| citations count:", citations.length, "| validation:", JSON.stringify(built.validation));
       if (!webContextStr) {
         console.log("[CHAT] webContextStr empty after buildContext — all sources filtered. Resetting webSearchUsed to false.");
         searchOutcome.webSearchUsed = false;
@@ -449,6 +449,9 @@ export async function POST(request: NextRequest) {
           summariesCount: summaries.length,
           sourcesUsed: citations.length,
           citationsGenerated: citations.length,
+          evidenceConfidence: built.validation.confidence,
+          evidenceWarnings: built.validation.warnings.length,
+          evidenceConflicts: built.validation.conflicts,
         });
         stepId = null;
       }

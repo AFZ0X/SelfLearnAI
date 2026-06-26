@@ -102,7 +102,48 @@ export class SearchDecisionService {
 
   generateSearchQuery(userMessage: string): string {
     const clean = this.redactSensitiveData(userMessage);
+
+    const now = new Date();
+    const todayStr = now.toISOString().split("T")[0];
+    const currentYear = now.getFullYear();
+
+    const lower = clean.toLowerCase();
+
+    const isWeatherQuery = /\b(weather|temperature|طقس|حرارة|درجة\s*الحرارة|الطقس)\b/i.test(clean) &&
+      /\b(today|now|current|اليوم|الآن|حاليا)\b/i.test(clean);
+
+    if (isWeatherQuery) {
+      const location = this.extractLocation(clean);
+      if (/[\u0600-\u06FF]/.test(clean)) {
+        return `درجة الحرارة الحالية في ${location || "المدينة"} ${todayStr} الطقس الآن`.slice(0, 200);
+      }
+      return `${location || ""} current temperature weather ${todayStr}`.trim().slice(0, 200);
+    }
+
+    const isSportsQuery = /\b(match|result|score|game|مباراة|نتيجة|فوز|خسارة|تعادل)\b/i.test(clean) &&
+      /\b(result|score|النتيجة)\b/i.test(clean);
+
+    if (isSportsQuery) {
+      if (/[\u0600-\u06FF]/.test(clean)) {
+        return `${clean} رسمي FIFA ${currentYear}`.slice(0, 200);
+      }
+      return `${clean} official FIFA result ${currentYear}`.slice(0, 200);
+    }
+
+    const isFreshnessQuery = FRESHNESS_KEYWORDS.some((kw) => lower.includes(kw));
+    if (isFreshnessQuery && !/[\u0600-\u06FF]/.test(clean)) {
+      return `${clean} ${todayStr}`.slice(0, 200);
+    }
+
     return clean.length > 200 ? clean.slice(0, 200) : clean;
+  }
+
+  private extractLocation(text: string): string {
+    const arabicLocation = text.match(/(?:في|فى)\s+([\u0600-\u06FF\s]{2,30}?)(?:\s*[؟?]|\s*$|\s+[فيو])/i);
+    if (arabicLocation) return arabicLocation[1].trim();
+    const englishLocation = text.match(/(?:in|at|for)\s+([a-zA-Z\s]{2,30}?)(?:\s*[?.!]|\s*$|\s+(?:today|now|weather))/i);
+    if (englishLocation) return englishLocation[1].trim();
+    return "";
   }
 
   private async classifyWithLLM(query: string): Promise<SearchDecisionResult> {
