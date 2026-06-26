@@ -138,6 +138,17 @@ interface HealthData {
   error?: string;
 }
 
+function Badge({ text, bg, color }: { text: string; bg: string; color: string }) {
+  return (
+    <span
+      className="text-xs font-medium px-2 py-0.5 rounded-full"
+      style={{ backgroundColor: bg, color }}
+    >
+      {text}
+    </span>
+  );
+}
+
 export function AdminDashboardClient() {
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const [health, setHealth] = useState<HealthData | null>(null);
@@ -276,7 +287,7 @@ export function AdminDashboardClient() {
       setUsers((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, ...data.user } : u))
       );
-      setActionMsg(`User banned.`);
+      setActionMsg("User banned.");
       setBanConfirm(null);
     } catch (e) {
       setActionMsg(e instanceof Error ? e.message : "Ban failed.");
@@ -294,7 +305,7 @@ export function AdminDashboardClient() {
       setUsers((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, ...data.user } : u))
       );
-      setActionMsg(`User unbanned.`);
+      setActionMsg("User unbanned.");
       setUnbanConfirm(null);
     } catch (e) {
       setActionMsg(e instanceof Error ? e.message : "Unban failed.");
@@ -347,7 +358,7 @@ export function AdminDashboardClient() {
 
   if (error && !health) {
     return (
-      <div className="rounded-lg px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm">
+      <div className="rounded-lg px-4 py-3 text-sm" style={{ backgroundColor: "var(--error-bg)", border: "1px solid var(--error-border)", color: "var(--error-text)" }}>
         {error}
       </div>
     );
@@ -356,29 +367,28 @@ export function AdminDashboardClient() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Admin Dashboard</h2>
-        <span className="text-xs px-2 py-1 rounded bg-amber-100 text-amber-800 font-medium">
-          Admin Only
-        </span>
+        <h2 className="text-xl font-semibold" style={{ color: "var(--surface-text)" }}>Admin Dashboard</h2>
+        <Badge text="Admin Only" bg="var(--warning-bg)" color="var(--warning-text)" />
       </div>
 
       {actionMsg && (
-        <div className="rounded-lg px-4 py-2 bg-blue-50 border border-blue-200 text-blue-700 text-sm">
+        <div className="rounded-lg px-4 py-2 text-sm" style={{ backgroundColor: "var(--info-bg)", border: "1px solid var(--info-border)", color: "var(--info-text)" }}>
           {actionMsg}
         </div>
       )}
 
-      <div className="border-b">
+      <div className="border-b" style={{ borderColor: "var(--card-border)" }}>
         <nav className="flex gap-4 overflow-x-auto">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`text-sm pb-2 border-b-2 transition-colors whitespace-nowrap ${
-                activeTab === tab.id
-                  ? "border-zinc-900 text-zinc-900 font-medium"
-                  : "border-transparent text-zinc-500 hover:text-zinc-700"
-              }`}
+              className="text-sm pb-2 border-b-2 transition-colors whitespace-nowrap"
+              style={{
+                borderColor: activeTab === tab.id ? "var(--accent)" : "transparent",
+                color: activeTab === tab.id ? "var(--surface-text)" : "var(--muted-text)",
+                fontWeight: activeTab === tab.id ? 500 : 400,
+              }}
             >
               {tab.label}
             </button>
@@ -386,9 +396,7 @@ export function AdminDashboardClient() {
         </nav>
       </div>
 
-      {activeTab === "overview" && (
-        <OverviewTab health={health} />
-      )}
+      {activeTab === "overview" && <OverviewTab health={health} />}
       {activeTab === "users" && (
         <UsersTab
           users={filteredUsers}
@@ -416,15 +424,9 @@ export function AdminDashboardClient() {
           setUserFilter={setUserFilter}
         />
       )}
-      {activeTab === "conversations" && (
-        <ConversationsTab conversations={conversations} />
-      )}
-      {activeTab === "warnings" && (
-        <WarningsTab warnings={warnings} />
-      )}
-      {activeTab === "audit-log" && (
-        <AuditLogTab logs={auditLogs} />
-      )}
+      {activeTab === "conversations" && <ConversationsTab conversations={conversations} />}
+      {activeTab === "warnings" && <WarningsTab warnings={warnings} />}
+      {activeTab === "audit-log" && <AuditLogTab logs={auditLogs} />}
       {activeTab === "memories" && (
         <MemoriesTab
           memories={memories}
@@ -441,25 +443,17 @@ export function AdminDashboardClient() {
           onDelete={(id) => handleDelete("learning-candidates", id)}
         />
       )}
-      {activeTab === "feedback" && (
-        <FeedbackTab feedback={feedback} />
-      )}
-      {activeTab === "sources" && (
-        <SourcesTab sources={sources} />
-      )}
-      {activeTab === "logs" && (
-        <LogsTab />
-      )}
-      {activeTab === "health" && (
-        <HealthTab health={health} />
-      )}
+      {activeTab === "feedback" && <FeedbackTab feedback={feedback} />}
+      {activeTab === "sources" && <SourcesTab sources={sources} />}
+      {activeTab === "logs" && <LogsTab />}
+      {activeTab === "health" && <HealthTab health={health} />}
     </div>
   );
 }
 
 function OverviewTab({ health }: { health: HealthData | null }) {
   if (!health?.counts) {
-    return <p className="text-zinc-500 text-sm">Health data not available.</p>;
+    return <p className="text-sm" style={{ color: "var(--muted-text)" }}>Health data not available.</p>;
   }
 
   const { counts } = health;
@@ -476,9 +470,9 @@ function OverviewTab({ health }: { health: HealthData | null }) {
     <div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {cards.map((card) => (
-          <div key={card.label} className="rounded-lg border p-4">
-            <p className="text-sm text-zinc-500">{card.label}</p>
-            <p className="text-2xl font-semibold mt-1">{card.value}</p>
+          <div key={card.label} className="rounded-lg border p-4" style={{ borderColor: "var(--card-border)", backgroundColor: "var(--card-bg)" }}>
+            <p className="text-sm" style={{ color: "var(--muted-text)" }}>{card.label}</p>
+            <p className="text-2xl font-semibold mt-1" style={{ color: "var(--surface-text)" }}>{card.value}</p>
           </div>
         ))}
       </div>
@@ -547,14 +541,14 @@ function UsersTab({
           placeholder="Search by email or name..."
           value={userSearch}
           onChange={(e) => setUserSearch(e.target.value)}
-          className="flex-1 max-w-xs rounded-lg px-3 py-1.5 text-sm border"
-          style={{ borderColor: "var(--border-subtle)" }}
+          className="flex-1 max-w-xs rounded-lg px-3 py-1.5 text-sm outline-none"
+          style={{ border: "1px solid var(--input-border)", backgroundColor: "var(--input-bg)", color: "var(--input-text)" }}
         />
         <select
           value={userFilter}
           onChange={(e) => setUserFilter(e.target.value as "ALL" | "ACTIVE" | "BANNED")}
-          className="rounded-lg px-3 py-1.5 text-sm border"
-          style={{ borderColor: "var(--border-subtle)" }}
+          className="rounded-lg px-3 py-1.5 text-sm outline-none"
+          style={{ border: "1px solid var(--input-border)", backgroundColor: "var(--input-bg)", color: "var(--input-text)" }}
         >
           <option value="ALL">All</option>
           <option value="ACTIVE">Active</option>
@@ -563,57 +557,48 @@ function UsersTab({
       </div>
 
       {users.length === 0 ? (
-        <p className="text-zinc-500 text-sm">No users found.</p>
+        <p className="text-sm" style={{ color: "var(--muted-text)" }}>No users found.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b text-left text-zinc-500">
-                <th className="pb-2 pr-4">Email</th>
-                <th className="pb-2 pr-4">Name</th>
-                <th className="pb-2 pr-4">Role</th>
-                <th className="pb-2 pr-4">Status</th>
-                <th className="pb-2 pr-4">Conversations</th>
-                <th className="pb-2 pr-4">Warnings</th>
-                <th className="pb-2 pr-4">Created</th>
-                <th className="pb-2">Actions</th>
+              <tr className="border-b text-left" style={{ borderColor: "var(--card-border)", color: "var(--muted-text)" }}>
+                <th className="pb-2 pr-4 font-medium">Email</th>
+                <th className="pb-2 pr-4 font-medium">Name</th>
+                <th className="pb-2 pr-4 font-medium">Role</th>
+                <th className="pb-2 pr-4 font-medium">Status</th>
+                <th className="pb-2 pr-4 font-medium">Conversations</th>
+                <th className="pb-2 pr-4 font-medium">Warnings</th>
+                <th className="pb-2 pr-4 font-medium">Created</th>
+                <th className="pb-2 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr key={u.id} className="border-b last:border-0">
-                  <td className="py-2 pr-4">{u.email}</td>
-                  <td className="py-2 pr-4">{u.name || "-"}</td>
+                <tr key={u.id} className="border-b last:border-0" style={{ borderColor: "var(--card-border)" }}>
+                  <td className="py-2 pr-4" style={{ color: "var(--surface-text)" }}>{u.email}</td>
+                  <td className="py-2 pr-4" style={{ color: "var(--surface-text)" }}>{u.name || "-"}</td>
                   <td className="py-2 pr-4">
-                    <span
-                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                        u.role === "ADMIN"
-                          ? "bg-amber-100 text-amber-800"
-                          : "bg-zinc-100 text-zinc-600"
-                      }`}
-                    >
-                      {u.role}
-                    </span>
+                    <Badge
+                      text={u.role}
+                      bg={u.role === "ADMIN" ? "var(--warning-bg)" : "var(--subtle-bg)"}
+                      color={u.role === "ADMIN" ? "var(--warning-text)" : "var(--muted-text)"}
+                    />
                   </td>
                   <td className="py-2 pr-4">
-                    <span
-                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                        u.status === "BANNED"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-green-100 text-green-800"
-                      }`}
-                    >
-                      {u.status}
-                    </span>
+                    <Badge
+                      text={u.status}
+                      bg={u.status === "BANNED" ? "var(--error-bg)" : "var(--success-bg)"}
+                      color={u.status === "BANNED" ? "var(--error-text)" : "var(--success-text)"}
+                    />
                   </td>
-                  <td className="py-2 pr-4 text-zinc-500">{u._count?.conversations ?? "-"}</td>
-                  <td className="py-2 pr-4 text-zinc-500">{u._count?.warningsReceived ?? 0}</td>
-                  <td className="py-2 pr-4 text-zinc-500 text-xs">
+                  <td className="py-2 pr-4" style={{ color: "var(--muted-text)" }}>{u._count?.conversations ?? "-"}</td>
+                  <td className="py-2 pr-4" style={{ color: "var(--muted-text)" }}>{u._count?.warningsReceived ?? 0}</td>
+                  <td className="py-2 pr-4 text-xs" style={{ color: "var(--muted-text)" }}>
                     {formatDateSafe(u.createdAt)}
                   </td>
                   <td className="py-2">
                     <div className="flex gap-1 flex-wrap">
-                      {/* Role change */}
                       {roleChangeId === u.id ? (
                         <div className="flex gap-1">
                           <button
@@ -625,7 +610,10 @@ function UsersTab({
                           </button>
                           <button
                             onClick={() => setRoleChangeId(null)}
-                            className="text-xs px-2 py-1 rounded text-zinc-500 hover:bg-zinc-100"
+                            className="text-xs px-2 py-1 rounded transition-colors"
+                            style={{ color: "var(--muted-text)" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--subtle-bg)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                           >
                             Cancel
                           </button>
@@ -633,25 +621,31 @@ function UsersTab({
                       ) : (
                         <button
                           onClick={() => setRoleChangeId(u.id)}
-                          className="text-xs px-2 py-1 rounded border hover:bg-zinc-50"
+                          className="text-xs px-2 py-1 rounded border transition-colors"
+                          style={{ borderColor: "var(--card-border)", color: "var(--surface-text)" }}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--subtle-bg)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                         >
                           Role
                         </button>
                       )}
 
-                      {/* Ban/Unban */}
                       {u.status === "BANNED" ? (
                         unbanConfirm === u.id ? (
                           <div className="flex gap-1">
                             <button
                               onClick={() => onUnban(u.id)}
-                              className="text-xs px-2 py-1 rounded bg-green-600 text-white"
+                              className="text-xs px-2 py-1 rounded transition-colors"
+                              style={{ backgroundColor: "var(--success-bg)", color: "var(--success-text)" }}
                             >
                               Confirm Unban
                             </button>
                             <button
                               onClick={() => setUnbanConfirm(null)}
-                              className="text-xs px-2 py-1 rounded text-zinc-500 hover:bg-zinc-100"
+                              className="text-xs px-2 py-1 rounded transition-colors"
+                              style={{ color: "var(--muted-text)" }}
+                              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--subtle-bg)"; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                             >
                               Cancel
                             </button>
@@ -659,7 +653,10 @@ function UsersTab({
                         ) : (
                           <button
                             onClick={() => setUnbanConfirm(u.id)}
-                            className="text-xs px-2 py-1 rounded border text-green-600 hover:bg-green-50"
+                            className="text-xs px-2 py-1 rounded border transition-colors"
+                            style={{ borderColor: "var(--card-border)", color: "var(--success-text)" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--success-bg)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                           >
                             Unban
                           </button>
@@ -672,19 +669,23 @@ function UsersTab({
                               placeholder="Ban reason..."
                               value={banReasons[u.id] || ""}
                               onChange={(e) => setBanReasons({ ...banReasons, [u.id]: e.target.value })}
-                              className="text-xs px-2 py-1 rounded border w-40"
-                              style={{ borderColor: "var(--border-subtle)" }}
+                              className="text-xs px-2 py-1 rounded outline-none w-40"
+                              style={{ border: "1px solid var(--input-border)", backgroundColor: "var(--input-bg)", color: "var(--input-text)" }}
                             />
                             <div className="flex gap-1">
                               <button
                                 onClick={() => onBan(u.id)}
-                                className="text-xs px-2 py-1 rounded bg-red-600 text-white"
+                                className="text-xs px-2 py-1 rounded transition-colors"
+                                style={{ backgroundColor: "var(--error-bg)", color: "var(--error-text)" }}
                               >
                                 Confirm Ban
                               </button>
                               <button
                                 onClick={() => setBanConfirm(null)}
-                                className="text-xs px-2 py-1 rounded text-zinc-500 hover:bg-zinc-100"
+                                className="text-xs px-2 py-1 rounded transition-colors"
+                                style={{ color: "var(--muted-text)" }}
+                                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--subtle-bg)"; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                               >
                                 Cancel
                               </button>
@@ -693,14 +694,16 @@ function UsersTab({
                         ) : (
                           <button
                             onClick={() => setBanConfirm(u.id)}
-                            className="text-xs px-2 py-1 rounded border text-red-600 hover:bg-red-50"
+                            className="text-xs px-2 py-1 rounded border transition-colors"
+                            style={{ borderColor: "var(--card-border)", color: "var(--error-text)" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--error-bg)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                           >
                             Ban
                           </button>
                         )
                       )}
 
-                      {/* Warn */}
                       {warnUserId === u.id ? (
                         <div className="flex flex-col gap-1">
                           <input
@@ -708,27 +711,31 @@ function UsersTab({
                             placeholder="Warning reason..."
                             value={warnReason}
                             onChange={(e) => setWarnReason(e.target.value)}
-                            className="text-xs px-2 py-1 rounded border w-40"
-                            style={{ borderColor: "var(--border-subtle)" }}
+                            className="text-xs px-2 py-1 rounded outline-none w-40"
+                            style={{ border: "1px solid var(--input-border)", backgroundColor: "var(--input-bg)", color: "var(--input-text)" }}
                           />
                           <textarea
                             placeholder="Note (optional)"
                             value={warnNote}
                             onChange={(e) => setWarnNote(e.target.value)}
-                            className="text-xs px-2 py-1 rounded border w-40 resize-none"
-                            style={{ borderColor: "var(--border-subtle)" }}
+                            className="text-xs px-2 py-1 rounded outline-none w-40 resize-none"
+                            style={{ border: "1px solid var(--input-border)", backgroundColor: "var(--input-bg)", color: "var(--input-text)" }}
                             rows={2}
                           />
                           <div className="flex gap-1">
                             <button
                               onClick={() => onWarn(u.id)}
-                              className="text-xs px-2 py-1 rounded bg-amber-600 text-white"
+                              className="text-xs px-2 py-1 rounded transition-colors"
+                              style={{ backgroundColor: "var(--warning-bg)", color: "var(--warning-text)" }}
                             >
                               Issue Warning
                             </button>
                             <button
                               onClick={() => { setWarnUserId(null); setWarnReason(""); setWarnNote(""); }}
-                              className="text-xs px-2 py-1 rounded text-zinc-500 hover:bg-zinc-100"
+                              className="text-xs px-2 py-1 rounded transition-colors"
+                              style={{ color: "var(--muted-text)" }}
+                              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--subtle-bg)"; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                             >
                               Cancel
                             </button>
@@ -737,7 +744,10 @@ function UsersTab({
                       ) : (
                         <button
                           onClick={() => { setWarnUserId(u.id); setWarnReason(""); setWarnNote(""); }}
-                          className="text-xs px-2 py-1 rounded border text-amber-600 hover:bg-amber-50"
+                          className="text-xs px-2 py-1 rounded border transition-colors"
+                          style={{ borderColor: "var(--card-border)", color: "var(--warning-text)" }}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--warning-bg)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                         >
                           Warn
                         </button>
@@ -756,34 +766,37 @@ function UsersTab({
 
 function ConversationsTab({ conversations }: { conversations: Conversation[] }) {
   if (conversations.length === 0) {
-    return <p className="text-zinc-500 text-sm">No conversations found.</p>;
+    return <p className="text-sm" style={{ color: "var(--muted-text)" }}>No conversations found.</p>;
   }
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b text-left text-zinc-500">
-            <th className="pb-2 pr-4">Title</th>
-            <th className="pb-2 pr-4">User ID</th>
-            <th className="pb-2 pr-4">Messages</th>
-            <th className="pb-2 pr-4">Created</th>
-            <th className="pb-2">Actions</th>
+          <tr className="border-b text-left" style={{ borderColor: "var(--card-border)", color: "var(--muted-text)" }}>
+            <th className="pb-2 pr-4 font-medium">Title</th>
+            <th className="pb-2 pr-4 font-medium">User ID</th>
+            <th className="pb-2 pr-4 font-medium">Messages</th>
+            <th className="pb-2 pr-4 font-medium">Created</th>
+            <th className="pb-2 font-medium">Actions</th>
           </tr>
         </thead>
         <tbody>
           {conversations.map((c) => (
-            <tr key={c.id} className="border-b last:border-0">
-              <td className="py-2 pr-4 max-w-[200px] truncate">{c.title}</td>
-              <td className="py-2 pr-4 text-zinc-500 font-mono text-xs">{c.userId.slice(0, 12)}...</td>
-              <td className="py-2 pr-4">{c._count.messages}</td>
-              <td className="py-2 pr-4 text-zinc-500 text-xs">
+            <tr key={c.id} className="border-b last:border-0" style={{ borderColor: "var(--card-border)" }}>
+              <td className="py-2 pr-4 max-w-[200px] truncate" style={{ color: "var(--surface-text)" }}>{c.title}</td>
+              <td className="py-2 pr-4 font-mono text-xs" style={{ color: "var(--muted-text)" }}>{c.userId.slice(0, 12)}...</td>
+              <td className="py-2 pr-4" style={{ color: "var(--surface-text)" }}>{c._count.messages}</td>
+              <td className="py-2 pr-4 text-xs" style={{ color: "var(--muted-text)" }}>
                 {formatDateSafe(c.createdAt)}
               </td>
               <td className="py-2">
                 <a
                   href={`/dashboard/admin/conversations/${c.id}`}
-                  className="text-xs px-2 py-1 rounded border hover:bg-zinc-50"
+                  className="text-xs px-2 py-1 rounded border transition-colors"
+                  style={{ borderColor: "var(--card-border)", color: "var(--surface-text)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--subtle-bg)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                 >
                   View
                 </a>
@@ -798,37 +811,35 @@ function ConversationsTab({ conversations }: { conversations: Conversation[] }) 
 
 function WarningsTab({ warnings }: { warnings: WarningItem[] }) {
   if (warnings.length === 0) {
-    return <p className="text-zinc-500 text-sm">No warnings issued.</p>;
+    return <p className="text-sm" style={{ color: "var(--muted-text)" }}>No warnings issued.</p>;
   }
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b text-left text-zinc-500">
-            <th className="pb-2 pr-4">User</th>
-            <th className="pb-2 pr-4">Admin</th>
-            <th className="pb-2 pr-4">Reason</th>
-            <th className="pb-2 pr-4">Note</th>
-            <th className="pb-2 pr-4">Status</th>
-            <th className="pb-2">Created</th>
+          <tr className="border-b text-left" style={{ borderColor: "var(--card-border)", color: "var(--muted-text)" }}>
+            <th className="pb-2 pr-4 font-medium">User</th>
+            <th className="pb-2 pr-4 font-medium">Admin</th>
+            <th className="pb-2 pr-4 font-medium">Reason</th>
+            <th className="pb-2 pr-4 font-medium">Note</th>
+            <th className="pb-2 pr-4 font-medium">Status</th>
+            <th className="pb-2 font-medium">Created</th>
           </tr>
         </thead>
         <tbody>
           {warnings.map((w) => (
-            <tr key={w.id} className="border-b last:border-0">
-              <td className="py-2 pr-4">{w.user?.email || w.admin?.email || "-"}</td>
-              <td className="py-2 pr-4 text-zinc-500">{w.admin?.email || "-"}</td>
-              <td className="py-2 pr-4 max-w-[200px] truncate">{w.reason}</td>
-              <td className="py-2 pr-4 max-w-[150px] truncate text-zinc-500">{w.note || "-"}</td>
+            <tr key={w.id} className="border-b last:border-0" style={{ borderColor: "var(--card-border)" }}>
+              <td className="py-2 pr-4" style={{ color: "var(--surface-text)" }}>{w.user?.email || w.admin?.email || "-"}</td>
+              <td className="py-2 pr-4" style={{ color: "var(--muted-text)" }}>{w.admin?.email || "-"}</td>
+              <td className="py-2 pr-4 max-w-[200px] truncate" style={{ color: "var(--surface-text)" }}>{w.reason}</td>
+              <td className="py-2 pr-4 max-w-[150px] truncate" style={{ color: "var(--muted-text)" }}>{w.note || "-"}</td>
               <td className="py-2 pr-4">
-                {w.acknowledgedAt ? (
-                  <span className="text-xs text-green-600">Acknowledged</span>
-                ) : (
-                  <span className="text-xs text-amber-600">Active</span>
-                )}
+                <span className="text-xs" style={{ color: w.acknowledgedAt ? "var(--success-text)" : "var(--warning-text)" }}>
+                  {w.acknowledgedAt ? "Acknowledged" : "Active"}
+                </span>
               </td>
-              <td className="py-2 text-zinc-500 text-xs">
+              <td className="py-2 text-xs" style={{ color: "var(--muted-text)" }}>
                 {formatDateSafe(w.createdAt)}
               </td>
             </tr>
@@ -841,37 +852,37 @@ function WarningsTab({ warnings }: { warnings: WarningItem[] }) {
 
 function AuditLogTab({ logs }: { logs: AuditLogItem[] }) {
   if (logs.length === 0) {
-    return <p className="text-zinc-500 text-sm">No audit log entries.</p>;
+    return <p className="text-sm" style={{ color: "var(--muted-text)" }}>No audit log entries.</p>;
   }
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b text-left text-zinc-500">
-            <th className="pb-2 pr-4">Admin</th>
-            <th className="pb-2 pr-4">Action</th>
-            <th className="pb-2 pr-4">Target</th>
-            <th className="pb-2 pr-4">Details</th>
-            <th className="pb-2">Created</th>
+          <tr className="border-b text-left" style={{ borderColor: "var(--card-border)", color: "var(--muted-text)" }}>
+            <th className="pb-2 pr-4 font-medium">Admin</th>
+            <th className="pb-2 pr-4 font-medium">Action</th>
+            <th className="pb-2 pr-4 font-medium">Target</th>
+            <th className="pb-2 pr-4 font-medium">Details</th>
+            <th className="pb-2 font-medium">Created</th>
           </tr>
         </thead>
         <tbody>
           {logs.map((l) => (
-            <tr key={l.id} className="border-b last:border-0">
-              <td className="py-2 pr-4">{l.admin?.email || "-"}</td>
+            <tr key={l.id} className="border-b last:border-0" style={{ borderColor: "var(--card-border)" }}>
+              <td className="py-2 pr-4" style={{ color: "var(--surface-text)" }}>{l.admin?.email || "-"}</td>
               <td className="py-2 pr-4">
-                <span className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-100">
+                <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ backgroundColor: "var(--subtle-bg)", color: "var(--muted-text)" }}>
                   {l.action}
                 </span>
               </td>
-              <td className="py-2 pr-4 text-zinc-500 text-xs">
+              <td className="py-2 pr-4 text-xs" style={{ color: "var(--muted-text)" }}>
                 {String(l.targetUser?.email ?? "") || String((l.metadata as Record<string, string>)?.targetUserId ?? "") || "-"}
               </td>
-              <td className="py-2 pr-4 max-w-[200px] truncate text-xs text-zinc-500">
+              <td className="py-2 pr-4 max-w-[200px] truncate text-xs" style={{ color: "var(--muted-text)" }}>
                 {JSON.stringify(l.metadata)}
               </td>
-              <td className="py-2 text-zinc-500 text-xs">
+              <td className="py-2 text-xs" style={{ color: "var(--muted-text)" }}>
                 {formatDateSafe(l.createdAt)}
               </td>
             </tr>
@@ -894,46 +905,50 @@ function MemoriesTab({
   onDelete: (id: string) => void;
 }) {
   if (memories.length === 0) {
-    return <p className="text-zinc-500 text-sm">No memories found.</p>;
+    return <p className="text-sm" style={{ color: "var(--muted-text)" }}>No memories found.</p>;
   }
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b text-left text-zinc-500">
-            <th className="pb-2 pr-4">Summary</th>
-            <th className="pb-2 pr-4">User ID</th>
-            <th className="pb-2 pr-4">Type</th>
-            <th className="pb-2 pr-4">Tags</th>
-            <th className="pb-2 pr-4">Confidence</th>
-            <th className="pb-2">Actions</th>
+          <tr className="border-b text-left" style={{ borderColor: "var(--card-border)", color: "var(--muted-text)" }}>
+            <th className="pb-2 pr-4 font-medium">Summary</th>
+            <th className="pb-2 pr-4 font-medium">User ID</th>
+            <th className="pb-2 pr-4 font-medium">Type</th>
+            <th className="pb-2 pr-4 font-medium">Tags</th>
+            <th className="pb-2 pr-4 font-medium">Confidence</th>
+            <th className="pb-2 font-medium">Actions</th>
           </tr>
         </thead>
         <tbody>
           {memories.map((m) => (
-            <tr key={m.id} className="border-b last:border-0">
-              <td className="py-2 pr-4 max-w-[200px] truncate">{m.summary || "(no summary)"}</td>
-              <td className="py-2 pr-4 text-zinc-500 font-mono text-xs">{m.userId.slice(0, 12)}...</td>
+            <tr key={m.id} className="border-b last:border-0" style={{ borderColor: "var(--card-border)" }}>
+              <td className="py-2 pr-4 max-w-[200px] truncate" style={{ color: "var(--surface-text)" }}>{m.summary || "(no summary)"}</td>
+              <td className="py-2 pr-4 font-mono text-xs" style={{ color: "var(--muted-text)" }}>{m.userId.slice(0, 12)}...</td>
               <td className="py-2 pr-4">
-                <span className="text-xs px-1.5 py-0.5 rounded bg-zinc-100">{m.type}</span>
+                <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: "var(--subtle-bg)", color: "var(--muted-text)" }}>{m.type}</span>
               </td>
-              <td className="py-2 pr-4 text-xs text-zinc-500">
+              <td className="py-2 pr-4 text-xs" style={{ color: "var(--muted-text)" }}>
                 {m.tags.length > 0 ? m.tags.join(", ") : "-"}
               </td>
-              <td className="py-2 pr-4">{m.confidence?.toFixed(2) ?? "-"}</td>
+              <td className="py-2 pr-4" style={{ color: "var(--surface-text)" }}>{m.confidence?.toFixed(2) ?? "-"}</td>
               <td className="py-2">
                 {deleteConfirm === m.id ? (
                   <div className="flex gap-1">
                     <button
                       onClick={() => onDelete(m.id)}
-                      className="text-xs px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700"
+                      className="text-xs px-2 py-1 rounded transition-colors"
+                      style={{ backgroundColor: "var(--error-bg)", color: "var(--error-text)" }}
                     >
                       Confirm
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(null)}
-                      className="text-xs px-2 py-1 rounded text-zinc-500 hover:bg-zinc-100"
+                      className="text-xs px-2 py-1 rounded transition-colors"
+                      style={{ color: "var(--muted-text)" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--subtle-bg)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                     >
                       Cancel
                     </button>
@@ -941,7 +956,10 @@ function MemoriesTab({
                 ) : (
                   <button
                     onClick={() => setDeleteConfirm(m.id)}
-                    className="text-xs px-2 py-1 rounded border text-red-600 hover:bg-red-50"
+                    className="text-xs px-2 py-1 rounded border transition-colors"
+                    style={{ borderColor: "var(--card-border)", color: "var(--error-text)" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--error-bg)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                   >
                     Delete
                   </button>
@@ -967,36 +985,36 @@ function LearningTab({
   onDelete: (id: string) => void;
 }) {
   if (candidates.length === 0) {
-    return <p className="text-zinc-500 text-sm">No learning candidates found.</p>;
+    return <p className="text-sm" style={{ color: "var(--muted-text)" }}>No learning candidates found.</p>;
   }
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b text-left text-zinc-500">
-            <th className="pb-2 pr-4">Summary</th>
-            <th className="pb-2 pr-4">User ID</th>
-            <th className="pb-2 pr-4">Sensitivity</th>
-            <th className="pb-2 pr-4">Status</th>
-            <th className="pb-2 pr-4">Confidence</th>
-            <th className="pb-2 pr-4">Created</th>
-            <th className="pb-2">Actions</th>
+          <tr className="border-b text-left" style={{ borderColor: "var(--card-border)", color: "var(--muted-text)" }}>
+            <th className="pb-2 pr-4 font-medium">Summary</th>
+            <th className="pb-2 pr-4 font-medium">User ID</th>
+            <th className="pb-2 pr-4 font-medium">Sensitivity</th>
+            <th className="pb-2 pr-4 font-medium">Status</th>
+            <th className="pb-2 pr-4 font-medium">Confidence</th>
+            <th className="pb-2 pr-4 font-medium">Created</th>
+            <th className="pb-2 font-medium">Actions</th>
           </tr>
         </thead>
         <tbody>
           {candidates.map((c) => (
-            <tr key={c.id} className="border-b last:border-0">
-              <td className="py-2 pr-4 max-w-[200px] truncate">{c.summary || "(no summary)"}</td>
-              <td className="py-2 pr-4 text-zinc-500 font-mono text-xs">{c.userId.slice(0, 12)}...</td>
+            <tr key={c.id} className="border-b last:border-0" style={{ borderColor: "var(--card-border)" }}>
+              <td className="py-2 pr-4 max-w-[200px] truncate" style={{ color: "var(--surface-text)" }}>{c.summary || "(no summary)"}</td>
+              <td className="py-2 pr-4 font-mono text-xs" style={{ color: "var(--muted-text)" }}>{c.userId.slice(0, 12)}...</td>
               <td className="py-2 pr-4">
                 <SensitivityBadge level={c.sensitivity} />
               </td>
               <td className="py-2 pr-4">
                 <StatusBadge status={c.status} />
               </td>
-              <td className="py-2 pr-4">{c.confidence?.toFixed(2) ?? "-"}</td>
-              <td className="py-2 pr-4 text-zinc-500 text-xs">
+              <td className="py-2 pr-4" style={{ color: "var(--surface-text)" }}>{c.confidence?.toFixed(2) ?? "-"}</td>
+              <td className="py-2 pr-4 text-xs" style={{ color: "var(--muted-text)" }}>
                 {formatDateSafe(c.createdAt)}
               </td>
               <td className="py-2">
@@ -1004,13 +1022,17 @@ function LearningTab({
                   <div className="flex gap-1">
                     <button
                       onClick={() => onDelete(c.id)}
-                      className="text-xs px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700"
+                      className="text-xs px-2 py-1 rounded transition-colors"
+                      style={{ backgroundColor: "var(--error-bg)", color: "var(--error-text)" }}
                     >
                       Confirm
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(null)}
-                      className="text-xs px-2 py-1 rounded text-zinc-500 hover:bg-zinc-100"
+                      className="text-xs px-2 py-1 rounded transition-colors"
+                      style={{ color: "var(--muted-text)" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--subtle-bg)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                     >
                       Cancel
                     </button>
@@ -1018,7 +1040,10 @@ function LearningTab({
                 ) : (
                   <button
                     onClick={() => setDeleteConfirm(c.id)}
-                    className="text-xs px-2 py-1 rounded border text-red-600 hover:bg-red-50"
+                    className="text-xs px-2 py-1 rounded border transition-colors"
+                    style={{ borderColor: "var(--card-border)", color: "var(--error-text)" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--error-bg)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                   >
                     Delete
                   </button>
@@ -1034,33 +1059,31 @@ function LearningTab({
 
 function FeedbackTab({ feedback }: { feedback: FeedbackItem[] }) {
   if (feedback.length === 0) {
-    return <p className="text-zinc-500 text-sm">No feedback records found.</p>;
+    return <p className="text-sm" style={{ color: "var(--muted-text)" }}>No feedback records found.</p>;
   }
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b text-left text-zinc-500">
-            <th className="pb-2 pr-4">Type</th>
-            <th className="pb-2 pr-4">Rating</th>
-            <th className="pb-2 pr-4">User ID</th>
-            <th className="pb-2 pr-4">Reason</th>
-            <th className="pb-2">Created</th>
+          <tr className="border-b text-left" style={{ borderColor: "var(--card-border)", color: "var(--muted-text)" }}>
+            <th className="pb-2 pr-4 font-medium">Type</th>
+            <th className="pb-2 pr-4 font-medium">Rating</th>
+            <th className="pb-2 pr-4 font-medium">User ID</th>
+            <th className="pb-2 pr-4 font-medium">Reason</th>
+            <th className="pb-2 font-medium">Created</th>
           </tr>
         </thead>
         <tbody>
           {feedback.map((f) => (
-            <tr key={f.id} className="border-b last:border-0">
-              <td className="py-2 pr-4">
-                <span className="text-xs font-medium">{f.type}</span>
-              </td>
-              <td className="py-2 pr-4">{f.rating}</td>
-              <td className="py-2 pr-4 text-zinc-500 font-mono text-xs">{f.userId.slice(0, 12)}...</td>
-              <td className="py-2 pr-4 max-w-[150px] truncate text-xs text-zinc-500">
+            <tr key={f.id} className="border-b last:border-0" style={{ borderColor: "var(--card-border)" }}>
+              <td className="py-2 pr-4" style={{ color: "var(--surface-text)" }}><span className="text-xs font-medium">{f.type}</span></td>
+              <td className="py-2 pr-4" style={{ color: "var(--surface-text)" }}>{f.rating}</td>
+              <td className="py-2 pr-4 font-mono text-xs" style={{ color: "var(--muted-text)" }}>{f.userId.slice(0, 12)}...</td>
+              <td className="py-2 pr-4 max-w-[150px] truncate text-xs" style={{ color: "var(--muted-text)" }}>
                 {f.reason || "-"}
               </td>
-              <td className="py-2 text-zinc-500 text-xs">
+              <td className="py-2 text-xs" style={{ color: "var(--muted-text)" }}>
                 {formatDateSafe(f.createdAt)}
               </td>
             </tr>
@@ -1073,31 +1096,31 @@ function FeedbackTab({ feedback }: { feedback: FeedbackItem[] }) {
 
 function SourcesTab({ sources }: { sources: WebSource[] }) {
   if (sources.length === 0) {
-    return <p className="text-zinc-500 text-sm">No web sources found.</p>;
+    return <p className="text-sm" style={{ color: "var(--muted-text)" }}>No web sources found.</p>;
   }
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b text-left text-zinc-500">
-            <th className="pb-2 pr-4">Title</th>
-            <th className="pb-2 pr-4">URL</th>
-            <th className="pb-2 pr-4">Provider</th>
-            <th className="pb-2 pr-4">User ID</th>
-            <th className="pb-2">Created</th>
+          <tr className="border-b text-left" style={{ borderColor: "var(--card-border)", color: "var(--muted-text)" }}>
+            <th className="pb-2 pr-4 font-medium">Title</th>
+            <th className="pb-2 pr-4 font-medium">URL</th>
+            <th className="pb-2 pr-4 font-medium">Provider</th>
+            <th className="pb-2 pr-4 font-medium">User ID</th>
+            <th className="pb-2 font-medium">Created</th>
           </tr>
         </thead>
         <tbody>
           {sources.map((s) => (
-            <tr key={s.id} className="border-b last:border-0">
-              <td className="py-2 pr-4 max-w-[200px] truncate">{s.title || "(no title)"}</td>
-              <td className="py-2 pr-4 max-w-[200px] truncate text-xs text-blue-600">
+            <tr key={s.id} className="border-b last:border-0" style={{ borderColor: "var(--card-border)" }}>
+              <td className="py-2 pr-4 max-w-[200px] truncate" style={{ color: "var(--surface-text)" }}>{s.title || "(no title)"}</td>
+              <td className="py-2 pr-4 max-w-[200px] truncate text-xs" style={{ color: "var(--info-text)" }}>
                 {s.url}
               </td>
-              <td className="py-2 pr-4 text-xs">{s.provider}</td>
-              <td className="py-2 pr-4 text-zinc-500 font-mono text-xs">{s.userId.slice(0, 12)}...</td>
-              <td className="py-2 text-zinc-500 text-xs">
+              <td className="py-2 pr-4 text-xs" style={{ color: "var(--surface-text)" }}>{s.provider}</td>
+              <td className="py-2 pr-4 font-mono text-xs" style={{ color: "var(--muted-text)" }}>{s.userId.slice(0, 12)}...</td>
+              <td className="py-2 text-xs" style={{ color: "var(--muted-text)" }}>
                 {formatDateSafe(s.createdAt)}
               </td>
             </tr>
@@ -1121,11 +1144,11 @@ function LogsTab() {
   }, []);
 
   if (loading) {
-    return <p className="text-zinc-500 text-sm">Loading logs...</p>;
+    return <p className="text-sm" style={{ color: "var(--muted-text)" }}>Loading logs...</p>;
   }
 
   if (logs.length === 0) {
-    return <p className="text-zinc-500 text-sm">No log entries found.</p>;
+    return <p className="text-sm" style={{ color: "var(--muted-text)" }}>No log entries found.</p>;
   }
 
   return (
@@ -1169,25 +1192,21 @@ function LogsTab() {
 
 function HealthTab({ health }: { health: HealthData | null }) {
   if (!health) {
-    return <p className="text-zinc-500 text-sm">Health data not available.</p>;
+    return <p className="text-sm" style={{ color: "var(--muted-text)" }}>Health data not available.</p>;
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <span
-          className={`w-2 h-2 rounded-full ${
-            health.status === "healthy" ? "bg-green-500" : "bg-red-500"
-          }`}
-        />
-        <span className="font-medium capitalize">{health.status}</span>
+        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: health.status === "healthy" ? "var(--success-text)" : "var(--error-text)" }} />
+        <span className="font-medium capitalize" style={{ color: "var(--surface-text)" }}>{health.status}</span>
         <span className="text-xs" style={{ color: "var(--muted-text)" }}>
           {new Date(health.timestamp).toLocaleString()}
         </span>
       </div>
 
       {health.error && (
-        <div className="rounded-lg px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm">
+        <div className="rounded-lg px-4 py-3 text-sm" style={{ backgroundColor: "var(--error-bg)", border: "1px solid var(--error-border)", color: "var(--error-text)" }}>
           {health.error}
         </div>
       )}
@@ -1195,18 +1214,18 @@ function HealthTab({ health }: { health: HealthData | null }) {
       {health.counts && (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {Object.entries(health.counts).map(([key, value]) => (
-            <div key={key} className="rounded-lg border p-3">
-              <p className="text-xs text-zinc-500 capitalize">
+            <div key={key} className="rounded-lg border p-3" style={{ borderColor: "var(--card-border)", backgroundColor: "var(--card-bg)" }}>
+              <p className="text-xs capitalize" style={{ color: "var(--muted-text)" }}>
                 {key.replace(/([A-Z])/g, " $1").trim()}
               </p>
-              <p className="text-xl font-semibold mt-1">{value}</p>
+              <p className="text-xl font-semibold mt-1" style={{ color: "var(--surface-text)" }}>{value}</p>
             </div>
           ))}
         </div>
       )}
 
-      <div className="rounded-lg border p-4 text-sm text-zinc-600 space-y-1">
-        <p className="font-medium">System Info</p>
+      <div className="rounded-lg border p-4 text-sm space-y-1" style={{ borderColor: "var(--card-border)", backgroundColor: "var(--card-bg)", color: "var(--surface-text-secondary)" }}>
+        <p className="font-medium" style={{ color: "var(--surface-text)" }}>System Info</p>
         <p>Database: PostgreSQL 18 with pgvector</p>
         <p>Framework: Next.js 16.2.9 (Turbopack)</p>
         <p>Auth: NextAuth v5 (JWT strategy)</p>
@@ -1216,31 +1235,29 @@ function HealthTab({ health }: { health: HealthData | null }) {
 }
 
 function SensitivityBadge({ level }: { level: string }) {
-  const colors: Record<string, string> = {
-    LOW: "bg-green-100 text-green-800",
-    MEDIUM: "bg-yellow-100 text-yellow-800",
-    HIGH: "bg-red-100 text-red-800",
-    SECRET: "bg-red-100 text-red-800",
+  const style: Record<string, { bg: string; text: string }> = {
+    LOW: { bg: "var(--success-bg)", text: "var(--success-text)" },
+    MEDIUM: { bg: "var(--warning-bg)", text: "var(--warning-text)" },
+    HIGH: { bg: "var(--error-bg)", text: "var(--error-text)" },
+    SECRET: { bg: "var(--error-bg)", text: "var(--error-text)" },
   };
+  const s = style[level] || { bg: "var(--subtle-bg)", text: "var(--muted-text)" };
   return (
-    <span
-      className={`text-xs px-1.5 py-0.5 rounded-full ${colors[level] || "bg-zinc-100"}`}
-    >
+    <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ backgroundColor: s.bg, color: s.text }}>
       {level}
     </span>
   );
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    PENDING: "bg-yellow-100 text-yellow-800",
-    APPROVED: "bg-green-100 text-green-800",
-    REJECTED: "bg-zinc-100 text-zinc-600",
+  const style: Record<string, { bg: string; text: string }> = {
+    PENDING: { bg: "var(--info-bg)", text: "var(--info-text)" },
+    APPROVED: { bg: "var(--success-bg)", text: "var(--success-text)" },
+    REJECTED: { bg: "var(--subtle-bg)", text: "var(--muted-text)" },
   };
+  const s = style[status] || { bg: "var(--subtle-bg)", text: "var(--muted-text)" };
   return (
-    <span
-      className={`text-xs px-1.5 py-0.5 rounded-full ${colors[status] || "bg-zinc-100"}`}
-    >
+    <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ backgroundColor: s.bg, color: s.text }}>
       {status}
     </span>
   );

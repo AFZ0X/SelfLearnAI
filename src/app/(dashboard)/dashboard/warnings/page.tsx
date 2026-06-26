@@ -62,69 +62,80 @@ export default function WarningsPage() {
   const acknowledged = warnings.filter((w) => w.acknowledgedAt);
 
   return (
-    <div className="flex-1 flex flex-col px-6 py-6 overflow-y-auto">
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold">My Warnings</h2>
-        <p className="text-sm mt-1" style={{ color: "var(--muted-text)" }}>
-          View and acknowledge warnings issued by administrators.
-        </p>
-      </div>
-
-      {error && (
-        <div className="rounded-lg px-4 py-3 text-sm mb-4" style={{ backgroundColor: "var(--error-bg)", border: "1px solid var(--error-border)", color: "var(--error-text)" }}>
-          {error}
-        </div>
-      )}
-
-      {loading && (
-        <p className="text-sm" style={{ color: "var(--muted-text)" }}>Loading warnings...</p>
-      )}
-
-      {!loading && warnings.length === 0 && (
-        <div className="rounded-lg border p-8 text-center">
-          <p className="text-lg" style={{ color: "var(--muted-text)" }}>No warnings</p>
-          <p className="text-sm mt-1" style={{ color: "var(--muted-text)" }}>
-            You have no warnings on your account.
+    <div className="flex-1 flex flex-col overflow-y-auto">
+      <div className="px-8 py-8">
+        <div className="mb-6">
+          <h1 className="text-xl font-semibold" style={{ color: "var(--surface-text)" }}>My Warnings</h1>
+          <p className="text-sm mt-1" style={{ color: "var(--surface-text-secondary)" }}>
+            View and acknowledge warnings issued by administrators.
           </p>
         </div>
-      )}
 
-      {unacknowledged.length > 0 && (
-        <div className="mb-8">
-          <h3 className="text-sm font-medium uppercase tracking-wider mb-3" style={{ color: "var(--muted-text)" }}>
-            Unacknowledged ({unacknowledged.length})
-          </h3>
+        {error && (
+          <div className="rounded-xl px-4 py-3 text-sm mb-4" style={{ backgroundColor: "var(--error-bg)", border: "1px solid var(--error-border)", color: "var(--error-text)" }}>
+            {error}
+          </div>
+        )}
+
+        {loading && (
           <div className="space-y-3">
-            {unacknowledged.map((w) => (
-              <WarningCard
-                key={w.id}
-                warning={w}
-                acknowledging={acknowledging === w.id}
-                onAcknowledge={handleAcknowledge}
-              />
+            {[1, 2].map((i) => (
+              <div key={i} className="h-24 rounded-xl animate-pulse" style={{ backgroundColor: "var(--subtle-bg)" }} />
             ))}
           </div>
-        </div>
-      )}
+        )}
 
-      {acknowledged.length > 0 && (
-        <div>
-          <h3 className="text-sm font-medium uppercase tracking-wider mb-3" style={{ color: "var(--muted-text)" }}>
-            Acknowledged ({acknowledged.length})
-          </h3>
-          <div className="space-y-3">
-            {acknowledged.map((w) => (
-              <WarningCard
-                key={w.id}
-                warning={w}
-                acknowledging={false}
-                onAcknowledge={() => {}}
-                acknowledged
-              />
-            ))}
+        {!loading && warnings.length === 0 && (
+          <div className="rounded-xl border p-10 text-center" style={{ borderColor: "var(--card-border)" }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: "var(--subtle-bg)" }}>
+              <svg className="w-5 h-5" style={{ color: "var(--muted-text)" }} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-base font-medium" style={{ color: "var(--surface-text)" }}>No warnings</p>
+            <p className="text-sm mt-1" style={{ color: "var(--muted-text)" }}>
+              You have no warnings on your account.
+            </p>
           </div>
-        </div>
-      )}
+        )}
+
+        {unacknowledged.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--muted-text)" }}>
+              Unacknowledged ({unacknowledged.length})
+            </h2>
+            <div className="space-y-3">
+              {unacknowledged.map((w) => (
+                <WarningCard
+                  key={w.id}
+                  warning={w}
+                  acknowledging={acknowledging === w.id}
+                  onAcknowledge={handleAcknowledge}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {acknowledged.length > 0 && (
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--muted-text)" }}>
+              Acknowledged ({acknowledged.length})
+            </h2>
+            <div className="space-y-3">
+              {acknowledged.map((w) => (
+                <WarningCard
+                  key={w.id}
+                  warning={w}
+                  acknowledging={false}
+                  onAcknowledge={() => {}}
+                  acknowledged
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -142,7 +153,7 @@ function WarningCard({
 }) {
   return (
     <div
-      className={`rounded-lg border p-4`}
+      className="rounded-xl border p-5 transition-all duration-200"
       style={{
         borderColor: acknowledged ? "var(--card-border)" : "var(--warning-border)",
         backgroundColor: acknowledged ? "var(--card-bg)" : "var(--warning-bg)",
@@ -151,31 +162,22 @@ function WarningCard({
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span
-              className={`text-xs font-semibold uppercase tracking-wider`}
-              style={{ color: acknowledged ? "var(--muted-text)" : "var(--warning-text)" }}
-            >
+            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: acknowledged ? "var(--muted-text)" : "var(--warning-text)" }}>
               {acknowledged ? "Acknowledged" : "Warning"}
             </span>
             <span className="text-xs" style={{ color: "var(--muted-text)" }}>
               {new Date(warning.createdAt).toLocaleDateString()}
             </span>
           </div>
-          <p
-            className={`text-sm font-medium`}
-            style={{ color: acknowledged ? "var(--surface-text)" : "var(--surface-text)" }}
-          >
+          <p className="text-sm font-medium" style={{ color: "var(--surface-text)" }}>
             {warning.reason}
           </p>
           {warning.note && (
-            <p
-              className={`text-sm mt-0.5`}
-              style={{ color: acknowledged ? "var(--muted-text)" : "var(--warning-text)" }}
-            >
+            <p className="text-sm mt-0.5" style={{ color: acknowledged ? "var(--muted-text)" : "var(--warning-text)" }}>
               {warning.note}
             </p>
           )}
-          <p className="text-xs mt-1" style={{ color: "var(--muted-text)" }}>
+          <p className="text-xs mt-1.5" style={{ color: "var(--muted-text)" }}>
             Issued by {warning.admin?.name || warning.admin?.email || "Admin"}
           </p>
           {warning.acknowledgedAt && (
@@ -188,10 +190,10 @@ function WarningCard({
           <button
             onClick={() => onAcknowledge(warning.id)}
             disabled={acknowledging}
-            className="shrink-0 text-xs px-2.5 py-1 rounded disabled:opacity-50 transition-colors"
+            className="shrink-0 text-xs px-3 py-1.5 rounded-lg font-medium disabled:opacity-50 transition-all duration-150"
             style={{ backgroundColor: "var(--btn-primary-bg)", color: "var(--btn-primary-text)" }}
           >
-            {acknowledging ? "..." : "Acknowledge"}
+            {acknowledging ? "Acknowledging..." : "Acknowledge"}
           </button>
         )}
       </div>

@@ -10,9 +10,16 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col px-6 py-6">
-      <h2 className="text-2xl font-semibold mb-6" style={{ color: "var(--surface-text)" }}>Settings</h2>
-      <SettingsPageClient />
+    <div className="flex-1 flex flex-col overflow-y-auto">
+      <div className="px-8 py-8">
+        <div className="mb-6">
+          <h1 className="text-xl font-semibold" style={{ color: "var(--surface-text)" }}>Settings</h1>
+          <p className="text-sm mt-1" style={{ color: "var(--surface-text-secondary)" }}>
+            Customize your application experience.
+          </p>
+        </div>
+        <SettingsPageClient />
+      </div>
     </div>
   );
 }

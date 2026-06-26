@@ -43,6 +43,7 @@ export function ChatPage({ provider, initialConversations }: ChatPageProps) {
       );
       if (empty) {
         setActiveId(empty.id);
+        setCreating(false);
         return;
       }
       const res = await fetch("/api/conversations", {
@@ -113,10 +114,7 @@ export function ChatPage({ provider, initialConversations }: ChatPageProps) {
   }
 
   return (
-    <div
-      className="flex flex-1"
-      style={{ backgroundColor: "var(--surface-bg)", color: "var(--surface-text)" }}
-    >
+    <div className="flex flex-1 min-h-0">
       <Sidebar
         conversations={conversations}
         activeId={activeId}
@@ -126,19 +124,7 @@ export function ChatPage({ provider, initialConversations }: ChatPageProps) {
         onDelete={handleDelete}
         creating={creating}
       />
-      <div className="flex flex-1 flex-col min-h-0">
-        <header
-          className="h-14 px-6 flex items-center shrink-0"
-          style={{
-            backgroundColor: "var(--header-bg)",
-            borderBottom: "1px solid var(--header-border)",
-          }}
-        >
-          <div>
-            <h1 className="font-semibold text-base" style={{ color: "var(--surface-text)" }}>Chat</h1>
-            <p className="text-xs leading-none mt-0.5" style={{ color: "var(--sidebar-text-muted)" }}>AI conversation workspace</p>
-          </div>
-        </header>
+      <div className="flex flex-1 flex-col min-w-0">
         <ChatWindow
           conversationId={activeId}
           provider={provider}

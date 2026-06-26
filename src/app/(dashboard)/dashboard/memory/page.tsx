@@ -19,14 +19,13 @@ export default async function MemoryPage() {
     summary: m.summary,
     source: m.source,
     tags: m.tags,
+    keywords: (m as any).keywords ?? [],
+    category: ((m as any).category ?? "knowledge") as "memory" | "knowledge",
     createdAt: m.createdAt.toISOString(),
   }));
 
   return (
-    <div className="flex flex-1 flex-col" style={{ backgroundColor: "var(--surface-bg)" }}>
-      <header className="px-6 py-3" style={{ borderBottom: "1px solid var(--header-border)" }}>
-        <h1 className="font-semibold text-lg" style={{ color: "var(--surface-text)" }}>Memory</h1>
-      </header>
+    <div className="flex-1 flex flex-col" style={{ backgroundColor: "var(--surface-bg)" }}>
       <MemoryPageClient initialMemories={serialized} />
     </div>
   );

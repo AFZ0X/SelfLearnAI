@@ -9,14 +9,18 @@ export default async function NeuralActivityPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col p-6 overflow-y-auto">
-      <h1 className="text-2xl font-semibold mb-1" style={{ color: "var(--surface-text)" }}>
-        Neural Activity
-      </h1>
-      <p className="text-sm mb-6" style={{ color: "var(--sidebar-text-muted)" }}>
-        Live pipeline visualization showing how each message is processed
-      </p>
-      <NeuralActivityClient />
+    <div className="flex-1 flex flex-col overflow-y-auto">
+      <div className="px-8 py-8">
+        <div className="mb-6">
+          <h1 className="text-xl font-semibold" style={{ color: "var(--surface-text)" }}>
+            Neural Activity
+          </h1>
+          <p className="text-sm mt-1" style={{ color: "var(--surface-text-secondary)" }}>
+            Live pipeline visualization showing how each message is processed.
+          </p>
+        </div>
+        <NeuralActivityClient />
+      </div>
     </div>
   );
 }

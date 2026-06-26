@@ -394,7 +394,7 @@ function StepRow({ step }: { step: TraceStep }) {
           {Object.entries(step.metadata).map(([key, val]) => {
             if (key === "error") {
               return (
-                <span key={key} className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: "rgba(239,68,68,0.15)", color: "#ef4444" }}>
+                <span key={key} className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: "var(--error-bg)", color: "var(--error-text)" }}>
                   {String(val)}
                 </span>
               );

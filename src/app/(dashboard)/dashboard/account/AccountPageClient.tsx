@@ -50,15 +50,12 @@ export function AccountPageClient() {
       const data = await res.json();
       if (!res.ok) {
         setMsg(data.error || "Failed to update.");
-        setPwError(true);
         return;
       }
       setUser(data.user);
       setMsg("Profile updated.");
-      setPwError(false);
     } catch {
       setMsg("Failed to connect to server.");
-      setPwError(true);
     } finally {
       setSaving(false);
     }
@@ -93,7 +90,7 @@ export function AccountPageClient() {
   }, [pwSaving, currentPw, newPw]);
 
   if (loading) {
-    return <p className="text-sm" style={{ color: "var(--muted-text)" }}>Loading...</p>;
+    return <div className="space-y-4">{[1, 2, 3].map((i) => <div key={i} className="h-32 rounded-xl animate-pulse" style={{ backgroundColor: "var(--subtle-bg)" }} />)}</div>;
   }
 
   if (!user) {
@@ -101,122 +98,135 @@ export function AccountPageClient() {
   }
 
   return (
-    <div className="flex-1 flex flex-col px-6 py-6 overflow-y-auto">
-      <h2 className="text-2xl font-semibold mb-6" style={{ color: "var(--surface-text)" }}>Account Settings</h2>
-
-      <div className="max-w-lg space-y-6">
-        <div className="rounded-lg border p-4 space-y-4" style={{ borderColor: "var(--card-border)", backgroundColor: "var(--card-bg)" }}>
-          <h3 className="font-medium text-sm" style={{ color: "var(--surface-text)" }}>Profile</h3>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs mb-1" style={{ color: "var(--muted-text)" }}>Email</label>
-              <input
-                type="email"
-                value={user.email}
-                disabled
-                className="w-full rounded-lg px-3 py-2 text-sm border opacity-60 cursor-not-allowed"
-                style={{ borderColor: "var(--input-border)", backgroundColor: "var(--input-bg)", color: "var(--input-text)" }}
-              />
+    <div className="max-w-lg space-y-6">
+      {/* Profile section */}
+      <div className="rounded-xl border p-6 space-y-5" style={{ borderColor: "var(--card-border)", backgroundColor: "var(--card-bg)" }}>
+        <h3 className="font-semibold text-sm" style={{ color: "var(--surface-text)" }}>Profile</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--surface-text-secondary)" }}>Email</label>
+            <input
+              type="email"
+              value={user.email}
+              disabled
+              className="w-full rounded-xl px-3.5 py-2.5 text-sm opacity-60 cursor-not-allowed"
+              style={{ backgroundColor: "var(--input-bg)", color: "var(--input-text)", border: "1px solid var(--input-border)" }}
+            />
+          </div>
+          <div>
+            <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--surface-text-secondary)" }}>Display Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={100}
+              className="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none transition-all duration-150"
+              style={{ backgroundColor: "var(--input-bg)", color: "var(--input-text)", border: "1px solid var(--input-border)" }}
+            />
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xs" style={{ color: "var(--muted-text)" }}>Role</span>
+              <span className="text-xs font-medium px-2.5 py-0.5 rounded-full" style={{
+                backgroundColor: user.role === "ADMIN" ? "var(--warning-bg)" : "var(--subtle-bg)",
+                color: user.role === "ADMIN" ? "var(--warning-text)" : "var(--muted-text)",
+              }}>
+                {user.role}
+              </span>
             </div>
-            <div>
-              <label className="block text-xs mb-1" style={{ color: "var(--muted-text)" }}>Display Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                maxLength={100}
-                className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none focus:ring-2"
-                style={{ borderColor: "var(--input-border)", backgroundColor: "var(--input-bg)", color: "var(--input-text)" }}
-              />
+            <div className="flex items-center gap-2">
+              <span className="text-xs" style={{ color: "var(--muted-text)" }}>Status</span>
+              <span className="text-xs font-medium px-2.5 py-0.5 rounded-full" style={{
+                backgroundColor: user.status === "BANNED" ? "var(--error-bg)" : "var(--success-bg)",
+                color: user.status === "BANNED" ? "var(--error-text)" : "var(--success-text)",
+              }}>
+                {user.status}
+              </span>
             </div>
-            <div className="flex items-center gap-4">
-              <div>
-                <span className="text-xs" style={{ color: "var(--muted-text)" }}>Role: </span>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${user.role === "ADMIN" ? "bg-amber-100 text-amber-800" : "bg-zinc-100 text-zinc-600"}`}>
-                  {user.role}
-                </span>
-              </div>
-              <div>
-                <span className="text-xs" style={{ color: "var(--muted-text)" }}>Status: </span>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${user.status === "BANNED" ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}>
-                  {user.status}
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleSaveName}
-                disabled={saving}
-                className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-                style={{ backgroundColor: "var(--btn-primary-bg)", color: "var(--btn-primary-text)" }}
-              >
-                {saving ? "Saving..." : "Save Changes"}
-              </button>
-              {msg && (
-                <span className={`text-xs ${pwError ? "text-red-500" : "text-green-600"}`}>{msg}</span>
-              )}
-            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleSaveName}
+              disabled={saving}
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 disabled:opacity-50"
+              style={{ backgroundColor: "var(--btn-primary-bg)", color: "var(--btn-primary-text)" }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--btn-primary-hover-bg)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "var(--btn-primary-bg)"; }}
+            >
+              {saving ? "Saving..." : "Save Changes"}
+            </button>
+            {msg && (
+              <span className="text-xs" style={{ color: "var(--success-text)" }}>{msg}</span>
+            )}
           </div>
         </div>
+      </div>
 
-        <div className="rounded-lg border p-4 space-y-4" style={{ borderColor: "var(--card-border)", backgroundColor: "var(--card-bg)" }}>
-          <h3 className="font-medium text-sm" style={{ color: "var(--surface-text)" }}>Change Password</h3>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs mb-1" style={{ color: "var(--muted-text)" }}>Current Password</label>
-              <input
-                type="password"
-                value={currentPw}
-                onChange={(e) => setCurrentPw(e.target.value)}
-                className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none focus:ring-2"
-                style={{ borderColor: "var(--input-border)", backgroundColor: "var(--input-bg)", color: "var(--input-text)" }}
-              />
-            </div>
-            <div>
-              <label className="block text-xs mb-1" style={{ color: "var(--muted-text)" }}>New Password</label>
-              <input
-                type="password"
-                value={newPw}
-                onChange={(e) => setNewPw(e.target.value)}
-                minLength={8}
-                className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none focus:ring-2"
-                style={{ borderColor: "var(--input-border)", backgroundColor: "var(--input-bg)", color: "var(--input-text)" }}
-              />
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleChangePassword}
-                disabled={pwSaving || !currentPw || !newPw}
-                className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-                style={{ backgroundColor: "var(--btn-primary-bg)", color: "var(--btn-primary-text)" }}
-              >
-                {pwSaving ? "Changing..." : "Change Password"}
-              </button>
-              {pwMsg && (
-                <span className={`text-xs ${pwError ? "text-red-500" : "text-green-600"}`}>{pwMsg}</span>
-              )}
-            </div>
+      {/* Password section */}
+      <div className="rounded-xl border p-6 space-y-5" style={{ borderColor: "var(--card-border)", backgroundColor: "var(--card-bg)" }}>
+        <h3 className="font-semibold text-sm" style={{ color: "var(--surface-text)" }}>Change Password</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--surface-text-secondary)" }}>Current Password</label>
+            <input
+              type="password"
+              value={currentPw}
+              onChange={(e) => setCurrentPw(e.target.value)}
+              className="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none transition-all duration-150"
+              style={{ backgroundColor: "var(--input-bg)", color: "var(--input-text)", border: "1px solid var(--input-border)" }}
+            />
+          </div>
+          <div>
+            <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--surface-text-secondary)" }}>New Password</label>
+            <input
+              type="password"
+              value={newPw}
+              onChange={(e) => setNewPw(e.target.value)}
+              minLength={8}
+              className="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none transition-all duration-150"
+              style={{ backgroundColor: "var(--input-bg)", color: "var(--input-text)", border: "1px solid var(--input-border)" }}
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleChangePassword}
+              disabled={pwSaving || !currentPw || !newPw}
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 disabled:opacity-50"
+              style={{ backgroundColor: "var(--btn-primary-bg)", color: "var(--btn-primary-text)" }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--btn-primary-hover-bg)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "var(--btn-primary-bg)"; }}
+            >
+              {pwSaving ? "Changing..." : "Change Password"}
+            </button>
+            {pwMsg && (
+              <span className={`text-xs ${pwError ? "text-red-500" : "text-green-600"}`}>{pwMsg}</span>
+            )}
           </div>
         </div>
+      </div>
 
-        <div className="rounded-lg border p-4 space-y-4" style={{ borderColor: "var(--card-border)", backgroundColor: "var(--card-bg)" }}>
-          <h3 className="font-medium text-sm" style={{ color: "var(--surface-text)" }}>Actions</h3>
-          <div className="flex gap-3">
-            <button
-              onClick={() => window.location.href = "/dashboard/account/export"}
-              className="px-4 py-2 rounded-lg text-sm font-medium border"
-              style={{ borderColor: "var(--input-border)", color: "var(--surface-text)" }}
-            >
-              Export My Data
-            </button>
-            <button
-              onClick={() => signOut({ callbackUrl: "/login" })}
-              className="px-4 py-2 rounded-lg text-sm font-medium"
-              style={{ backgroundColor: "var(--error-bg)", color: "var(--error-text)" }}
-            >
-              Logout
-            </button>
-          </div>
+      {/* Actions section */}
+      <div className="rounded-xl border p-6 space-y-4" style={{ borderColor: "var(--card-border)", backgroundColor: "var(--card-bg)" }}>
+        <h3 className="font-semibold text-sm" style={{ color: "var(--surface-text)" }}>Actions</h3>
+        <div className="flex flex-wrap gap-3">
+          <a
+            href="/dashboard/account/export"
+            className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium border transition-all duration-150"
+            style={{ borderColor: "var(--input-border)", color: "var(--surface-text)" }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--subtle-bg)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+          >
+            Export My Data
+          </a>
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150"
+            style={{ backgroundColor: "var(--error-bg)", color: "var(--error-text)" }}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.8"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+          >
+            Logout
+          </button>
         </div>
       </div>
     </div>
