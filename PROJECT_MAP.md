@@ -970,6 +970,23 @@ Before sending to search provider:
 - Long alphanumeric strings (32+ chars) redacted
 - Redacted query used for search, not original query
 
+### Provider Safety Fix (Phase 15.1)
+
+After the initial implementation, the following safety rules were added to prevent mock/development search results from appearing in production:
+
+| Rule | Implementation |
+|------|---------------|
+| Mock blocked in production | `getSearchProvider()` throws error if `NODE_ENV=production` and `SEARCH_PROVIDER=mock` |
+| Mock never silent fallback | `getSearchProvider()` throws error if `SEARCH_PROVIDER` is missing or unknown — no default |
+| Mock labeled in UI | Dashboard shows "Dev Only" badge for mock, "Setup Required" for missing/unknown providers |
+| Mock results suppressed | Chat route sets `webSearchUsed=false` and clears citations when using mock provider |
+| Mock injected into system prompt | Assistant told to explain that no real search provider is configured |
+| Missing required search handled | When `REQUIRED_SEARCH` decision but no provider, system prompt tells assistant to explain |
+| `isSearchConfigured()` production-aware | Returns `false` for mock in production — system treats it as unconfigured |
+| `/api/web-search/status` enriched | Returns `usingMock`, `productionSafe`, `missingVariables` fields |
+| `MockSearchProvider` clarified | Results prefixed with `[MOCK]` / `[وهمي]`, URLs use `example.com/mock-*` |
+| `.env.example` warns | Explicitly documents that mock is development-only and blocked in production |
+
 ### Verification Results
 ```
 npx prisma validate:  ✅ Schema valid

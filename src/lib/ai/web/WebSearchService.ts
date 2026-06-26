@@ -1,4 +1,4 @@
-import { getSearchProvider, isSearchConfigured, type SearchResult } from "@/lib/ai/search/SearchProvider";
+import { getSearchProvider, isSearchConfigured, isUsingMockProvider, type SearchResult } from "@/lib/ai/search/SearchProvider";
 import { SearchDecisionService, type SearchDecisionResult } from "./SearchDecisionService";
 
 export interface WebSearchConfig {
@@ -14,12 +14,14 @@ export interface WebSearchResult {
   url: string;
   snippet: string;
   fetchedAt: string;
+  isMock: boolean;
 }
 
 export interface WebSearchOutcome {
   results: WebSearchResult[];
   webSearchUsed: boolean;
   decisionResult?: SearchDecisionResult;
+  usingMock: boolean;
 }
 
 export class WebSearchService {
@@ -33,13 +35,13 @@ export class WebSearchService {
 
   async searchWithDecision(query: string, memoryConfidence?: number): Promise<WebSearchOutcome> {
     if (!query?.trim()) {
-      return { results: [], webSearchUsed: false };
+      return { results: [], webSearchUsed: false, usingMock: false };
     }
 
     const decisionResult = await this.decisionService.decide(query, memoryConfidence);
 
     if (!this.decisionService.shouldSearch(decisionResult.decision)) {
-      return { results: [], webSearchUsed: false, decisionResult };
+      return { results: [], webSearchUsed: false, decisionResult, usingMock: false };
     }
 
     if (!isSearchConfigured()) {
@@ -49,39 +51,46 @@ export class WebSearchService {
         decisionResult: {
           ...decisionResult,
           decision: "NO_SEARCH",
-          reason: "Search provider not configured. Set SEARCH_PROVIDER and corresponding API key.",
+          reason: "Search provider not configured. Set SEARCH_PROVIDER to \"tavily\" or \"brave\" with a valid API key.",
         },
+        usingMock: false,
       };
     }
+
+    const isMock = isUsingMockProvider();
 
     const redactedQuery = this.decisionService.generateSearchQuery(query);
     let provider;
     try {
       provider = getSearchProvider();
-    } catch {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Search provider initialization failed.";
       return {
         results: [],
         webSearchUsed: false,
         decisionResult: {
           ...decisionResult,
           decision: "NO_SEARCH",
-          reason: "Search provider initialization failed. Check SEARCH_PROVIDER env var.",
+          reason: msg,
         },
+        usingMock: isMock,
       };
     }
 
     let searchResults: SearchResult[];
     try {
       searchResults = await provider.search(redactedQuery, this.config.maxResults);
-    } catch {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Search provider API call failed.";
       return {
         results: [],
         webSearchUsed: false,
         decisionResult: {
           ...decisionResult,
           decision: "NO_SEARCH",
-          reason: "Search provider API call failed. Check API key and network connectivity.",
+          reason: msg,
         },
+        usingMock: isMock,
       };
     }
 
@@ -94,6 +103,7 @@ export class WebSearchService {
           decision: "NO_SEARCH",
           reason: "Search returned no results",
         },
+        usingMock: isMock,
       };
     }
 
@@ -103,8 +113,14 @@ export class WebSearchService {
       url: r.url,
       snippet: r.snippet,
       fetchedAt: now,
+      isMock,
     }));
 
-    return { results, webSearchUsed: results.length > 0, decisionResult };
+    return {
+      results,
+      webSearchUsed: results.length > 0,
+      decisionResult,
+      usingMock: isMock,
+    };
   }
 }

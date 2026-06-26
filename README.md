@@ -120,6 +120,26 @@ npm run build
 npm start
 ```
 
+### Vercel Deployment
+
+1. Connect your GitHub repository to Vercel.
+2. Go to **Project Settings → Environment Variables** and add:
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | Production PostgreSQL connection string |
+| `AUTH_SECRET` | Generate with `npx auth secret` |
+| `AUTH_URL` | Your Vercel deployment URL |
+| `AI_PROVIDER` | `openai` or `deepseek` |
+| `OPENAI_API_KEY` | Your OpenAI API key |
+| `SEARCH_PROVIDER` | `tavily` (recommended) or `brave` |
+| `TAVILY_API_KEY` | Your Tavily API key |
+| `NODE_ENV` | `production` (set automatically by Vercel) |
+
+3. **Important**: In production, `SEARCH_PROVIDER=mock` is blocked — you must use `tavily` or `brave` with a valid API key.
+4. Deploy your project.
+5. Verify web search works by asking a current-information question.
+
 ### Environment Variables
 
 | Variable | Description | Required | Default |
@@ -135,12 +155,14 @@ npm start
 | `DEEPSEEK_BASE_URL` | DeepSeek API base URL | No | `https://api.deepseek.com` |
 | `EMBEDDING_PROVIDER` | Embedding provider (`mock` or `openai`) | No | `mock` |
 | `OPENAI_EMBEDDING_MODEL` | OpenAI embedding model | No | `text-embedding-3-small` |
-| `SEARCH_PROVIDER` | Search provider (`mock`, `tavily`, or `brave`) | No | `mock` |
+| `SEARCH_PROVIDER` | Search provider (`tavily`, `brave`, or `mock` for dev only) | **Yes in production** | `mock` |
 | `TAVILY_API_KEY` | Tavily API key (required if SEARCH_PROVIDER=tavily) | Conditional | — |
 | `BRAVE_API_KEY` | Brave Search API key (required if SEARCH_PROVIDER=brave) | Conditional | — |
 | `WEB_SEARCH_ENABLED` | Enable web search globally | No | `true` |
 | `WEB_SEARCH_MAX_RESULTS` | Max search results per query | No | `5` |
 | `WEB_SEARCH_TIMEOUT_MS` | Search API timeout in milliseconds | No | `8000` |
+
+**Note**: `SEARCH_PROVIDER=mock` is only valid for local development. In production (`NODE_ENV=production`), mock is blocked — you must configure a real provider (tavily or brave) with a valid API key.
 | `NEXT_PUBLIC_APP_NAME` | Application display name | No | `SelfLearn AI` |
 | `NEXT_PUBLIC_APP_URL` | Public application URL | No | `http://localhost:3000` |
 
@@ -234,7 +256,8 @@ npx prisma validate
 
 - Rate limiter is in-memory (not shared across processes)
 - No CSP header (omitted to avoid breaking Next.js runtime)
-- Mock providers return fake data (use OpenAI/Brave for real behavior)
+- Mock providers return fake data (use real providers for production)
+- Mock web search is blocked in production — must configure Tavily or Brave
 - pgvector extension must be enabled on PostgreSQL
 - Embedding failure is non-fatal (degrades gracefully)
 - Web search uses LLM-based decision engine (falls back to keyword matching if AI unavailable)

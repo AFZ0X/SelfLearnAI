@@ -26,11 +26,26 @@ export async function GET() {
   } catch {
   }
 
+  const searchConfigured = isSearchConfigured();
+  const missingVariables: string[] = [];
+  if (!process.env.SEARCH_PROVIDER) {
+    missingVariables.push("SEARCH_PROVIDER");
+  }
+  if (process.env.SEARCH_PROVIDER === "tavily" && !process.env.TAVILY_API_KEY) {
+    missingVariables.push("TAVILY_API_KEY");
+  }
+  if (process.env.SEARCH_PROVIDER === "brave" && !process.env.BRAVE_API_KEY) {
+    missingVariables.push("BRAVE_API_KEY");
+  }
+
   return NextResponse.json({
-    enabled: isSearchConfigured(),
+    enabled: searchConfigured && webSearchEnabled,
     provider: providerStatus.name,
-    configured: providerStatus.configured,
+    configured: searchConfigured,
     configError: providerStatus.error || null,
     webSearchEnabled,
+    usingMock: providerStatus.usingMock,
+    productionSafe: providerStatus.productionSafe,
+    missingVariables,
   });
 }

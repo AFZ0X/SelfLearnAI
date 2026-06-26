@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth/auth";
-import { isSearchConfigured } from "@/lib/ai/search/SearchProvider";
+import { getProviderStatus } from "@/lib/ai/search/SearchProvider";
 
 const features = [
   {
@@ -104,11 +104,17 @@ export default async function DashboardPage() {
 
   const user = session.user;
 
-  const searchConfigured = isSearchConfigured();
+  const providerStatus = getProviderStatus();
 
-  const webSearchBadge = searchConfigured
+  const webSearchBadge = providerStatus.configured && !providerStatus.usingMock
     ? { text: "Active", color: "var(--success-text)", bg: "var(--success-bg)" }
+    : providerStatus.usingMock
+    ? { text: "Dev Only", color: "var(--warning-text)", bg: "var(--warning-bg)" }
     : { text: "Setup Required", color: "var(--warning-text)", bg: "var(--warning-bg)" };
+
+  const subtitleReady = providerStatus.configured && !providerStatus.usingMock
+    ? "Chat, Memory, Learning, Feedback, and Web Search are ready to use."
+    : "Chat, Memory, Learning, and Feedback are ready to use.";
 
   return (
     <div className="flex-1 flex flex-col overflow-y-auto">
@@ -118,7 +124,7 @@ export default async function DashboardPage() {
             Welcome, {user.name || user.email}
           </h1>
           <p className="text-sm mt-1.5" style={{ color: "var(--surface-text-secondary)" }}>
-            Chat, Memory, Learning, Feedback, and Web Search are ready to use.
+            {subtitleReady}
           </p>
         </div>
 

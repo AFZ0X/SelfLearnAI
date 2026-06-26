@@ -361,6 +361,8 @@ export async function POST(request: NextRequest) {
     let webContextStr = "";
     let citations: Array<{ title: string; url: string; snippet: string }> = [];
 
+    const isMockProvider = searchOutcome.usingMock === true;
+
     if (searchOutcome.webSearchUsed && searchOutcome.results.length > 0) {
       if (traceId) {
         stepId = (await traceService.startStep(traceId, "Web_Source_Fetch"))?.id ?? null;
@@ -444,10 +446,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (isMockProvider && searchOutcome.webSearchUsed) {
+      systemPrompt += `\n\n[SYSTEM NOTE: The web search provider is set to "mock" (development mode). The search results below are fake/mock data, not real web content. Do NOT present them as real facts. Tell the user that web search is not available because no real search provider is configured.]`;
+      webContextStr = "";
+      citations = [];
+    }
+
+    const missingProviderNote =
+      searchOutcome.decisionResult?.decision === "REQUIRED_SEARCH" && !searchOutcome.webSearchUsed
+        ? "\n\n[SYSTEM NOTE: Web search is required to answer this question accurately, but no real search provider is configured. Explain to the user that you cannot access current information and suggest they set up a search provider (SEARCH_PROVIDER=tavily with TAVILY_API_KEY).]"
+        : "";
+
+    systemPrompt += missingProviderNote;
+
     if (stepId) {
       await traceService.completeStep(stepId, {
         memoryContextChars: systemPrompt.length,
         webContextChars: webContextStr.length,
+        usingMock: isMockProvider,
+        citationsSuppressed: isMockProvider && searchOutcome.webSearchUsed,
       });
       stepId = null;
     }
@@ -570,13 +587,17 @@ export async function POST(request: NextRequest) {
       await traceService.completeTrace(traceId);
     }
 
+    const showWebSearchUI = searchOutcome.webSearchUsed && !isMockProvider;
+    const showCitations = citations.length > 0 && !isMockProvider;
+
     return NextResponse.json({
       role: "assistant",
       content: result.content,
       memoryUsed: retrievalResult.memoryUsed,
       ...(retrievalResult.memoryUsed ? { memoriesUsed } : {}),
-      webSearchUsed: searchOutcome.webSearchUsed,
-      ...(citations.length > 0 ? { citations } : {}),
+      webSearchUsed: showWebSearchUI,
+      ...(showCitations ? { citations } : {}),
+      usingMockProvider: isMockProvider || undefined,
       ...(searchOutcome.decisionResult ? {
         webSearchDecision: searchOutcome.decisionResult.decision,
         webSearchReason: searchOutcome.decisionResult.reason,
