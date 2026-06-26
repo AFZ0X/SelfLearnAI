@@ -348,6 +348,7 @@ export async function POST(request: NextRequest) {
         sourcesFound: searchOutcome.results.length,
         searchDurationMs,
         webSearchEnabled,
+        forcedSearch: searchOutcome.decisionResult?.decision === "FORCED_SEARCH" || undefined,
       };
       if (searchOutcome.decisionResult?.detectedTriggers && searchOutcome.decisionResult.detectedTriggers.length > 0) {
         decisionMeta.detectedTriggers = searchOutcome.decisionResult.detectedTriggers;
@@ -368,16 +369,20 @@ export async function POST(request: NextRequest) {
     const isMockProvider = searchOutcome.usingMock === true;
 
     const originalDecision = searchOutcome.originalDecision || searchOutcome.decisionResult?.decision;
-    const searchRequired = originalDecision === "REQUIRED_SEARCH" || originalDecision === "UNCERTAIN_SEARCH";
+    const forcedSearch = originalDecision === "FORCED_SEARCH";
+    const searchRequired = forcedSearch || originalDecision === "REQUIRED_SEARCH" || originalDecision === "UNCERTAIN_SEARCH";
     const searchFailed = searchOutcome.searchFailed === true;
 
     if (searchRequired && (searchFailed || !searchOutcome.webSearchUsed)) {
       if (traceId) {
         await traceService.failTrace(traceId);
       }
+      const forcedMsg = forcedSearch
+        ? "You asked me to search the web, but no real search provider is configured. To enable web search, set SEARCH_PROVIDER=tavily with a valid TAVILY_API_KEY in your environment variables."
+        : "Web search is required for this question, but no real search provider is configured. To enable real-time information retrieval, set SEARCH_PROVIDER=tavily with a valid TAVILY_API_KEY in your environment variables.";
       return NextResponse.json({
         role: "assistant",
-        content: "Web search is required for this question, but no real search provider is configured. To enable real-time information retrieval, set SEARCH_PROVIDER=tavily with a valid TAVILY_API_KEY in your environment variables.",
+        content: forcedMsg,
         webSearchUsed: false,
         webSearchDecision: originalDecision,
         webSearchReason: searchOutcome.decisionResult?.reason || "Search required but no real provider configured",
@@ -456,6 +461,7 @@ export async function POST(request: NextRequest) {
       memoryContext: retrievalResult.memories,
       webContext: webContextStr || undefined,
       webSearchUsed: searchOutcome.webSearchUsed,
+      forcedSearch: forcedSearch || undefined,
     });
 
     if (saveActionResult.handled) {
@@ -473,6 +479,7 @@ export async function POST(request: NextRequest) {
         memoryContextChars: systemPrompt.length,
         webContextChars: webContextStr.length,
         webSearchUsed: searchOutcome.webSearchUsed,
+        forcedSearch: forcedSearch || undefined,
       });
       stepId = null;
     }

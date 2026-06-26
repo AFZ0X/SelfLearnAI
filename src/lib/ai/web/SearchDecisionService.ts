@@ -5,7 +5,8 @@ export type SearchDecision =
   | "NO_SEARCH"
   | "OPTIONAL_SEARCH"
   | "REQUIRED_SEARCH"
-  | "UNCERTAIN_SEARCH";
+  | "UNCERTAIN_SEARCH"
+  | "FORCED_SEARCH";
 
 export interface SearchDecisionResult {
   decision: SearchDecision;
@@ -86,7 +87,7 @@ export class SearchDecisionService {
   }
 
   shouldSearch(decision: SearchDecision): boolean {
-    return decision === "REQUIRED_SEARCH" || decision === "OPTIONAL_SEARCH" || decision === "UNCERTAIN_SEARCH";
+    return decision === "REQUIRED_SEARCH" || decision === "OPTIONAL_SEARCH" || decision === "UNCERTAIN_SEARCH" || decision === "FORCED_SEARCH";
   }
 
   redactSensitiveData(text: string): string {
@@ -120,7 +121,7 @@ export class SearchDecisionService {
     if (isExplicit) {
       detectedTriggers.push("explicit_search_request");
       return {
-        decision: "REQUIRED_SEARCH",
+        decision: "FORCED_SEARCH",
         reason: "User explicitly requested web search",
         confidenceScore: 0.95,
         detectedTriggers,
@@ -236,6 +237,7 @@ export class SearchDecisionService {
         content: `You are a search decision classifier. Determine if the user's message requires a web search.
 
 Respond with exactly one of:
+- FORCED_SEARCH: if the user explicitly asks you to search the web, look something up, or get information from the internet (e.g., "search", "google it", "look up", "find online", "ابحث").
 - REQUIRED_SEARCH: if the query asks for current, recent, live, changing, version-specific, price, news, weather, sports, or source-sensitive information.
 - OPTIONAL_SEARCH: if a web search could improve the answer but is not strictly required.
 - NO_SEARCH: if the query is about stable general knowledge, creative writing, translation, summarization of provided text, coding help that does not need current docs, or basic greetings.
@@ -261,14 +263,17 @@ Output format (JSON only):
 
     try {
       const parsed = JSON.parse(content);
-      if (parsed.decision && ["REQUIRED_SEARCH", "OPTIONAL_SEARCH", "NO_SEARCH", "UNCERTAIN_SEARCH"].includes(parsed.decision)) {
+      if (parsed.decision && ["FORCED_SEARCH", "REQUIRED_SEARCH", "OPTIONAL_SEARCH", "NO_SEARCH", "UNCERTAIN_SEARCH"].includes(parsed.decision)) {
         decision = parsed.decision;
       }
       if (parsed.reason) {
         reason = parsed.reason;
       }
     } catch {
-      if (content.includes("REQUIRED_SEARCH")) {
+      if (content.includes("FORCED_SEARCH")) {
+        decision = "FORCED_SEARCH";
+        reason = "AI classifier: forced search";
+      } else if (content.includes("REQUIRED_SEARCH")) {
         decision = "REQUIRED_SEARCH";
         reason = "AI classifier: required search";
       } else if (content.includes("OPTIONAL_SEARCH")) {
@@ -283,14 +288,14 @@ Output format (JSON only):
     return {
       decision,
       reason,
-      confidenceScore: decision === "REQUIRED_SEARCH" ? 0.85 : decision === "NO_SEARCH" ? 0.7 : 0.6,
+      confidenceScore: decision === "FORCED_SEARCH" ? 0.95 : decision === "REQUIRED_SEARCH" ? 0.85 : decision === "NO_SEARCH" ? 0.7 : 0.6,
       detectedTriggers: triggers,
       generatedQuery: this.generateSearchQuery(query),
     };
   }
 
   private applyMemoryGate(result: SearchDecisionResult, memoryConfidence?: number): SearchDecisionResult {
-    if (result.decision === "NO_SEARCH") {
+    if (result.decision === "NO_SEARCH" || result.decision === "FORCED_SEARCH") {
       return result;
     }
 

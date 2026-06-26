@@ -5,6 +5,7 @@ export interface BuildPromptOptions {
   webContext?: string;
   baseSystemPrompt?: string;
   webSearchUsed?: boolean;
+  forcedSearch?: boolean;
 }
 
 const BASE_SYSTEM_PROMPT = `You are SelfLearn AI.
@@ -30,6 +31,18 @@ Never describe implementation details unless asked.
 
 Be helpful, honest, and clear about your limitations.`;
 
+const FORCED_SEARCH_PROMPT = `
+
+You are in FORCED WEB SEARCH MODE. This means the user explicitly asked you to search the web.
+
+CRITICAL RULES:
+- You are a SUMMARIZER of the provided web sources. Do NOT answer from your internal knowledge.
+- You MUST base your answer EXCLUSIVELY on the web search results provided below in the <web_search_results> block.
+- If the web sources do not contain the answer, say "The search results did not contain information about this."
+- Every factual claim MUST be attributed to a source using [N] notation.
+- Do NOT use your training data to answer. Only use the fetched web content.
+- If you are unsure or the sources are insufficient, say so clearly.`;
+
 const WEB_CITATION_INSTRUCTIONS = `
 
 IMPORTANT: Web search results have already been fetched and are provided below in the <web_search_results> block. You DO have access to current web information through these results. Never say "I cannot access the internet" or "I don't have real-time information" — use the provided web search results to answer.
@@ -49,11 +62,13 @@ Rules for citations:
 export class PromptContextBuilder {
   buildSystemPrompt(options: BuildPromptOptions = {}): string {
     const base = options.baseSystemPrompt || BASE_SYSTEM_PROMPT;
-    const { memoryContext, webContext, webSearchUsed } = options;
+    const { memoryContext, webContext, webSearchUsed, forcedSearch } = options;
 
     let prompt = base;
 
-    if (webSearchUsed && webContext) {
+    if (forcedSearch) {
+      prompt += FORCED_SEARCH_PROMPT;
+    } else if (webSearchUsed && webContext) {
       prompt += WEB_CITATION_INSTRUCTIONS;
     }
 
