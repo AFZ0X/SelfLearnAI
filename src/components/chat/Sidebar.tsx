@@ -150,8 +150,8 @@ export function Sidebar({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search conversations..."
-            className="flex-1 bg-transparent outline-none text-sm"
-            style={{ color: "var(--conv-text)", placeholderColor: "var(--conv-text-muted)" }}
+            className="flex-1 bg-transparent outline-none text-sm conv-search-input"
+            style={{ color: "var(--conv-text)" }}
           />
           {searchQuery && (
             <button onClick={() => setSearchQuery("")} className="text-xs" style={{ color: "var(--conv-text-muted)" }} aria-label="Clear search">
@@ -177,7 +177,7 @@ export function Sidebar({
               <>
                 <p className="text-sm font-medium" style={{ color: "var(--conv-text)" }}>No results</p>
                 <p className="text-xs mt-1" style={{ color: "var(--conv-text-muted)" }}>
-                  No conversations matching "{searchQuery}"
+                  No conversations matching &ldquo;{searchQuery}&rdquo;
                 </p>
               </>
             ) : (

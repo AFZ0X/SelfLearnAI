@@ -12,7 +12,7 @@ interface MemorySearchResult {
   keywords: string[];
   tags: string[];
   category: "memory" | "knowledge";
-  createdAt: Date;
+  createdAt: string | Date;
   _score?: number;
 }
 

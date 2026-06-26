@@ -206,7 +206,7 @@ export function MessageBubble({
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
-              code({ className, children, ...props }) {
+              code({ className, children }) {
                 const match = /language-(\w+)/.exec(className || "");
                 const codeStr = String(children);
                 if (match || codeStr.includes("\n")) {

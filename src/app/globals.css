@@ -273,6 +273,14 @@ body {
   background: var(--border-default);
 }
 
+/* Placeholder styling */
+.conv-search-input::placeholder {
+  color: var(--conv-text-muted);
+}
+.chat-input::placeholder {
+  color: var(--input-placeholder);
+}
+
 /* Focus ring */
 *:focus-visible {
   outline: none;

@@ -19,8 +19,8 @@ export default async function MemoryPage() {
     summary: m.summary,
     source: m.source,
     tags: m.tags,
-    keywords: (m as any).keywords ?? [],
-    category: ((m as any).category ?? "knowledge") as "memory" | "knowledge",
+    keywords: [] as string[],
+    category: "knowledge" as "memory" | "knowledge",
     createdAt: m.createdAt.toISOString(),
   }));
 

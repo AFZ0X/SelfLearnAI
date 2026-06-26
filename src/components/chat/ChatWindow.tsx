@@ -91,8 +91,10 @@ export function ChatWindow({
           }
         });
     } else {
-      setConvTitle("Chat");
-      setMessages([]);
+      Promise.resolve().then(() => {
+        setConvTitle("Chat");
+        setMessages([]);
+      });
     }
   }, [conversationId]);
 
@@ -229,71 +231,71 @@ export function ChatWindow({
       </header>
 
       {/* Message Area */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-[760px] px-4 py-6 space-y-4" style={{ animation: "fade-in 0.2s ease" }}>
-          {!hasMessages && !loading && (
-            <div className="flex flex-col items-center justify-center min-h-[50vh]">
-              <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
-                style={{ backgroundColor: "var(--subtle-bg)" }}
-              >
-                <svg className="w-6 h-6" style={{ color: "var(--muted-text)" }} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-              </div>
-              <p className="text-base font-medium" style={{ color: "var(--muted-text)" }}>
-                {conversationId ? "No messages yet" : "Start a conversation"}
-              </p>
-              <p className="text-sm mt-1" style={{ color: "var(--muted-text)" }}>
-                Send a message to begin chatting.
-              </p>
-            </div>
-          )}
-
-          {messages.map((msg, i) => (
-            <div key={msg.id || i} style={{ animation: "slide-up 0.15s ease" }}>
-              <MessageBubble
-                id={msg.id}
-                role={msg.role}
-                content={msg.content}
-                memoryUsed={msg.memoryUsed}
-                memoriesUsed={msg.memoriesUsed}
-                webSearchUsed={msg.webSearchUsed}
-                citations={msg.citations}
-                candidatesExtracted={msg.candidatesExtracted}
-                conversationId={msg.conversationId || conversationId}
-                feedback={msg.feedback ?? null}
-                onFeedbackChange={handleFeedbackChange}
-              />
-            </div>
-          ))}
-
-          {loading && (
-            <div className="flex justify-start">
-              <div
-                className="rounded-2xl rounded-bl-md px-5 py-4 text-sm"
-                style={{ backgroundColor: "var(--bubble-assistant-bg)", color: "var(--muted-text)" }}
-              >
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: "var(--muted-text)", animation: "pulse-dot 1.4s infinite" }} />
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: "var(--muted-text)", animation: "pulse-dot 1.4s infinite", animationDelay: "0.2s" }} />
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: "var(--muted-text)", animation: "pulse-dot 1.4s infinite", animationDelay: "0.4s" }} />
-                </span>
-              </div>
-            </div>
-          )}
-
-          {error && (
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {!hasMessages && !loading ? (
+          <div className="flex flex-col items-center justify-center h-full mx-auto max-w-[760px] px-4" style={{ animation: "fade-in 0.2s ease" }}>
             <div
-              className="rounded-xl px-4 py-3 text-sm"
-              style={{ backgroundColor: "var(--error-bg)", border: "1px solid var(--error-border)", color: "var(--error-text)" }}
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
+              style={{ backgroundColor: "var(--subtle-bg)" }}
             >
-              {error}
+              <svg className="w-6 h-6" style={{ color: "var(--muted-text)" }} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
             </div>
-          )}
+            <p className="text-base font-medium" style={{ color: "var(--muted-text)" }}>
+              {conversationId ? "No messages yet" : "Start a conversation"}
+            </p>
+            <p className="text-sm mt-1" style={{ color: "var(--muted-text)" }}>
+              Send a message to begin chatting.
+            </p>
+          </div>
+        ) : (
+          <div className="mx-auto max-w-[760px] px-4 py-6 space-y-4" style={{ animation: "fade-in 0.2s ease" }}>
+            {messages.map((msg, i) => (
+              <div key={msg.id || i} style={{ animation: "slide-up 0.15s ease" }}>
+                <MessageBubble
+                  id={msg.id}
+                  role={msg.role}
+                  content={msg.content}
+                  memoryUsed={msg.memoryUsed}
+                  memoriesUsed={msg.memoriesUsed}
+                  webSearchUsed={msg.webSearchUsed}
+                  citations={msg.citations}
+                  candidatesExtracted={msg.candidatesExtracted}
+                  conversationId={msg.conversationId || conversationId}
+                  feedback={msg.feedback ?? null}
+                  onFeedbackChange={handleFeedbackChange}
+                />
+              </div>
+            ))}
 
-          <div ref={bottomRef} />
-        </div>
+            {loading && (
+              <div className="flex justify-start">
+                <div
+                  className="rounded-2xl rounded-bl-md px-5 py-4 text-sm"
+                  style={{ backgroundColor: "var(--bubble-assistant-bg)", color: "var(--muted-text)" }}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: "var(--muted-text)", animation: "pulse-dot 1.4s infinite" }} />
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: "var(--muted-text)", animation: "pulse-dot 1.4s infinite", animationDelay: "0.2s" }} />
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: "var(--muted-text)", animation: "pulse-dot 1.4s infinite", animationDelay: "0.4s" }} />
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div
+                className="rounded-xl px-4 py-3 text-sm"
+                style={{ backgroundColor: "var(--error-bg)", border: "1px solid var(--error-border)", color: "var(--error-text)" }}
+              >
+                {error}
+              </div>
+            )}
+
+            <div ref={bottomRef} />
+          </div>
+        )}
       </div>
 
       {/* Composer */}

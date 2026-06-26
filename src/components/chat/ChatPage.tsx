@@ -124,7 +124,7 @@ export function ChatPage({ provider, initialConversations }: ChatPageProps) {
         onDelete={handleDelete}
         creating={creating}
       />
-      <div className="flex flex-1 flex-col min-w-0">
+      <div className="flex flex-1 flex-col min-w-0 min-h-0">
         <ChatWindow
           conversationId={activeId}
           provider={provider}

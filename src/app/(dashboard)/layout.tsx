@@ -11,7 +11,7 @@ export default async function DashboardLayout({
   const user = session?.user;
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-dvh overflow-hidden">
       <DashboardSidebar
         userName={user?.name || user?.email}
         userEmail={user?.email}
