@@ -3,7 +3,7 @@ import type { EmbeddingProvider } from "./EmbeddingProvider";
 export class MockEmbeddingProvider implements EmbeddingProvider {
   private dimensions: number;
 
-  constructor(dimensions = 384) {
+  constructor(dimensions = 1536) {
     this.dimensions = dimensions;
   }
 

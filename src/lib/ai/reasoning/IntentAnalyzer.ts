@@ -82,6 +82,18 @@ const SAVE_MEMORY_PATTERNS = [
   /احفظ\s+هذي|تذكر\s+هذا|خزن|save\s+this|remember\s+that/i,
 ];
 
+const NAME_QUERY_PATTERNS = [
+  /وش\s+اسمي/i,
+  /ما\s+اسمي/i,
+  /شو\s+اسمي/i,
+  /ايش\s+اسمي/i,
+  /what(?:'s| is)\s+my\s+name/i,
+  /do\s+you\s+(?:know|remember)\s+my\s+name/i,
+  /اسمي\s+/i,
+  /نادني\s+/i,
+  /ناديني\s+/i,
+];
+
 const ARABIC_DETECT = /[\u0600-\u06FF]/;
 
 export class IntentAnalyzer {
@@ -95,6 +107,10 @@ export class IntentAnalyzer {
 
     if (SAVE_MEMORY_PATTERNS.some((p) => p.test(t))) {
       return { goal: "SAVE_MEMORY", language, urgency: "LOW", requiresFollowUpContext: false };
+    }
+
+    if (NAME_QUERY_PATTERNS.some((p) => p.test(t))) {
+      return { goal: "ASK_PERSONAL", language, urgency: "LOW", requiresFollowUpContext: false };
     }
 
     if (GREETING_PATTERNS.some((p) => p.test(t))) {

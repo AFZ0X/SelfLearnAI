@@ -16,6 +16,11 @@ export interface ExtractionCandidate {
 const EXTRACTION_PATTERNS = [
   { pattern: /my name is (\w+)/i, tag: "user_info", confidence: 0.9 },
   { pattern: /i (?:am|'m) (?:a|an) (\w+)/i, tag: "user_info", confidence: 0.7 },
+  { pattern: /اسمي\s+الكامل\s+(.+)/i, tag: "user_info", confidence: 0.9 },
+  { pattern: /اسمي\s+(.+)/i, tag: "user_info", confidence: 0.9 },
+  { pattern: /أنا\s+(.+)/i, tag: "user_info", confidence: 0.7 },
+  { pattern: /نادني\s+(.+)/i, tag: "user_info", confidence: 0.8 },
+  { pattern: /ناديني\s+(.+)/i, tag: "user_info", confidence: 0.8 },
   { pattern: /i (?:like|love|enjoy) (\w+)/i, tag: "preference", confidence: 0.7 },
   { pattern: /i (?:work|works|job) (?:as|at|for) (.+)/i, tag: "work", confidence: 0.8 },
   { pattern: /i (?:live|lives|stay) (?:in|at) (.+)/i, tag: "location", confidence: 0.8 },
