@@ -1,9 +1,43 @@
 "use client";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useState, useEffect } from "react";
 
 export function SettingsPageClient() {
   const { theme, setTheme } = useTheme();
+  const [webSearchEnabled, setWebSearchEnabled] = useState(true);
+  const [providerName, setProviderName] = useState("Mock");
+  const [providerConfigured, setProviderConfigured] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/web-search/status")
+      .then((res) => res.json())
+      .then((data) => {
+        setProviderName(data.provider);
+        setProviderConfigured(data.configured);
+        if (typeof data.webSearchEnabled === "boolean") {
+          setWebSearchEnabled(data.webSearchEnabled);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  async function toggleWebSearch(enabled: boolean) {
+    setSaving(true);
+    setWebSearchEnabled(enabled);
+    try {
+      await fetch("/api/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: { webSearchEnabled: enabled } }),
+      });
+    } catch {
+      setWebSearchEnabled(!enabled);
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <div className="max-w-lg space-y-6">
@@ -45,6 +79,50 @@ export function SettingsPageClient() {
             </svg>
             Light
           </button>
+        </div>
+      </div>
+
+      <div
+        className="rounded-xl border p-6"
+        style={{
+          backgroundColor: "var(--card-bg)",
+          borderColor: "var(--card-border)",
+        }}
+      >
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="font-semibold text-sm" style={{ color: "var(--surface-text)" }}>Automatic Web Search</h3>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={webSearchEnabled}
+              onChange={(e) => toggleWebSearch(e.target.checked)}
+              disabled={saving}
+              className="sr-only peer"
+            />
+            <div
+              className="w-9 h-5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"
+              style={{
+                backgroundColor: webSearchEnabled ? "var(--info-text)" : "var(--border-subtle)",
+              }}
+            />
+          </label>
+        </div>
+        <p className="text-sm" style={{ color: "var(--surface-text-secondary)" }}>
+          When enabled, automatically searches the web when current or recent information is needed.
+        </p>
+        <div className="mt-3 flex items-center gap-2">
+          <span className="text-xs" style={{ color: "var(--muted-text)" }}>
+            Provider: {providerName}
+          </span>
+          <span
+            className="text-[10px] font-medium px-1.5 py-0.5 rounded"
+            style={{
+              backgroundColor: providerConfigured ? "var(--success-bg)" : "var(--warning-bg)",
+              color: providerConfigured ? "var(--success-text)" : "var(--warning-text)",
+            }}
+          >
+            {providerConfigured ? "Configured" : "API key missing"}
+          </span>
         </div>
       </div>
     </div>

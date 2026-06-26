@@ -16,6 +16,7 @@ export async function GET() {
       name: true,
       role: true,
       status: true,
+      settings: true,
       createdAt: true,
     },
   });
@@ -44,15 +45,34 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    const data: Record<string, unknown> = {};
+    if (name !== undefined) {
+      data.name = name || null;
+    }
+
+    if (body.settings !== undefined && typeof body.settings === "object") {
+      const currentUser = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { settings: true },
+      });
+
+      const currentSettings = (currentUser?.settings && typeof currentUser.settings === "object")
+        ? (currentUser.settings as Record<string, unknown>)
+        : {};
+
+      data.settings = { ...currentSettings, ...body.settings };
+    }
+
     const updated = await prisma.user.update({
       where: { id: session.user.id },
-      data: { name: name || null },
+      data,
       select: {
         id: true,
         email: true,
         name: true,
         role: true,
         status: true,
+        settings: true,
       },
     });
 

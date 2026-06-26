@@ -1,50 +1,13 @@
-import { getSearchProvider, type SearchResult } from "@/lib/ai/search/SearchProvider";
+import { getSearchProvider, isSearchConfigured, type SearchResult } from "@/lib/ai/search/SearchProvider";
+import { SearchDecisionService, type SearchDecisionResult } from "./SearchDecisionService";
 
 export interface WebSearchConfig {
   maxResults: number;
 }
 
 const DEFAULT_CONFIG: WebSearchConfig = {
-  maxResults: 3,
+  maxResults: 5,
 };
-
-const WEB_SEARCH_KEYWORDS = [
-  // English
-  "latest",
-  "current",
-  "today",
-  "now",
-  "news",
-  "weather",
-  "price",
-  "price of",
-  "stock",
-  "forecast",
-  "update",
-  "recent",
-  "breaking",
-  "election",
-  "score",
-  "schedule",
-  "release",
-  "version",
-  "announce",
-  // Arabic
-  "اليوم",
-  "الآن",
-  "أخبار",
-  "جديد",
-  "حديث",
-  "آخر",
-  "سعر",
-  "طقس",
-  "تقويم",
-  "جدول",
-  "إصدار",
-  "إعلان",
-  "تحديث",
-  "مباشر",
-];
 
 export interface WebSearchResult {
   title: string;
@@ -56,61 +19,82 @@ export interface WebSearchResult {
 export interface WebSearchOutcome {
   results: WebSearchResult[];
   webSearchUsed: boolean;
+  decisionResult?: SearchDecisionResult;
 }
 
 export class WebSearchService {
   private config: WebSearchConfig;
+  private decisionService: SearchDecisionService;
 
   constructor(config?: Partial<WebSearchConfig>) {
     this.config = { ...DEFAULT_CONFIG, ...config };
+    this.decisionService = new SearchDecisionService();
   }
 
-  shouldSearchWeb(query: string): boolean {
-    if (!query?.trim()) return false;
-
-    const lower = query.toLowerCase();
-
-    if (WEB_SEARCH_KEYWORDS.some((kw) => lower.includes(kw))) {
-      return true;
-    }
-
-    if (/^(who|what|when|where|why|how)\s/i.test(lower)) {
-      return true;
-    }
-
-    // Arabic question words
-    if (/^(من|ماذا|متى|أين|لماذا|كيف|كم|هل)\s/i.test(query)) {
-      return true;
-    }
-
-    return false;
-  }
-
-  async search(query: string): Promise<WebSearchOutcome> {
+  async searchWithDecision(query: string, memoryConfidence?: number): Promise<WebSearchOutcome> {
     if (!query?.trim()) {
       return { results: [], webSearchUsed: false };
     }
 
-    if (!this.shouldSearchWeb(query)) {
-      return { results: [], webSearchUsed: false };
+    const decisionResult = await this.decisionService.decide(query, memoryConfidence);
+
+    if (!this.decisionService.shouldSearch(decisionResult.decision)) {
+      return { results: [], webSearchUsed: false, decisionResult };
     }
 
+    if (!isSearchConfigured()) {
+      return {
+        results: [],
+        webSearchUsed: false,
+        decisionResult: {
+          ...decisionResult,
+          decision: "NO_SEARCH",
+          reason: "Search provider not configured. Set SEARCH_PROVIDER and corresponding API key.",
+        },
+      };
+    }
+
+    const redactedQuery = this.decisionService.generateSearchQuery(query);
     let provider;
     try {
       provider = getSearchProvider();
     } catch {
-      return { results: [], webSearchUsed: false };
+      return {
+        results: [],
+        webSearchUsed: false,
+        decisionResult: {
+          ...decisionResult,
+          decision: "NO_SEARCH",
+          reason: "Search provider initialization failed. Check SEARCH_PROVIDER env var.",
+        },
+      };
     }
 
     let searchResults: SearchResult[];
     try {
-      searchResults = await provider.search(query, this.config.maxResults);
+      searchResults = await provider.search(redactedQuery, this.config.maxResults);
     } catch {
-      return { results: [], webSearchUsed: false };
+      return {
+        results: [],
+        webSearchUsed: false,
+        decisionResult: {
+          ...decisionResult,
+          decision: "NO_SEARCH",
+          reason: "Search provider API call failed. Check API key and network connectivity.",
+        },
+      };
     }
 
     if (!Array.isArray(searchResults) || searchResults.length === 0) {
-      return { results: [], webSearchUsed: false };
+      return {
+        results: [],
+        webSearchUsed: false,
+        decisionResult: {
+          ...decisionResult,
+          decision: "NO_SEARCH",
+          reason: "Search returned no results",
+        },
+      };
     }
 
     const now = new Date().toISOString();
@@ -121,6 +105,6 @@ export class WebSearchService {
       fetchedAt: now,
     }));
 
-    return { results, webSearchUsed: results.length > 0 };
+    return { results, webSearchUsed: results.length > 0, decisionResult };
   }
 }

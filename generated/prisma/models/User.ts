@@ -59,6 +59,7 @@ export type UserCountAggregateOutputType = {
   status: number
   bannedAt: number
   bannedReason: number
+  settings: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -100,6 +101,7 @@ export type UserCountAggregateInputType = {
   status?: true
   bannedAt?: true
   bannedReason?: true
+  settings?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -186,6 +188,7 @@ export type UserGroupByOutputType = {
   status: $Enums.UserStatus
   bannedAt: Date | null
   bannedReason: string | null
+  settings: runtime.JsonValue
   createdAt: Date
   updatedAt: Date
   _count: UserCountAggregateOutputType | null
@@ -220,6 +223,7 @@ export type UserWhereInput = {
   status?: Prisma.EnumUserStatusFilter<"User"> | $Enums.UserStatus
   bannedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   bannedReason?: Prisma.StringNullableFilter<"User"> | string | null
+  settings?: Prisma.JsonFilter<"User">
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   accounts?: Prisma.AccountListRelationFilter
@@ -249,6 +253,7 @@ export type UserOrderByWithRelationInput = {
   status?: Prisma.SortOrder
   bannedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   bannedReason?: Prisma.SortOrderInput | Prisma.SortOrder
+  settings?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   accounts?: Prisma.AccountOrderByRelationAggregateInput
@@ -281,6 +286,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.EnumUserStatusFilter<"User"> | $Enums.UserStatus
   bannedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   bannedReason?: Prisma.StringNullableFilter<"User"> | string | null
+  settings?: Prisma.JsonFilter<"User">
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   accounts?: Prisma.AccountListRelationFilter
@@ -310,6 +316,7 @@ export type UserOrderByWithAggregationInput = {
   status?: Prisma.SortOrder
   bannedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   bannedReason?: Prisma.SortOrderInput | Prisma.SortOrder
+  settings?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
@@ -329,6 +336,7 @@ export type UserScalarWhereWithAggregatesInput = {
   status?: Prisma.EnumUserStatusWithAggregatesFilter<"User"> | $Enums.UserStatus
   bannedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   bannedReason?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  settings?: Prisma.JsonWithAggregatesFilter<"User">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
@@ -342,6 +350,7 @@ export type UserCreateInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -371,6 +380,7 @@ export type UserUncheckedCreateInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -400,6 +410,7 @@ export type UserUpdateInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -429,6 +440,7 @@ export type UserUncheckedUpdateInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -458,6 +470,7 @@ export type UserCreateManyInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -471,6 +484,7 @@ export type UserUpdateManyMutationInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -484,6 +498,7 @@ export type UserUncheckedUpdateManyInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -497,6 +512,7 @@ export type UserCountOrderByAggregateInput = {
   status?: Prisma.SortOrder
   bannedAt?: Prisma.SortOrder
   bannedReason?: Prisma.SortOrder
+  settings?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -796,6 +812,7 @@ export type UserCreateWithoutWarningsGivenInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -824,6 +841,7 @@ export type UserUncheckedCreateWithoutWarningsGivenInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -857,6 +875,7 @@ export type UserCreateWithoutWarningsReceivedInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -885,6 +904,7 @@ export type UserUncheckedCreateWithoutWarningsReceivedInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -929,6 +949,7 @@ export type UserUpdateWithoutWarningsGivenInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -957,6 +978,7 @@ export type UserUncheckedUpdateWithoutWarningsGivenInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -996,6 +1018,7 @@ export type UserUpdateWithoutWarningsReceivedInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -1024,6 +1047,7 @@ export type UserUncheckedUpdateWithoutWarningsReceivedInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -1052,6 +1076,7 @@ export type UserCreateWithoutAdminActionsInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -1080,6 +1105,7 @@ export type UserUncheckedCreateWithoutAdminActionsInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -1113,6 +1139,7 @@ export type UserCreateWithoutTargetedActionsInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -1141,6 +1168,7 @@ export type UserUncheckedCreateWithoutTargetedActionsInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -1185,6 +1213,7 @@ export type UserUpdateWithoutAdminActionsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -1213,6 +1242,7 @@ export type UserUncheckedUpdateWithoutAdminActionsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -1252,6 +1282,7 @@ export type UserUpdateWithoutTargetedActionsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -1280,6 +1311,7 @@ export type UserUncheckedUpdateWithoutTargetedActionsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -1308,6 +1340,7 @@ export type UserCreateWithoutMemoriesInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -1336,6 +1369,7 @@ export type UserUncheckedCreateWithoutMemoriesInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -1380,6 +1414,7 @@ export type UserUpdateWithoutMemoriesInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -1408,6 +1443,7 @@ export type UserUncheckedUpdateWithoutMemoriesInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -1436,6 +1472,7 @@ export type UserCreateWithoutConversationsInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -1464,6 +1501,7 @@ export type UserUncheckedCreateWithoutConversationsInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -1508,6 +1546,7 @@ export type UserUpdateWithoutConversationsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -1536,6 +1575,7 @@ export type UserUncheckedUpdateWithoutConversationsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -1564,6 +1604,7 @@ export type UserCreateWithoutWebSourcesInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -1592,6 +1633,7 @@ export type UserUncheckedCreateWithoutWebSourcesInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -1636,6 +1678,7 @@ export type UserUpdateWithoutWebSourcesInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -1664,6 +1707,7 @@ export type UserUncheckedUpdateWithoutWebSourcesInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -1692,6 +1736,7 @@ export type UserCreateWithoutLearningCandidatesInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -1720,6 +1765,7 @@ export type UserUncheckedCreateWithoutLearningCandidatesInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -1764,6 +1810,7 @@ export type UserUpdateWithoutLearningCandidatesInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -1792,6 +1839,7 @@ export type UserUncheckedUpdateWithoutLearningCandidatesInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -1820,6 +1868,7 @@ export type UserCreateWithoutLearningConfigInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -1848,6 +1897,7 @@ export type UserUncheckedCreateWithoutLearningConfigInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -1892,6 +1942,7 @@ export type UserUpdateWithoutLearningConfigInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -1920,6 +1971,7 @@ export type UserUncheckedUpdateWithoutLearningConfigInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -1948,6 +2000,7 @@ export type UserCreateWithoutFeedbackInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -1976,6 +2029,7 @@ export type UserUncheckedCreateWithoutFeedbackInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -2020,6 +2074,7 @@ export type UserUpdateWithoutFeedbackInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -2048,6 +2103,7 @@ export type UserUncheckedUpdateWithoutFeedbackInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -2076,6 +2132,7 @@ export type UserCreateWithoutNeuralExperimentsInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -2104,6 +2161,7 @@ export type UserUncheckedCreateWithoutNeuralExperimentsInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -2148,6 +2206,7 @@ export type UserUpdateWithoutNeuralExperimentsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -2176,6 +2235,7 @@ export type UserUncheckedUpdateWithoutNeuralExperimentsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -2204,6 +2264,7 @@ export type UserCreateWithoutTrainingRunsInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -2232,6 +2293,7 @@ export type UserUncheckedCreateWithoutTrainingRunsInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -2276,6 +2338,7 @@ export type UserUpdateWithoutTrainingRunsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -2304,6 +2367,7 @@ export type UserUncheckedUpdateWithoutTrainingRunsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -2332,6 +2396,7 @@ export type UserCreateWithoutModelSnapshotsInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -2360,6 +2425,7 @@ export type UserUncheckedCreateWithoutModelSnapshotsInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -2404,6 +2470,7 @@ export type UserUpdateWithoutModelSnapshotsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -2432,6 +2499,7 @@ export type UserUncheckedUpdateWithoutModelSnapshotsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -2460,6 +2528,7 @@ export type UserCreateWithoutActivityTracesInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -2488,6 +2557,7 @@ export type UserUncheckedCreateWithoutActivityTracesInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -2532,6 +2602,7 @@ export type UserUpdateWithoutActivityTracesInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -2560,6 +2631,7 @@ export type UserUncheckedUpdateWithoutActivityTracesInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -2588,6 +2660,7 @@ export type UserCreateWithoutAccountsInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
@@ -2616,6 +2689,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
@@ -2660,6 +2734,7 @@ export type UserUpdateWithoutAccountsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
@@ -2688,6 +2763,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
@@ -2716,6 +2792,7 @@ export type UserCreateWithoutSessionsInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -2744,6 +2821,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   status?: $Enums.UserStatus
   bannedAt?: Date | string | null
   bannedReason?: string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -2788,6 +2866,7 @@ export type UserUpdateWithoutSessionsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -2816,6 +2895,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   bannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   bannedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -3001,6 +3081,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   status?: boolean
   bannedAt?: boolean
   bannedReason?: boolean
+  settings?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
@@ -3031,6 +3112,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   status?: boolean
   bannedAt?: boolean
   bannedReason?: boolean
+  settings?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["user"]>
@@ -3044,6 +3126,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   status?: boolean
   bannedAt?: boolean
   bannedReason?: boolean
+  settings?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["user"]>
@@ -3057,11 +3140,12 @@ export type UserSelectScalar = {
   status?: boolean
   bannedAt?: boolean
   bannedReason?: boolean
+  settings?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "passwordHash" | "role" | "status" | "bannedAt" | "bannedReason" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "passwordHash" | "role" | "status" | "bannedAt" | "bannedReason" | "settings" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
@@ -3113,6 +3197,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     status: $Enums.UserStatus
     bannedAt: Date | null
     bannedReason: string | null
+    settings: runtime.JsonValue
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["user"]>
@@ -3562,6 +3647,7 @@ export interface UserFieldRefs {
   readonly status: Prisma.FieldRef<"User", 'UserStatus'>
   readonly bannedAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly bannedReason: Prisma.FieldRef<"User", 'String'>
+  readonly settings: Prisma.FieldRef<"User", 'Json'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
 }

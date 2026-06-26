@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth/auth";
+import { isSearchConfigured } from "@/lib/ai/search/SearchProvider";
 
 const features = [
   {
@@ -36,7 +37,7 @@ const features = [
     title: "Web Search",
     description: "Real-time information retrieval from the web.",
     icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z",
-    comingSoon: true,
+    href: "/dashboard/chat",
   },
 ];
 
@@ -45,13 +46,13 @@ function FeatureCard({
   description,
   icon,
   href,
-  comingSoon,
+  badge,
 }: {
   title: string;
   description: string;
   icon: string;
   href?: string;
-  comingSoon?: boolean;
+  badge?: { text: string; color: string; bg: string };
 }) {
   const content = (
     <div
@@ -70,9 +71,9 @@ function FeatureCard({
             <path d={icon} strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
-        {comingSoon && (
-          <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--info-bg)", color: "var(--info-text)" }}>
-            Soon
+        {badge && (
+          <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: badge.bg, color: badge.color }}>
+            {badge.text}
           </span>
         )}
       </div>
@@ -103,6 +104,12 @@ export default async function DashboardPage() {
 
   const user = session.user;
 
+  const searchConfigured = isSearchConfigured();
+
+  const webSearchBadge = searchConfigured
+    ? { text: "Active", color: "var(--success-text)", bg: "var(--success-bg)" }
+    : { text: "Setup Required", color: "var(--warning-text)", bg: "var(--warning-bg)" };
+
   return (
     <div className="flex-1 flex flex-col overflow-y-auto">
       <div className="px-8 py-8">
@@ -111,14 +118,17 @@ export default async function DashboardPage() {
             Welcome, {user.name || user.email}
           </h1>
           <p className="text-sm mt-1.5" style={{ color: "var(--surface-text-secondary)" }}>
-            Chat, Memory, Learning, and Feedback are ready to use.
+            Chat, Memory, Learning, Feedback, and Web Search are ready to use.
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl">
           {features.map((feature) => (
             <div key={feature.title} style={{ animation: "slide-up 0.2s ease" }}>
-              <FeatureCard {...feature} />
+              <FeatureCard
+                {...feature}
+                badge={feature.title === "Web Search" ? webSearchBadge : undefined}
+              />
             </div>
           ))}
         </div>

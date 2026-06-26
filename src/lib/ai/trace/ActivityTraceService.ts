@@ -9,13 +9,23 @@ export interface TraceStepMetadata {
   intentConfidence?: number;
   memoriesFound?: number;
   memoryUsed?: boolean;
+  memoryConfidence?: number;
   queryLength?: number;
   resultsCount?: number;
   searchTriggered?: boolean;
   searchReason?: string;
+  searchDecision?: string;
+  searchDecisionConfidence?: number;
+  searchQueryRedacted?: string;
+  searchProvider?: string;
   pagesFetched?: number;
   totalChars?: number;
   summariesCount?: number;
+  sourcesFound?: number;
+  sourcesUsed?: number;
+  citationsGenerated?: number;
+  searchDurationMs?: number;
+  failureReason?: string;
   candidatesExtracted?: number;
   feedbackApplied?: boolean;
   memoryContextChars?: number;
@@ -78,7 +88,7 @@ export class ActivityTraceService {
           status: "COMPLETED" as TraceStatus,
           completedAt: now,
           durationMs,
-          metadata: (metadata || {}) as unknown as Prisma.InputJsonValue,
+          metadata: { ...(metadata || {}), durationMs } as unknown as Prisma.InputJsonValue,
         },
       });
 
@@ -112,7 +122,7 @@ export class ActivityTraceService {
           status: "ERROR" as TraceStatus,
           completedAt: now,
           durationMs,
-          metadata: { error: errorMessage || "Unknown error" } as unknown as Prisma.InputJsonValue,
+          metadata: { error: errorMessage || "Unknown error", durationMs } as unknown as Prisma.InputJsonValue,
         },
       });
 

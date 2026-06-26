@@ -135,8 +135,12 @@ npm start
 | `DEEPSEEK_BASE_URL` | DeepSeek API base URL | No | `https://api.deepseek.com` |
 | `EMBEDDING_PROVIDER` | Embedding provider (`mock` or `openai`) | No | `mock` |
 | `OPENAI_EMBEDDING_MODEL` | OpenAI embedding model | No | `text-embedding-3-small` |
-| `SEARCH_PROVIDER` | Search provider (`mock` or `brave`) | No | `mock` |
+| `SEARCH_PROVIDER` | Search provider (`mock`, `tavily`, or `brave`) | No | `mock` |
+| `TAVILY_API_KEY` | Tavily API key (required if SEARCH_PROVIDER=tavily) | Conditional | — |
 | `BRAVE_API_KEY` | Brave Search API key (required if SEARCH_PROVIDER=brave) | Conditional | — |
+| `WEB_SEARCH_ENABLED` | Enable web search globally | No | `true` |
+| `WEB_SEARCH_MAX_RESULTS` | Max search results per query | No | `5` |
+| `WEB_SEARCH_TIMEOUT_MS` | Search API timeout in milliseconds | No | `8000` |
 | `NEXT_PUBLIC_APP_NAME` | Application display name | No | `SelfLearn AI` |
 | `NEXT_PUBLIC_APP_URL` | Public application URL | No | `http://localhost:3000` |
 
@@ -233,7 +237,7 @@ npx prisma validate
 - Mock providers return fake data (use OpenAI/Brave for real behavior)
 - pgvector extension must be enabled on PostgreSQL
 - Embedding failure is non-fatal (degrades gracefully)
-- Web search uses keyword matching (may miss genuine search needs)
+- Web search uses LLM-based decision engine (falls back to keyword matching if AI unavailable)
 - No fine-tuning or model training capabilities
 
 ## Tech Stack

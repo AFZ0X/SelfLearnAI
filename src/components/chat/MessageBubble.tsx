@@ -110,6 +110,52 @@ function TableCell({ children, isHeader }: { children?: React.ReactNode; isHeade
   );
 }
 
+function InlineCitationBadge({ num, onClick }: { num: number; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="inline-flex items-center justify-center text-[10px] font-mono font-semibold leading-none px-1 py-0.5 rounded-sm mx-0.5 align-super cursor-pointer transition-opacity hover:opacity-80"
+      style={{
+        backgroundColor: "var(--info-bg)",
+        color: "var(--info-text)",
+      }}
+      aria-label={`Source ${num}`}
+    >
+      {num}
+    </button>
+  );
+}
+
+function renderWithInlineCitations(
+  content: string,
+  citationCount: number,
+  onCitationClick: (num: number) => void
+): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  const regex = /\[(\d+)\]/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(content)) !== null) {
+    const num = parseInt(match[1], 10);
+    if (num >= 1 && num <= citationCount) {
+      if (match.index > lastIndex) {
+        parts.push(content.slice(lastIndex, match.index));
+      }
+      parts.push(
+        <InlineCitationBadge key={`cite-${match.index}`} num={num} onClick={() => onCitationClick(num)} />
+      );
+      lastIndex = match.index + match[0].length;
+    }
+  }
+
+  if (lastIndex < content.length) {
+    parts.push(content.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : [content];
+}
+
 export function MessageBubble({
   id,
   role,
@@ -191,6 +237,8 @@ export function MessageBubble({
   const showMeta = !isUser && (memoryUsed || webSearchUsed || (candidatesExtracted ?? 0) > 0 || feedback);
   const showActions = !isUser && conversationId;
 
+  const citationCount = citations?.length ?? 0;
+
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
@@ -229,6 +277,28 @@ export function MessageBubble({
                     {children}
                   </a>
                 );
+              },
+              p({ children }) {
+                try {
+                  const childStr = typeof children === "string" ? children : "";
+                  if (childStr && citationCount > 0) {
+                    const elements = renderWithInlineCitations(
+                      childStr,
+                      citationCount,
+                      (num: number) => {
+                        const details = document.getElementById(`sources-details-${id || "0"}`) as HTMLDetailsElement | null;
+                        if (details) {
+                          details.open = true;
+                          const target = document.getElementById(`citation-${id || "0"}-${num - 1}`) as HTMLElement | null;
+                          target?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                      }
+                    );
+                    return <p>{elements}</p>;
+                  }
+                } catch {
+                }
+                return <p>{children}</p>;
               },
             }}
           >
@@ -270,18 +340,32 @@ export function MessageBubble({
               </span>
             )}
             {citations && citations.length > 0 && (
-              <details className="mt-1">
+              <details id={`sources-details-${id || "0"}`} className="mt-1">
                 <summary className="text-[11px] cursor-pointer" style={{ color: "var(--muted-text)" }}>
                   Sources ({citations.length})
                 </summary>
-                <ul className="mt-2 space-y-2">
+                <ul className="mt-2 space-y-3">
                   {citations.map((c, i) => (
-                    <li key={i} className="text-[11px]">
-                      <a href={c.url} target="_blank" rel="noopener noreferrer" className="font-medium underline decoration-1 underline-offset-2" style={{ color: "var(--info-text)" }}>
-                        {c.title}
-                      </a>
-                      <span className="ml-1" style={{ color: "var(--muted-text)" }}>({safeHostname(c.url)})</span>
-                      <p className="mt-0.5" style={{ color: "var(--muted-text)" }}>{c.snippet}</p>
+                    <li
+                      key={i}
+                      id={`citation-${id || "0"}-${i}`}
+                      className="text-[11px] scroll-mt-2"
+                    >
+                      <div className="flex items-start gap-2">
+                        <span
+                          className="inline-flex items-center justify-center text-[10px] font-mono font-semibold leading-none px-1 py-0.5 rounded-sm shrink-0 mt-0.5"
+                          style={{ backgroundColor: "var(--info-bg)", color: "var(--info-text)" }}
+                        >
+                          {i + 1}
+                        </span>
+                        <div className="min-w-0">
+                          <a href={c.url} target="_blank" rel="noopener noreferrer" className="font-medium underline decoration-1 underline-offset-2" style={{ color: "var(--info-text)" }}>
+                            {c.title}
+                          </a>
+                          <span className="ml-1" style={{ color: "var(--muted-text)" }}>({safeHostname(c.url)})</span>
+                          <p className="mt-0.5" style={{ color: "var(--muted-text)" }}>{c.snippet}</p>
+                        </div>
+                      </div>
                     </li>
                   ))}
                 </ul>

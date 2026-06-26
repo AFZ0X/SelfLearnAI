@@ -22,6 +22,7 @@ import { rateLimitGuard } from "@/lib/safety/route-guard";
 import { validateChatMessage } from "@/lib/safety/safety-validator";
 import { ActivityTraceService } from "@/lib/ai/trace/ActivityTraceService";
 import { requireNotBanned } from "@/lib/auth/ban-check";
+import { getProviderStatus } from "@/lib/ai/search/SearchProvider";
 
 const MAX_MESSAGE_LENGTH = 4000;
 const MAX_MESSAGES = 50;
@@ -121,10 +122,45 @@ async function handleExplicitSaveCommand(
         : "mock-v1";
     await saveEmbedding(memory.id, embedding, model);
   } catch {
-    // Embedding failure is non-fatal
   }
 
   return { handled: true, action: "saved", memory: { id: memory.id, text: memory.text } };
+}
+
+async function getUserWebSearchSetting(userId: string): Promise<boolean> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { settings: true },
+    });
+    if (user?.settings && typeof user.settings === "object") {
+      const settings = user.settings as Record<string, unknown>;
+      if (typeof settings.webSearchEnabled === "boolean") {
+        return settings.webSearchEnabled;
+      }
+    }
+  } catch {
+  }
+  return true;
+}
+
+async function saveUserWebSearchSetting(userId: string, enabled: boolean): Promise<void> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { settings: true },
+    });
+    const currentSettings = (user?.settings && typeof user.settings === "object")
+      ? (user.settings as Record<string, unknown>)
+      : {};
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        settings: { ...currentSettings, webSearchEnabled: enabled },
+      },
+    });
+  } catch {
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -219,11 +255,9 @@ export async function POST(request: NextRequest) {
 
     const userContent = lastUserMessage?.content as string | undefined;
 
-    // Start trace
     const trace = await traceService.startTrace(userId, conversationId);
     traceId = trace?.id ?? null;
 
-    // Input step
     if (traceId) {
       stepId = (await traceService.startStep(traceId, "Input"))?.id ?? null;
       if (stepId) {
@@ -239,7 +273,6 @@ export async function POST(request: NextRequest) {
       savedUserMessage = await createMessage(conversationId, "user", userContent);
     }
 
-    // Intent Detection
     if (traceId) {
       stepId = (await traceService.startStep(traceId, "Intent_Detection"))?.id ?? null;
     }
@@ -252,7 +285,6 @@ export async function POST(request: NextRequest) {
       stepId = null;
     }
 
-    // Memory Retrieval
     if (traceId) {
       stepId = (await traceService.startStep(traceId, "Memory_Retrieval"))?.id ?? null;
     }
@@ -265,17 +297,18 @@ export async function POST(request: NextRequest) {
       await traceService.completeStep(stepId, {
         memoriesFound: retrievalResult.memories.length,
         memoryUsed: retrievalResult.memoryUsed,
+        memoryConfidence: retrievalResult.memories.length > 0
+          ? Math.max(...retrievalResult.memories.map((m) => m.similarity || 0))
+          : 0,
       });
       stepId = null;
     }
 
-    // Explicit Save Command
     let saveActionResult: SaveActionResult = { handled: false };
     if (userContent) {
       saveActionResult = await handleExplicitSaveCommand(userId, userContent);
     }
 
-    // Vector Search
     if (traceId) {
       stepId = (await traceService.startStep(traceId, "Vector_Search"))?.id ?? null;
     }
@@ -287,18 +320,41 @@ export async function POST(request: NextRequest) {
       stepId = null;
     }
 
-    // Web Search Decision
+    const webSearchEnabled = await getUserWebSearchSetting(userId);
+
+    const searchDecisionStart = Date.now();
+    const webSearchService = new WebSearchService();
+    const memoryConfidence = retrievalResult.memories.length > 0
+      ? Math.max(...retrievalResult.memories.map((m) => m.similarity || 0))
+      : undefined;
+
+    let searchOutcome;
+    if (webSearchEnabled) {
+      searchOutcome = await webSearchService.searchWithDecision(userContent || "", memoryConfidence);
+    } else {
+      searchOutcome = { results: [], webSearchUsed: false, decisionResult: undefined };
+    }
+    const searchDurationMs = Date.now() - searchDecisionStart;
+
     if (traceId) {
       stepId = (await traceService.startStep(traceId, "Web_Search_Decision"))?.id ?? null;
     }
-    const webSearchService = new WebSearchService();
-    const searchOutcome = await webSearchService.search(userContent || "");
     if (stepId) {
-      await traceService.completeStep(stepId, {
+      const decisionMeta: Record<string, unknown> = {
         searchTriggered: searchOutcome.webSearchUsed,
-        searchReason: searchOutcome.webSearchUsed ? "keyword_match" : "not_needed",
-        resultsCount: searchOutcome.results.length,
-      });
+        searchReason: searchOutcome.decisionResult?.reason || "not_needed",
+        searchDecision: searchOutcome.decisionResult?.decision || "NO_SEARCH",
+        searchDecisionConfidence: searchOutcome.decisionResult?.confidenceScore || 0,
+        sourcesFound: searchOutcome.results.length,
+        searchDurationMs,
+        webSearchEnabled,
+      };
+      if (searchOutcome.decisionResult?.detectedTriggers && searchOutcome.decisionResult.detectedTriggers.length > 0) {
+        decisionMeta.detectedTriggers = searchOutcome.decisionResult.detectedTriggers;
+      }
+      const providerInfo = getProviderStatus();
+      decisionMeta.searchProvider = providerInfo.name;
+      await traceService.completeStep(stepId, decisionMeta);
       stepId = null;
     }
 
@@ -306,7 +362,6 @@ export async function POST(request: NextRequest) {
     let citations: Array<{ title: string; url: string; snippet: string }> = [];
 
     if (searchOutcome.webSearchUsed && searchOutcome.results.length > 0) {
-      // Web Source Fetch
       if (traceId) {
         stepId = (await traceService.startStep(traceId, "Web_Source_Fetch"))?.id ?? null;
       }
@@ -337,7 +392,6 @@ export async function POST(request: NextRequest) {
         stepId = null;
       }
 
-      // Source Summarization
       if (traceId) {
         stepId = (await traceService.startStep(traceId, "Source_Summarization"))?.id ?? null;
       }
@@ -347,6 +401,8 @@ export async function POST(request: NextRequest) {
       if (stepId) {
         await traceService.completeStep(stepId, {
           summariesCount: summaries.length,
+          sourcesUsed: citations.length,
+          citationsGenerated: citations.length,
         });
         stepId = null;
       }
@@ -368,7 +424,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Prompt Builder
     if (traceId) {
       stepId = (await traceService.startStep(traceId, "Prompt_Builder"))?.id ?? null;
     }
@@ -376,6 +431,7 @@ export async function POST(request: NextRequest) {
     let systemPrompt = promptBuilder.buildSystemPrompt({
       memoryContext: retrievalResult.memories,
       webContext: webContextStr || undefined,
+      webSearchUsed: searchOutcome.webSearchUsed,
     });
 
     if (saveActionResult.handled) {
@@ -396,7 +452,6 @@ export async function POST(request: NextRequest) {
       stepId = null;
     }
 
-    // LLM Provider
     if (traceId) {
       stepId = (await traceService.startStep(traceId, "LLM_Provider"))?.id ?? null;
     }
@@ -460,8 +515,6 @@ export async function POST(request: NextRequest) {
       relevanceLabel: m.relevanceLabel,
     }));
 
-    // Learning Pipeline
-    // Skip when a direct save already handled the message
     let candidatesExtracted = 0;
     if (saveActionResult.handled && saveActionResult.action === "saved") {
       candidatesExtracted = 0;
@@ -484,7 +537,6 @@ export async function POST(request: NextRequest) {
         );
         candidatesExtracted = result_.stored;
       } catch {
-        // Learning extraction is non-fatal
       }
     }
     if (stepId) {
@@ -494,7 +546,6 @@ export async function POST(request: NextRequest) {
       stepId = null;
     }
 
-    // Feedback Signal (no-op here — feedback happens post-response)
     if (traceId) {
       stepId = (await traceService.startStep(traceId, "Feedback_Signal"))?.id ?? null;
     }
@@ -505,7 +556,6 @@ export async function POST(request: NextRequest) {
       stepId = null;
     }
 
-    // Final Response
     if (traceId) {
       stepId = (await traceService.startStep(traceId, "Final_Response"))?.id ?? null;
     }
@@ -527,6 +577,11 @@ export async function POST(request: NextRequest) {
       ...(retrievalResult.memoryUsed ? { memoriesUsed } : {}),
       webSearchUsed: searchOutcome.webSearchUsed,
       ...(citations.length > 0 ? { citations } : {}),
+      ...(searchOutcome.decisionResult ? {
+        webSearchDecision: searchOutcome.decisionResult.decision,
+        webSearchReason: searchOutcome.decisionResult.reason,
+        webSearchConfidence: searchOutcome.decisionResult.confidenceScore,
+      } : {}),
       ...(savedUserMessage ? { userMessageId: savedUserMessage.id } : {}),
       ...(savedAssistantMessage ? { messageId: savedAssistantMessage.id } : {}),
       ...(conversationId ? { conversationId } : {}),
@@ -545,3 +600,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export { saveUserWebSearchSetting };
