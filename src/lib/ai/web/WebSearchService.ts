@@ -1,14 +1,10 @@
 import { getSearchProvider, isSearchConfigured, isUsingMockProvider, type SearchResult } from "@/lib/ai/search/SearchProvider";
 import { SearchDecisionService, type SearchDecisionResult } from "./SearchDecisionService";
 import { SourceRanker } from "./SourceRanker";
-
-export interface WebSearchConfig {
-  maxResults: number;
-}
-
-const DEFAULT_CONFIG: WebSearchConfig = {
-  maxResults: 5,
-};
+import { QueryRewriter } from "./QueryRewriter";
+import { FreshnessGate, type FreshnessGateResult } from "./FreshnessGate";
+import { EvidenceSufficiencyValidator, type SufficiencyResult } from "./EvidenceSufficiencyValidator";
+import { classifyQuery, type QueryClassification } from "./QueryTypes";
 
 export type SourceReliability = "high" | "medium" | "low";
 
@@ -31,15 +27,20 @@ export interface WebSearchOutcome {
   usingMock: boolean;
   searchFailed?: boolean;
   originalDecision?: SearchDecisionResult["decision"];
+  classification?: QueryClassification;
+  rewrittenQuery?: string;
+  freshnessResult?: FreshnessGateResult;
+  sufficiencyResult?: SufficiencyResult;
+  rejectionSummary?: { total: number; reasons: string[] };
 }
 
 export class WebSearchService {
-  private config: WebSearchConfig;
   private decisionService: SearchDecisionService;
+  private queryRewriter: QueryRewriter;
 
-  constructor(config?: Partial<WebSearchConfig>) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
+  constructor() {
     this.decisionService = new SearchDecisionService();
+    this.queryRewriter = new QueryRewriter();
   }
 
   async searchWithDecision(query: string, memoryConfidence?: number): Promise<WebSearchOutcome> {
@@ -62,11 +63,7 @@ export class WebSearchService {
       return {
         results: [],
         webSearchUsed: false,
-        decisionResult: {
-          ...decisionResult,
-          decision: "NO_SEARCH",
-          reason: "Search provider not configured. Set SEARCH_PROVIDER to \"tavily\" or \"brave\" with a valid API key.",
-        },
+        decisionResult: { ...decisionResult, decision: "NO_SEARCH", reason: "Search provider not configured." },
         usingMock: false,
         searchFailed: true,
         originalDecision,
@@ -74,39 +71,33 @@ export class WebSearchService {
     }
 
     const isMock = isUsingMockProvider();
-
     if (isMock) {
       return {
         results: [],
         webSearchUsed: false,
-        decisionResult: {
-          ...decisionResult,
-          decision: "NO_SEARCH",
-          reason: "Web search is set to mock provider. Configure a real provider (SEARCH_PROVIDER=tavily) for real results.",
-        },
+        decisionResult: { ...decisionResult, decision: "NO_SEARCH", reason: "Mock provider in use." },
         usingMock: true,
         searchFailed: true,
         originalDecision,
       };
     }
 
-    const redactedQuery = this.decisionService.generateSearchQuery(query);
+    const classification = classifyQuery(query);
+    const rewrittenQuery = this.queryRewriter.rewrite(query, classification);
+    console.log("[WEB_SEARCH] queryType:", classification.type, "| rewritten:", rewrittenQuery.slice(0, 100));
+
+    const redactedQuery = this.decisionService.generateSearchQuery(rewrittenQuery);
     console.log("[WEB_SEARCH] redactedQuery:", redactedQuery.slice(0, 100));
+
     let provider;
     try {
       provider = getSearchProvider();
-      console.log("[WEB_SEARCH] provider obtained:", provider.constructor?.name);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Search provider initialization failed.";
-      console.log("[WEB_SEARCH] provider init failed:", msg);
       return {
         results: [],
         webSearchUsed: false,
-        decisionResult: {
-          ...decisionResult,
-          decision: "NO_SEARCH",
-          reason: msg,
-        },
+        decisionResult: { ...decisionResult, decision: "NO_SEARCH", reason: msg },
         usingMock: false,
         searchFailed: true,
         originalDecision,
@@ -115,20 +106,15 @@ export class WebSearchService {
 
     let searchResults: SearchResult[];
     try {
-      console.log("[WEB_SEARCH] calling provider.search with config.maxResults:", this.config.maxResults);
-      searchResults = await provider.search(redactedQuery, this.config.maxResults);
+      console.log("[WEB_SEARCH] calling provider.search");
+      searchResults = await provider.search(redactedQuery, 10);
       console.log("[WEB_SEARCH] search returned", searchResults?.length ?? 0, "results");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Search provider API call failed.";
-      console.log("[WEB_SEARCH] search failed:", msg);
       return {
         results: [],
         webSearchUsed: false,
-        decisionResult: {
-          ...decisionResult,
-          decision: "NO_SEARCH",
-          reason: msg,
-        },
+        decisionResult: { ...decisionResult, decision: "NO_SEARCH", reason: msg },
         usingMock: false,
         searchFailed: true,
         originalDecision,
@@ -136,51 +122,72 @@ export class WebSearchService {
     }
 
     if (!Array.isArray(searchResults) || searchResults.length === 0) {
-      console.log("[WEB_SEARCH] search returned no results or empty array");
+      console.log("[WEB_SEARCH] search returned no results");
       return {
         results: [],
         webSearchUsed: false,
-        decisionResult: {
-          ...decisionResult,
-          decision: "NO_SEARCH",
-          reason: "Search returned no results",
-        },
+        decisionResult: { ...decisionResult, decision: "NO_SEARCH", reason: "Search returned no results" },
         usingMock: false,
         searchFailed: true,
         originalDecision,
       };
     }
 
-    const now = new Date().toISOString();
-
-    const ranker = new SourceRanker();
+    const ranker = new SourceRanker(classification);
     const ranked = ranker.rank(
       searchResults.map((r) => ({ title: r.title, url: r.url, snippet: r.snippet })),
-      redactedQuery
+      query
     );
     const qualityFiltered = ranker.filterLowQuality(ranked);
+    console.log("[WEB_SEARCH] ranked:", ranked.length, "| after quality filter:", qualityFiltered.length);
 
-    console.log("[WEB_SEARCH] ranked:", ranked.length, "| after quality filter:", qualityFiltered.length, "| total from tavily:", searchResults.length);
-
-    const results: WebSearchResult[] = qualityFiltered.map((r) => ({
+    const now = new Date().toISOString();
+    const rawSources = qualityFiltered.map((r) => ({
       title: r.source.title,
       url: r.source.url,
       snippet: r.source.snippet,
-      fetchedAt: now,
-      isMock,
-      sourceReliability: r.score.reliability,
       sourceDate: r.score.extractedDate || undefined,
       isStale: r.score.isStale,
       domainCredibility: r.score.domainScore,
     }));
 
-    console.log("[WEB_SEARCH] success: returning", results.length, "ranked results, webSearchUsed: true, originalDecision:", originalDecision);
+    const freshnessGate = new FreshnessGate();
+    const freshnessResult = freshnessGate.filter(rawSources, classification, query);
+    console.log("[WEB_SEARCH] freshnessGate: accepted:", freshnessResult.acceptedSources.length, "| rejected:", freshnessResult.rejectedSources.length, "| hasFresh:", freshnessResult.hasFreshSource);
+
+    const validator = new EvidenceSufficiencyValidator();
+    const sufficiencyResult = validator.validate(freshnessResult, classification, query);
+    console.log("[WEB_SEARCH] sufficiency: sufficient:", sufficiencyResult.sufficient, "| confidence:", sufficiencyResult.confidence, "| controlledResponse:", sufficiencyResult.controlledResponse ? "YES" : "NO");
+
+    const rejectionSummary = freshnessResult.rejectedSources.length > 0
+      ? {
+          total: freshnessResult.rejectedSources.length,
+          reasons: [...new Set(freshnessResult.rejectedSources.map((r) => r.rejectionReason))],
+        }
+      : undefined;
+
+    const results: WebSearchResult[] = freshnessResult.acceptedSources.map((s) => ({
+      title: s.title,
+      url: s.url,
+      snippet: s.snippet,
+      fetchedAt: now,
+      isMock,
+      sourceReliability: "medium" as SourceReliability,
+      sourceDate: s.sourceDate,
+      isStale: s.isStale,
+    }));
+
     return {
       results,
       webSearchUsed: results.length > 0,
       decisionResult,
       usingMock: isMock,
       originalDecision,
+      classification,
+      rewrittenQuery,
+      freshnessResult,
+      sufficiencyResult,
+      rejectionSummary,
     };
   }
 }

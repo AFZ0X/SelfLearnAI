@@ -368,6 +368,29 @@ export async function POST(request: NextRequest) {
         decisionMeta.searchFailed = true;
         decisionMeta.originalDecision = searchOutcome.originalDecision;
       }
+      if (searchOutcome.classification) {
+        decisionMeta.queryType = searchOutcome.classification.type;
+        decisionMeta.isTimeSensitive = searchOutcome.classification.isTimeSensitive;
+        decisionMeta.needsOfficialSource = searchOutcome.classification.needsOfficialSource;
+      }
+      if (searchOutcome.rewrittenQuery) {
+        decisionMeta.rewrittenQuery = searchOutcome.rewrittenQuery;
+      }
+      if (searchOutcome.freshnessResult) {
+        decisionMeta.sourcesAccepted = searchOutcome.freshnessResult.acceptedSources.length;
+        decisionMeta.sourcesRejected = searchOutcome.freshnessResult.rejectedSources.length;
+        decisionMeta.hasFreshSource = searchOutcome.freshnessResult.hasFreshSource;
+        decisionMeta.allRejected = searchOutcome.freshnessResult.allRejected;
+        decisionMeta.freshnessGatePassed = searchOutcome.freshnessResult.acceptedSources.length > 0;
+      }
+      if (searchOutcome.sufficiencyResult) {
+        decisionMeta.evidenceSufficient = searchOutcome.sufficiencyResult.sufficient;
+        decisionMeta.evidenceConfidence = searchOutcome.sufficiencyResult.confidence;
+        decisionMeta.controlledResponseUsed = !!searchOutcome.sufficiencyResult.controlledResponse;
+      }
+      if (searchOutcome.rejectionSummary) {
+        decisionMeta.rejectionReasons = searchOutcome.rejectionSummary.reasons;
+      }
       const providerInfo = getProviderStatus();
       decisionMeta.searchProvider = providerInfo.name;
       await traceService.completeStep(stepId, decisionMeta);
@@ -436,7 +459,13 @@ export async function POST(request: NextRequest) {
       if (traceId) {
         stepId = (await traceService.startStep(traceId, "Source_Summarization"))?.id ?? null;
       }
-      const built = contextBuilder.buildContext(searchOutcome.results, fetchedPages, summaries);
+      const built = contextBuilder.buildContext(
+        searchOutcome.results,
+        fetchedPages,
+        summaries,
+        searchOutcome.classification,
+        searchOutcome.sufficiencyResult
+      );
       webContextStr = built.webContext;
       citations = built.citations;
       console.log("[CHAT] webContextStr length:", webContextStr.length, "| citations count:", citations.length, "| validation:", JSON.stringify(built.validation));
@@ -471,6 +500,22 @@ export async function POST(request: NextRequest) {
           })),
         });
       }
+    }
+
+    if (searchOutcome.sufficiencyResult?.controlledResponse) {
+      if (traceId) {
+        await traceService.failTrace(traceId);
+      }
+      return NextResponse.json({
+        role: "assistant",
+        content: searchOutcome.sufficiencyResult.controlledResponse,
+        webSearchUsed: false,
+        webSearchDecision: "NO_SEARCH",
+        webSearchReason: "Insufficient reliable evidence",
+        searchFailed: true,
+        ...(searchOutcome.classification ? { queryType: searchOutcome.classification.type } : {}),
+        ...(searchOutcome.rejectionSummary ? { rejectedSources: searchOutcome.rejectionSummary.total, rejectionReasons: searchOutcome.rejectionSummary.reasons } : {}),
+      });
     }
 
     if (traceId) {
@@ -649,6 +694,9 @@ export async function POST(request: NextRequest) {
       ...(saveActionResult.handled && saveActionResult.action === "saved"
         ? { memorySaved: true, memorySavedId: saveActionResult.memory.id }
         : {}),
+      ...(searchOutcome.classification ? { queryType: searchOutcome.classification.type } : {}),
+      ...(searchOutcome.sufficiencyResult ? { evidenceConfidence: searchOutcome.sufficiencyResult.confidence } : {}),
+      ...(searchOutcome.rejectionSummary ? { rejectedSourcesCount: searchOutcome.rejectionSummary.total } : {}),
     });
   } catch {
     if (traceId) {

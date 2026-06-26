@@ -1,7 +1,9 @@
 import type { WebSearchResult } from "./WebSearchService";
 import type { FetchedPage } from "./WebFetchService";
 import type { SourceSummary } from "./SourceSummarizer";
-import { EvidenceValidator } from "./EvidenceValidator";
+import type { QueryClassification } from "./QueryTypes";
+import type { SufficiencyResult } from "./EvidenceSufficiencyValidator";
+import { AnswerConstraintBuilder } from "./AnswerConstraintBuilder";
 
 export interface Citation {
   title: string;
@@ -43,7 +45,9 @@ export class WebContextBuilder {
   buildContext(
     searchResults: WebSearchResult[],
     fetchedPages: FetchedPage[],
-    summaries: SourceSummary[]
+    summaries: SourceSummary[],
+    classification?: QueryClassification,
+    sufficiencyResult?: SufficiencyResult
   ): WebContextResult {
     if (searchResults.length === 0) {
       return { webContext: "", citations: [], validation: { confidence: "LOW", warnings: ["No sources found"], conflicts: 0, insufficientEvidence: true } };
@@ -109,20 +113,9 @@ Content: ${safeSourceText}`;
       return { webContext: "", citations: [], validation: { confidence: "LOW", warnings: ["All sources filtered as malicious or low quality"], conflicts: 0, insufficientEvidence: true } };
     }
 
-    const validator = new EvidenceValidator();
-    const validation = validator.validate(
-      searchResults.map((r) => ({
-        title: r.title,
-        url: r.url,
-        snippet: r.snippet,
-        sourceDate: r.sourceDate,
-        isStale: r.isStale,
-      })),
-      ""
-    );
-
-    const conflictBlock = validation.conflicts.length > 0
-      ? `\n\nNOTE: ${validation.conflicts.length} contradiction(s) detected between sources. Do not present contradictory information as settled fact. Acknowledge the disagreement.`
+    const conflicts = this.detectConflicts(searchResults);
+    const conflictBlock = conflicts > 0
+      ? `\n\nNOTE: ${conflicts} contradiction(s) detected between sources. Do not present contradictory information as settled fact. Acknowledge the disagreement.`
       : "";
 
     const staleWarning = !hasFreshSource && parts.length > 0
@@ -133,11 +126,24 @@ Content: ${safeSourceText}`;
       ? "\n\nNOTE: No high-reliability sources found. Be cautious about presenting information as confirmed fact."
       : "";
 
-    const confidenceLabel = validation.confidence === "HIGH" ? "HIGH" : validation.confidence === "MEDIUM" ? "MEDIUM" : "LOW";
+    let confidenceLabel = "MEDIUM";
+    if (sufficiencyResult) {
+      confidenceLabel = sufficiencyResult.confidence;
+    }
+
+    let constraintsStr = "";
+    if (classification && sufficiencyResult) {
+      constraintsStr = "\n\n" + new AnswerConstraintBuilder().buildConstraints(
+        classification,
+        sufficiencyResult,
+        parts.length,
+        searchResults.length - parts.length
+      );
+    }
 
     let webContext = `<web_search_results>
 Source confidence: ${confidenceLabel}
-${validation.warnings.length > 0 ? `Warnings: ${validation.warnings.join("; ")}` : ""}
+${sufficiencyResult && sufficiencyResult.warnings.length > 0 ? `Warnings: ${sufficiencyResult.warnings.join("; ")}` : ""}
 ${conflictBlock}
 ${staleWarning}
 ${qualityNote}
@@ -148,15 +154,7 @@ ${parts.join("\n\n")}
 </web_search_results>
 
 When answering with web sources, cite them inline using [1], [2], [3] notation matching the source numbers above. Always cite the specific source when presenting information from it.
-
-EVIDENCE RULES — FAILURE TO FOLLOW IS A BUG:
-1. If sources conflict, acknowledge the disagreement. Do not pick one side without noting the conflict.
-2. If no high-reliability source exists, qualify your answer appropriately.
-3. If a source is marked [STALE DATE], do not use it for current information.
-4. If evidence is insufficient, say "I don't have enough reliable information to answer."
-5. Never present speculative content (predictions, forecasts, expected results) as settled fact.
-6. Never fabricate scores, dates, venues, temperatures, prices, or versions.
-7. Never use your internal training data to fill in missing facts when web search was required.`;
+${constraintsStr}`;
 
     webContext = webContext.trim();
 
@@ -165,15 +163,41 @@ EVIDENCE RULES — FAILURE TO FOLLOW IS A BUG:
       citations,
       validation: {
         confidence: confidenceLabel,
-        warnings: validation.warnings,
-        conflicts: validation.conflicts.length,
-        insufficientEvidence: validation.insufficientEvidence && parts.length === 0,
+        warnings: sufficiencyResult?.warnings || [],
+        conflicts,
+        insufficientEvidence: parts.length === 0,
       },
     };
   }
 
   private isMaliciousContent(text: string): boolean {
     return PROMPT_INJECTION_PATTERNS.some((p) => p.test(text));
+  }
+
+  private detectConflicts(sources: WebSearchResult[]): number {
+    let count = 0;
+    const texts = sources.map((s) => (s.snippet + " " + s.title).toLowerCase());
+    const patterns: Array<{ regex: RegExp; terms: string[] }> = [
+      { regex: /won|lost|defeated|victory|loss/, terms: ["won", "lost"] },
+      { regex: /higher|lower|increased|decreased|up|down/, terms: ["higher", "lower", "increased", "decreased", "up", "down"] },
+    ];
+    for (const { regex, terms } of patterns) {
+      const matched = texts.filter((t) => regex.test(t));
+      if (matched.length >= 2) {
+        const hasPositive = matched.some((t) => terms.some((term) => t.includes(term)));
+        const hasNegative = matched.some((t) => terms.some((term) => t.includes(term) && !t.includes(term)));
+        if (hasPositive !== hasNegative) count++;
+      }
+    }
+    const numbers = texts.flatMap((t) => {
+      const nums = t.match(/\d+/g);
+      return nums ? nums.map(Number) : [];
+    });
+    for (const n of numbers) {
+      const opposites = numbers.filter((o) => Math.abs(n - o) > 5);
+      if (opposites.length > 0) { count++; break; }
+    }
+    return Math.min(count, 5);
   }
 
   private sanitizeContent(text: string): string {

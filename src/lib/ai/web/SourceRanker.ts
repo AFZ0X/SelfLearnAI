@@ -1,3 +1,5 @@
+import type { QueryClassification } from "./QueryTypes";
+
 export type SourceReliability = "high" | "medium" | "low";
 
 export interface SourceScore {
@@ -5,6 +7,8 @@ export interface SourceScore {
   freshnessScore: number;
   domainScore: number;
   qualityScore: number;
+  officialBonus: number;
+  speculativePenalty: number;
   compositeScore: number;
   extractedDate: string | null;
   isStale: boolean;
@@ -17,17 +21,32 @@ const HIGH_TRUST_DOMAINS = [
   "bbc.com", "bbc.co.uk", "nytimes.com", "wsj.com", "bloomberg.com",
   "nature.com", "sciencedirect.com", "pubmed.ncbi.nlm.nih.gov",
   "who.int", "worldbank.org", "imf.org", "un.org",
-  "fifa.com", "weather.com", "accuweather.com", "timeanddate.com",
-  "npmjs.com", "github.com", "nodejs.org", "nextjs.org", "vercel.com",
-  "google.com", "developer.mozilla.org", "stackoverflow.com",
+  "timeanddate.com",
   "gov", "edu",
 ];
+
+const OFFICIAL_DOMAINS: Record<string, string[]> = {
+  WEATHER: ["weather.com", "accuweather.com", "meteoblue.com", "windy.com", "wunderground.com",
+    "weather.gov", "timeanddate.com"],
+  VERSION: ["npmjs.com", "github.com", "nextjs.org", "vercel.com",
+    "nodejs.org", "react.dev", "angular.io", "vuejs.org"],
+  SPORTS_RESULT: ["fifa.com", "uefa.com", "espn.com", "skyports.com",
+    "bbc.com/sport", "goal.com", "transfermarkt.com"],
+  COMPANY_INFO: ["aramco.com"],
+};
 
 const LOW_TRUST_DOMAINS = [
   "blogspot.com", "wordpress.com", "medium.com", "quora.com",
   "reddit.com", "tiktok.com", "instagram.com", "facebook.com",
   "twitter.com", "x.com", "example.com", "fandom.com",
   "wikia.com", "pinterest.com", "tumblr.com",
+];
+
+const SPECULATIVE_WORDS = [
+  "predicted", "prediction", "forecast", "expected", "projected",
+  "likely", "could", "may", "would", "might", "perhaps", "possibly",
+  "anticipated", "estimated", "speculative",
+  "متوقع", "من المتوقع", "قد", "ربما", "محتمل",
 ];
 
 const DATE_PATTERNS = [
@@ -39,6 +58,8 @@ const DATE_PATTERNS = [
 ];
 
 export class SourceRanker {
+  constructor(private classification: QueryClassification) {}
+
   rank(
     sources: Array<{ title: string; url: string; snippet: string }>,
     query: string
@@ -65,7 +86,7 @@ export class SourceRanker {
 
       let isDupTitle = false;
       for (const seen of seenTitles) {
-        if (this.similarity(title, seen) > 0.85) {
+        if (this.titleSimilarity(title, seen) > 0.85) {
           isDupTitle = true;
           break;
         }
@@ -88,8 +109,15 @@ export class SourceRanker {
   ): Array<{ source: { title: string; url: string; snippet: string }; score: SourceScore }> {
     return ranked.filter((item) => {
       if (item.score.isDuplicate) return false;
-      if (item.score.isStale && item.score.reliability === "low") return false;
+
+      if (this.classification.isTimeSensitive) {
+        if (item.score.isStale) return false;
+        if (item.score.compositeScore < 0.4) return false;
+      }
+
       if (item.score.compositeScore < 0.2) return false;
+      if (item.score.domainScore < 0.1) return false;
+
       return true;
     });
   }
@@ -104,11 +132,23 @@ export class SourceRanker {
     const freshnessScore = this.scoreFreshness(extractedDate);
     const qualityScore = this.scoreContentQuality(source.snippet, source.title);
     const queryRelevance = this.scoreQueryRelevance(source, query);
-    const compositeScore = domainScore * 0.3 + freshnessScore * 0.25 + qualityScore * 0.2 + queryRelevance * 0.25;
+    const officialBonus = this.scoreOfficialBonus(domain);
+    const speculativePenalty = this.scoreSpeculativePenalty(source.snippet, source.title);
+
+    const rawScore = (
+      domainScore * 0.25 +
+      freshnessScore * 0.25 +
+      qualityScore * 0.15 +
+      queryRelevance * 0.15 +
+      officialBonus * 0.1 +
+      speculativePenalty * 0.1
+    );
+
+    const compositeScore = Math.max(0, Math.min(1, rawScore));
     const isStale = freshnessScore < 0.3;
 
     let reliability: SourceReliability;
-    if (compositeScore >= 0.7 && domainScore >= 0.7) {
+    if (compositeScore >= 0.7 && domainScore >= 0.6) {
       reliability = "high";
     } else if (compositeScore >= 0.4) {
       reliability = "medium";
@@ -127,6 +167,8 @@ export class SourceRanker {
       freshnessScore,
       domainScore,
       qualityScore,
+      officialBonus,
+      speculativePenalty,
       compositeScore,
       extractedDate,
       isStale,
@@ -139,9 +181,7 @@ export class SourceRanker {
     try {
       const hostname = new URL(url).hostname.replace(/^www\./, "");
       const parts = hostname.split(".");
-      if (parts.length >= 2) {
-        return parts.slice(-2).join(".");
-      }
+      if (parts.length >= 2) return parts.slice(-2).join(".");
       return hostname;
     } catch {
       return url;
@@ -150,19 +190,35 @@ export class SourceRanker {
 
   private scoreDomain(domain: string): number {
     for (const trusted of HIGH_TRUST_DOMAINS) {
-      if (domain.endsWith(trusted) || domain === trusted) {
-        return 1.0;
-      }
+      if (domain.endsWith(trusted) || domain === trusted) return 1.0;
     }
     if (domain.endsWith(".gov") || domain.endsWith(".edu")) return 0.95;
-
     for (const untrusted of LOW_TRUST_DOMAINS) {
-      if (domain.endsWith(untrusted) || domain === untrusted) {
-        return 0.1;
-      }
+      if (domain.endsWith(untrusted) || domain === untrusted) return 0.1;
     }
-
     return 0.5;
+  }
+
+  private scoreOfficialBonus(domain: string): number {
+    const type = this.classification.type;
+    const domains = OFFICIAL_DOMAINS[type];
+    if (!domains) return 0;
+
+    for (const official of domains) {
+      if (domain === official || domain.endsWith("." + official)) return 1.0;
+      if (domain.endsWith(official)) return 0.8;
+    }
+    return 0;
+  }
+
+  private scoreSpeculativePenalty(snippet: string, title: string): number {
+    const text = (snippet + " " + title).toLowerCase();
+    let matchCount = 0;
+    for (const word of SPECULATIVE_WORDS) {
+      if (text.includes(word)) matchCount++;
+    }
+    if (matchCount === 0) return 0;
+    return Math.max(-0.5, -(matchCount * 0.15));
   }
 
   private extractDate(text: string): string | null {
@@ -249,7 +305,6 @@ export class SourceRanker {
     const hasNumbers = /\d/.test(text);
     const hasSentences = /[.!?]/.test(text);
     const quality = (hasNumbers ? 0.15 : 0) + (hasSentences ? 0.15 : 0);
-
     return Math.min(1.0, 0.7 + quality);
   }
 
@@ -267,17 +322,14 @@ export class SourceRanker {
     for (const word of queryWords) {
       if (text.includes(word)) matchCount++;
     }
-
     return matchCount / queryWords.length;
   }
 
-  private similarity(a: string, b: string): number {
+  private titleSimilarity(a: string, b: string): number {
     if (a === b) return 1.0;
     if (a.length < 5 || b.length < 5) return 0;
-
     const longer = a.length > b.length ? a : b;
     const shorter = a.length > b.length ? b : a;
-
     if (longer.includes(shorter)) return 0.9;
 
     const maxDist = Math.floor(shorter.length * 0.3);
@@ -285,11 +337,7 @@ export class SourceRanker {
     for (let i = 0; i < Math.min(shorter.length, longer.length); i++) {
       if (shorter[i] !== longer[i]) distance++;
     }
-
-    if (distance <= maxDist) {
-      return 1.0 - distance / longer.length;
-    }
-
+    if (distance <= maxDist) return 1.0 - distance / longer.length;
     return 0;
   }
 }
