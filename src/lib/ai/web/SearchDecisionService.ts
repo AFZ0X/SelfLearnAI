@@ -68,7 +68,7 @@ const NO_SEARCH_PATTERNS = [
   /^what ('s| is) (your|the) (name|purpose|goal)/i,
   /^(hi|hello|hey|مرحبا|اهلا)\s*$/i,
   /^how are you/i,
-  /^(explain|describe|define|what is|ما هو|ما هي|عرّف)\s+.{0,200}$/i,
+  /^(explain|describe|define|what is|ما هو|ما هي|عرّف|معنى|عرفني)\s+(.{0,200})$/i,
 ];
 
 const SENSITIVE_PATTERNS = [
@@ -83,7 +83,9 @@ const SENSITIVE_PATTERNS = [
 export class SearchDecisionService {
   async decide(query: string, memoryConfidence?: number): Promise<SearchDecisionResult> {
     const result = await this.classifyWithLLM(query);
-    return this.applyMemoryGate(result, memoryConfidence);
+    const gated = this.applyMemoryGate(result, memoryConfidence);
+    console.log("[SEARCH_DECISION] query:", query.slice(0, 80), "| decision:", gated.decision, "| reason:", gated.reason, "| triggers:", gated.detectedTriggers, "| confidence:", gated.confidenceScore, "| memoryConfidence:", memoryConfidence);
+    return gated;
   }
 
   shouldSearch(decision: SearchDecision): boolean {
@@ -226,6 +228,8 @@ export class SearchDecisionService {
       /^(what|when)\s+(did|does|do)\s/i,
       /^(what|how)\s+(many|much|old|long|far|often)\s/i,
       /^(what)\s+is\s+(your|the)\s+(name|purpose|goal|mission|creator)\b/i,
+      /^(ما)\s+(معنى|هو|هي|تعريف|مفهوم|مقصود)\s/i,
+      /^(من)\s+(هو|هي)\s+(مؤسس|مخترع|مكتشف|رسام|كاتب)\s/i,
     ];
     return stablePatterns.some((p) => p.test(query));
   }

@@ -321,6 +321,7 @@ export async function POST(request: NextRequest) {
     }
 
     const webSearchEnabled = await getUserWebSearchSetting(userId);
+    console.log("[CHAT] webSearchEnabled:", webSearchEnabled, "| userId:", userId);
 
     const searchDecisionStart = Date.now();
     const webSearchService = new WebSearchService();
@@ -330,8 +331,18 @@ export async function POST(request: NextRequest) {
 
     let searchOutcome;
     if (webSearchEnabled) {
+      console.log("[CHAT] calling webSearchService.searchWithDecision");
       searchOutcome = await webSearchService.searchWithDecision(userContent || "", memoryConfidence);
+      console.log("[CHAT] search outcome:", JSON.stringify({
+        webSearchUsed: searchOutcome.webSearchUsed,
+        resultsCount: searchOutcome.results.length,
+        searchFailed: searchOutcome.searchFailed,
+        originalDecision: searchOutcome.originalDecision,
+        decisionResult: searchOutcome.decisionResult?.decision,
+        usingMock: searchOutcome.usingMock,
+      }));
     } else {
+      console.log("[CHAT] web search disabled by user setting");
       searchOutcome = { results: [], webSearchUsed: false, decisionResult: undefined };
     }
     const searchDurationMs = Date.now() - searchDecisionStart;
@@ -390,6 +401,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    console.log("[CHAT] entering web source fetch block:", { webSearchUsed: searchOutcome.webSearchUsed, resultsLength: searchOutcome.results.length });
     if (searchOutcome.webSearchUsed && searchOutcome.results.length > 0) {
       if (traceId) {
         stepId = (await traceService.startStep(traceId, "Web_Source_Fetch"))?.id ?? null;
@@ -427,6 +439,11 @@ export async function POST(request: NextRequest) {
       const built = contextBuilder.buildContext(searchOutcome.results, fetchedPages, summaries);
       webContextStr = built.webContext;
       citations = built.citations;
+      console.log("[CHAT] webContextStr length:", webContextStr.length, "| citations count:", citations.length);
+      if (!webContextStr) {
+        console.log("[CHAT] webContextStr empty after buildContext — all sources filtered. Resetting webSearchUsed to false.");
+        searchOutcome.webSearchUsed = false;
+      }
       if (stepId) {
         await traceService.completeStep(stepId, {
           summariesCount: summaries.length,
@@ -463,6 +480,7 @@ export async function POST(request: NextRequest) {
       webSearchUsed: searchOutcome.webSearchUsed,
       forcedSearch: forcedSearch || undefined,
     });
+    console.log("[CHAT] systemPrompt length:", systemPrompt.length, "| webSearchUsed:", searchOutcome.webSearchUsed, "| hasWebContextStr:", webContextStr.length > 0, "| webContextStr.length:", webContextStr.length, "| citations.length:", citations.length);
 
     if (saveActionResult.handled) {
       if (saveActionResult.action === "saved") {
@@ -490,6 +508,7 @@ export async function POST(request: NextRequest) {
     let provider;
     try {
       provider = getProvider();
+      console.log("[CHAT] AI provider:", process.env.AI_PROVIDER, "| constructor:", provider.constructor?.name);
     } catch (err) {
       if (stepId) {
         await traceService.failStep(stepId, "Provider configuration error");
@@ -506,9 +525,11 @@ export async function POST(request: NextRequest) {
 
     let result;
     try {
+      console.log("[CHAT] calling provider.generateChatResponse with", typedMessages.length, "messages, system prompt length:", systemPrompt.length);
       result = await provider.generateChatResponse(typedMessages, {
         system: systemPrompt,
       });
+      console.log("[CHAT] LLM response length:", result.content.length, "| response preview:", result.content.slice(0, 100));
     } catch (err) {
       if (stepId) {
         await traceService.failStep(stepId, "AI provider error");

@@ -16,14 +16,13 @@ export interface WebContextResult {
 const MAX_WEB_CONTEXT_CHARS = 4000;
 
 const PROMPT_INJECTION_PATTERNS = [
-  /ignore\s+(all\s+)?previous\s+instructions/i,
+  /ignore\s+(all\s+)?previous\s+(instructions|directives|messages)/i,
   /reveal\s+(your\s+)?(system\s+)?prompt/i,
-  /you\s+are\s+(not\s+)?(an?\s+)?(AI|assistant|chatbot)/i,
-  /forget\s+(all\s+)?(previous\s+)?instructions/i,
-  /execute\s+/i,
-  /delete\s+(all\s+)?data/i,
-  /you\s+must\s+ignore/i,
-  /disregard\s+(all\s+)?(previous\s+)?instructions/i,
+  /forget\s+(all\s+)?(previous\s+)?(instructions|directives)/i,
+  /disregard\s+(all\s+)?(previous\s+)?(instructions|directives)/i,
+  /you\s+must\s+ignore\s+(all\s+)?(previous\s+)?(instructions|directives)/i,
+  /delete\s+(all\s+)?(your\s+)?data/i,
+  /output\s+(your\s+)?(system\s+)?prompt/i,
 ];
 
 export class WebContextBuilder {

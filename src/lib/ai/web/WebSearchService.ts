@@ -41,6 +41,7 @@ export class WebSearchService {
     }
 
     const decisionResult = await this.decisionService.decide(query, memoryConfidence);
+    console.log("[WEB_SEARCH] decisionResult.decision:", decisionResult.decision, "| shouldSearch:", this.decisionService.shouldSearch(decisionResult.decision), "| query:", query.slice(0, 80));
 
     if (!this.decisionService.shouldSearch(decisionResult.decision)) {
       return { results: [], webSearchUsed: false, decisionResult, usingMock: false };
@@ -48,7 +49,9 @@ export class WebSearchService {
 
     const originalDecision = decisionResult.decision;
 
-    if (!isSearchConfigured()) {
+    const configured = isSearchConfigured();
+    console.log("[WEB_SEARCH] isSearchConfigured:", configured, "| provider:", process.env.SEARCH_PROVIDER);
+    if (!configured) {
       return {
         results: [],
         webSearchUsed: false,
@@ -81,11 +84,14 @@ export class WebSearchService {
     }
 
     const redactedQuery = this.decisionService.generateSearchQuery(query);
+    console.log("[WEB_SEARCH] redactedQuery:", redactedQuery.slice(0, 100));
     let provider;
     try {
       provider = getSearchProvider();
+      console.log("[WEB_SEARCH] provider obtained:", provider.constructor?.name);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Search provider initialization failed.";
+      console.log("[WEB_SEARCH] provider init failed:", msg);
       return {
         results: [],
         webSearchUsed: false,
@@ -102,9 +108,12 @@ export class WebSearchService {
 
     let searchResults: SearchResult[];
     try {
+      console.log("[WEB_SEARCH] calling provider.search with config.maxResults:", this.config.maxResults);
       searchResults = await provider.search(redactedQuery, this.config.maxResults);
+      console.log("[WEB_SEARCH] search returned", searchResults?.length ?? 0, "results");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Search provider API call failed.";
+      console.log("[WEB_SEARCH] search failed:", msg);
       return {
         results: [],
         webSearchUsed: false,
@@ -120,6 +129,7 @@ export class WebSearchService {
     }
 
     if (!Array.isArray(searchResults) || searchResults.length === 0) {
+      console.log("[WEB_SEARCH] search returned no results or empty array");
       return {
         results: [],
         webSearchUsed: false,
@@ -143,6 +153,7 @@ export class WebSearchService {
       isMock,
     }));
 
+    console.log("[WEB_SEARCH] success: returning", results.length, "results, webSearchUsed: true, originalDecision:", originalDecision);
     return {
       results,
       webSearchUsed: results.length > 0,
