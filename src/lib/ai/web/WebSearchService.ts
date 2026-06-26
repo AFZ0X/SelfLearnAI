@@ -9,6 +9,7 @@ const DEFAULT_CONFIG: WebSearchConfig = {
 };
 
 const WEB_SEARCH_KEYWORDS = [
+  // English
   "latest",
   "current",
   "today",
@@ -28,6 +29,21 @@ const WEB_SEARCH_KEYWORDS = [
   "release",
   "version",
   "announce",
+  // Arabic
+  "اليوم",
+  "الآن",
+  "أخبار",
+  "جديد",
+  "حديث",
+  "آخر",
+  "سعر",
+  "طقس",
+  "تقويم",
+  "جدول",
+  "إصدار",
+  "إعلان",
+  "تحديث",
+  "مباشر",
 ];
 
 export interface WebSearchResult {
@@ -59,6 +75,11 @@ export class WebSearchService {
     }
 
     if (/^(who|what|when|where|why|how)\s/i.test(lower)) {
+      return true;
+    }
+
+    // Arabic question words
+    if (/^(من|ماذا|متى|أين|لماذا|كيف|كم|هل)\s/i.test(query)) {
       return true;
     }
 
