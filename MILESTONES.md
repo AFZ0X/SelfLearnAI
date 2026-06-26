@@ -249,5 +249,22 @@ npm run build:        ✅ Compiled in 2.5s
 - [x] Pre-existing build-blocking errors fixed (3 fixes: make-admin PrismaPg adapter, AI Lab type cast, AI Lab status narrowing)
 - [x] Full verification: prisma validate ✅, generate ✅, tsc ✅ (0 errors), lint ✅ (0 errors), build ✅ (31 routes), test ✅ (83/83)
 
+## Milestone 14: Stability & Polish Pass (Phase 14) — 🟢 Complete
+**Gate**: 10 UX and stability fixes: memory save, scrolling, dedup, theme, warnings, rename/delete, account, logs, export, clear memory.
+- [x] Fix 1: Explicit memory save — improved Arabic regex patterns (prefixes و/ف/ب/ل), content extraction
+- [x] Fix 2: Chat internal scrolling — dashboard layout overflow fix (overflow-hidden + inner wrapper)
+- [x] Fix 3: Duplicate empty conversations — client-side dedup, server-side findEmptyConversation, confirmation dialog
+- [x] Fix 4: Global light/dark theme — CSS variables for error/warning, replaced hardcoded bg-red-900/bg-amber-800
+- [x] Fix 5: Admin warning visibility — verified existing WarningBanner, /api/me/warnings, /dashboard/warnings
+- [x] Fix 6: Conversation rename/delete — controls visible for all conversations, title validation
+- [x] Fix 7: Account settings — /dashboard/account with profile, password change, logout
+- [x] Fix 8: Admin error logs — in-memory log store, /dashboard/admin/logs page
+- [x] Fix 9: User data export — /api/me/export, /dashboard/account/export
+- [x] Fix 10: Clear Memory — /api/memories/clear, confirmation dialog, embeds cascade
+- [x] New API routes: /api/me, /api/me/password, /api/me/export, /api/memories/clear, /api/admin/logs
+- [x] New pages: /dashboard/account, /dashboard/account/export, /dashboard/admin/logs
+- [x] Theme CSS: added --error-bg, --error-border, --error-text, --warning-bg, --warning-border, --warning-text
+- [x] Verification: prisma validate ✅, generate ✅, tsc ✅, lint ✅ (0 errors), build ✅ (41 routes), test ✅ (83/83)
+
 ## Orphans and Pending Items
 - (none currently)

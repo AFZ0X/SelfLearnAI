@@ -71,7 +71,7 @@ export default function WarningsPage() {
       </div>
 
       {error && (
-        <div className="rounded-lg px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm mb-4">
+        <div className="rounded-lg px-4 py-3 text-sm mb-4" style={{ backgroundColor: "var(--error-bg)", border: "1px solid var(--error-border)", color: "var(--error-text)" }}>
           {error}
         </div>
       )}
@@ -142,53 +142,44 @@ function WarningCard({
 }) {
   return (
     <div
-      className={`rounded-lg border p-4 ${
-        acknowledged
-          ? "border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/50"
-          : "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950"
-      }`}
+      className={`rounded-lg border p-4`}
+      style={{
+        borderColor: acknowledged ? "var(--card-border)" : "var(--warning-border)",
+        backgroundColor: acknowledged ? "var(--card-bg)" : "var(--warning-bg)",
+      }}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span
-              className={`text-xs font-semibold uppercase tracking-wider ${
-                acknowledged
-                  ? "text-zinc-500 dark:text-zinc-400"
-                  : "text-amber-700 dark:text-amber-400"
-              }`}
+              className={`text-xs font-semibold uppercase tracking-wider`}
+              style={{ color: acknowledged ? "var(--muted-text)" : "var(--warning-text)" }}
             >
               {acknowledged ? "Acknowledged" : "Warning"}
             </span>
-            <span className="text-xs text-zinc-400">
+            <span className="text-xs" style={{ color: "var(--muted-text)" }}>
               {new Date(warning.createdAt).toLocaleDateString()}
             </span>
           </div>
           <p
-            className={`text-sm font-medium ${
-              acknowledged
-                ? "text-zinc-600 dark:text-zinc-300"
-                : "text-amber-900 dark:text-amber-100"
-            }`}
+            className={`text-sm font-medium`}
+            style={{ color: acknowledged ? "var(--surface-text)" : "var(--surface-text)" }}
           >
             {warning.reason}
           </p>
           {warning.note && (
             <p
-              className={`text-sm mt-0.5 ${
-                acknowledged
-                  ? "text-zinc-500 dark:text-zinc-400"
-                  : "text-amber-700 dark:text-amber-300"
-              }`}
+              className={`text-sm mt-0.5`}
+              style={{ color: acknowledged ? "var(--muted-text)" : "var(--warning-text)" }}
             >
               {warning.note}
             </p>
           )}
-          <p className="text-xs mt-1 text-zinc-400">
+          <p className="text-xs mt-1" style={{ color: "var(--muted-text)" }}>
             Issued by {warning.admin?.name || warning.admin?.email || "Admin"}
           </p>
           {warning.acknowledgedAt && (
-            <p className="text-xs mt-0.5 text-zinc-400">
+            <p className="text-xs mt-0.5" style={{ color: "var(--muted-text)" }}>
               Acknowledged on {new Date(warning.acknowledgedAt).toLocaleDateString()}
             </p>
           )}
@@ -197,7 +188,8 @@ function WarningCard({
           <button
             onClick={() => onAcknowledge(warning.id)}
             disabled={acknowledging}
-            className="shrink-0 text-xs px-2.5 py-1 rounded bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 transition-colors"
+            className="shrink-0 text-xs px-2.5 py-1 rounded disabled:opacity-50 transition-colors"
+            style={{ backgroundColor: "var(--btn-primary-bg)", color: "var(--btn-primary-text)" }}
           >
             {acknowledging ? "..." : "Acknowledge"}
           </button>

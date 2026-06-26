@@ -50,22 +50,22 @@ export function WarningBanner() {
   if (loading || !latest) return null;
 
   return (
-    <div className="mx-4 mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950">
+    <div className="mx-4 mt-4 rounded-lg border p-4" style={{ backgroundColor: "var(--warning-bg)", borderColor: "var(--warning-border)" }}>
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--warning-text)" }}>
               Warning
             </span>
-            <span className="text-xs text-amber-500 dark:text-amber-500">
+            <span className="text-xs" style={{ color: "var(--muted-text)" }}>
               {new Date(latest.createdAt).toLocaleDateString()}
             </span>
           </div>
-          <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+          <p className="text-sm font-medium" style={{ color: "var(--surface-text)" }}>
             {latest.reason}
           </p>
           {latest.note && (
-            <p className="text-sm text-amber-700 dark:text-amber-300 mt-0.5">
+            <p className="text-sm mt-0.5" style={{ color: "var(--warning-text)" }}>
               {latest.note}
             </p>
           )}
@@ -73,14 +73,15 @@ export function WarningBanner() {
             <button
               onClick={() => handleAcknowledge(latest.id)}
               disabled={acknowledging === latest.id}
-              className="text-xs px-2.5 py-1 rounded bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 transition-colors"
+              className="text-xs px-2.5 py-1 rounded disabled:opacity-50 transition-colors"
+              style={{ backgroundColor: "var(--btn-primary-bg)", color: "var(--btn-primary-text)" }}
             >
               {acknowledging === latest.id ? "..." : "Acknowledge"}
             </button>
             {unacknowledged.length > 1 && (
               <Link
                 href="/dashboard/warnings"
-                className="text-xs text-amber-700 dark:text-amber-400 hover:underline"
+                className="text-xs hover:underline" style={{ color: "var(--warning-text)" }}
               >
                 View all ({unacknowledged.length}) warnings
               </Link>

@@ -240,7 +240,7 @@ export function ChatWindow({
           )}
 
           {error && (
-            <div className="rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: "var(--error-bg, #450a0a)", border: "1px solid var(--error-border, #7f1d1d)", color: "var(--error-text, #fca5a5)" }}>
+            <div className="rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: "var(--error-bg)", border: "1px solid var(--error-border)", color: "var(--error-text)" }}>
               {error}
             </div>
           )}

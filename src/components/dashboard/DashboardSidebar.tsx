@@ -20,6 +20,7 @@ const navItems = [
   { href: "/dashboard/neural-activity", label: "Neural Activity", icon: "📊" },
   { href: "/dashboard/admin", label: "Admin", icon: "⚙️", adminOnly: true },
   { href: "/dashboard/warnings", label: "Warnings", icon: "⚠️" },
+  { href: "/dashboard/account", label: "Account", icon: "👤" },
   { href: "/dashboard/settings", label: "Settings", icon: "🔧" },
 ];
 

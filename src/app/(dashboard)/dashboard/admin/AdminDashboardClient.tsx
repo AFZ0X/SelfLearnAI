@@ -13,7 +13,8 @@ type TabId =
   | "learning"
   | "feedback"
   | "sources"
-  | "health";
+  | "health"
+  | "logs";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -21,6 +22,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "conversations", label: "Conversations" },
   { id: "warnings", label: "Warnings" },
   { id: "audit-log", label: "Audit Log" },
+  { id: "logs", label: "Logs" },
   { id: "memories", label: "Memories" },
   { id: "learning", label: "Learning" },
   { id: "feedback", label: "Feedback" },
@@ -444,6 +446,9 @@ export function AdminDashboardClient() {
       )}
       {activeTab === "sources" && (
         <SourcesTab sources={sources} />
+      )}
+      {activeTab === "logs" && (
+        <LogsTab />
       )}
       {activeTab === "health" && (
         <HealthTab health={health} />
@@ -1099,6 +1104,65 @@ function SourcesTab({ sources }: { sources: WebSource[] }) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function LogsTab() {
+  const [logs, setLogs] = useState<Array<{ id: string; type: string; timestamp: string; source: string; details?: string; adminEmail?: string; targetEmail?: string }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/logs")
+      .then((r) => (r.ok ? r.json() : { logs: [] }))
+      .then((d) => setLogs(d.logs || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <p className="text-zinc-500 text-sm">Loading logs...</p>;
+  }
+
+  if (logs.length === 0) {
+    return <p className="text-zinc-500 text-sm">No log entries found.</p>;
+  }
+
+  return (
+    <div className="space-y-2">
+      {logs.slice(0, 100).map((log) => (
+        <div
+          key={log.id}
+          className="rounded border p-3 text-sm"
+          style={{ borderColor: "var(--card-border)", backgroundColor: "var(--card-bg)" }}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <span
+              className="text-xs font-medium px-2 py-0.5 rounded"
+              style={{
+                backgroundColor: log.source === "admin" ? "var(--warning-bg)" : "var(--subtle-bg)",
+                color: log.source === "admin" ? "var(--warning-text)" : "var(--muted-text)",
+              }}
+            >
+              {log.type}
+            </span>
+            <span className="text-xs" style={{ color: "var(--muted-text)" }}>
+              {formatDateSafe(log.timestamp)}
+            </span>
+          </div>
+          {log.details && (
+            <p className="text-xs mt-1" style={{ color: "var(--muted-text)" }}>
+              {log.details.slice(0, 200)}
+            </p>
+          )}
+          {log.adminEmail && (
+            <p className="text-xs mt-1" style={{ color: "var(--muted-text)" }}>
+              Admin: {log.adminEmail}
+              {log.targetEmail && ` → ${log.targetEmail}`}
+            </p>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

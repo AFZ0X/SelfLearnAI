@@ -40,6 +40,10 @@ function detectIntent(text: string): { type: string; confidence: number } {
 function detectExplicitSaveCommand(text: string): boolean {
   if (!text?.trim()) return false;
   const patterns = [
+    /[وفبل]احفظ[\s\S]{0,100}ذاكرت/im,
+    /[وفبل]تذكر[\s\S]{0,100}ذاكرت/im,
+    /[وفبل]اذكر[\s\S]{0,100}ذاكرت/im,
+    /[وفبل]خزن[\s\S]{0,100}ذاكرت/im,
     /احفظ[\s\S]{0,100}ذاكرت/im,
     /تذكر[\s\S]{0,100}ذاكرت/im,
     /اذكر[\s\S]{0,100}ذاكرت/im,
@@ -87,9 +91,22 @@ async function handleExplicitSaveCommand(
     return { handled: true, action: "needs_approval" };
   }
 
+  let memoryText = userContent;
+  const extractPatterns = [
+    /^(.*?)[\s]*[وفبل]?(احفظ|تذكر|اذكر|خزن)[\s\S]*$/im,
+    /^(.*?)[\s]*\b(remember|save|store|memorize|keep)\b[\s\S]*$/im,
+  ];
+  for (const pat of extractPatterns) {
+    const m = userContent.match(pat);
+    if (m && m[1] && m[1].trim().length > 2) {
+      memoryText = m[1].trim();
+      break;
+    }
+  }
+
   const memory = await createMemory(userId, {
-    text: userContent,
-    summary: userContent.slice(0, 150),
+    text: memoryText,
+    summary: memoryText.slice(0, 150),
     source: "chat",
     confidence: 1.0,
     tags: ["saved"],
@@ -363,7 +380,7 @@ export async function POST(request: NextRequest) {
 
     if (saveActionResult.handled) {
       if (saveActionResult.action === "saved") {
-        systemPrompt += `\n\n[SYSTEM NOTE: A new memory was saved with your message. The saved content is: "${saveActionResult.memory.text}" You may refer to this when responding.]`;
+        systemPrompt += `\n\n[SYSTEM NOTE: A new memory was saved. The saved content is: "${saveActionResult.memory.text}" You may refer to this when responding. For example, if the user saved their name, you can recall it later.]`;
       } else if (saveActionResult.action === "needs_approval") {
         systemPrompt += `\n\n[SYSTEM NOTE: The user asked to save something to memory but it requires approval. Explain that it needs to be approved from the Learning page first.]`;
       } else if (saveActionResult.action === "rejected") {

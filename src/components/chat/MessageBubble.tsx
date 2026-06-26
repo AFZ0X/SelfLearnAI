@@ -218,12 +218,8 @@ export function MessageBubble({
                 <button
                   onClick={() => feedback?.type === "THUMBS_DOWN" ? removeFeedback() : submitFeedback("THUMBS_DOWN")}
                   disabled={saving || !conversationId}
-                  className={`text-xs px-2 py-1 rounded transition-colors ${
-                    feedback?.type === "THUMBS_DOWN"
-                      ? "bg-red-900 text-red-200"
-                      : ""
-                  }`}
-                  style={feedback?.type !== "THUMBS_DOWN" ? { color: "var(--muted-text)" } : undefined}
+                  className="text-xs px-2 py-1 rounded transition-colors"
+                  style={feedback?.type === "THUMBS_DOWN" ? { backgroundColor: "var(--error-bg)", color: "var(--error-text)" } : { color: "var(--muted-text)" }}
                   onMouseEnter={(e) => { if (feedback?.type !== "THUMBS_DOWN") { e.currentTarget.style.backgroundColor = "var(--subtle-bg)"; e.currentTarget.style.color = "var(--conv-text)"; } }}
                   onMouseLeave={(e) => { if (feedback?.type !== "THUMBS_DOWN") { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "var(--muted-text)"; } }}
                   title="Thumbs down"
@@ -233,12 +229,8 @@ export function MessageBubble({
                 <button
                   onClick={() => { setShowWrongForm(!showWrongForm); setShowCorrection(false); }}
                   disabled={!conversationId}
-                  className={`text-xs px-2 py-1 rounded transition-colors ${
-                    feedback?.type === "WRONG_ANSWER"
-                      ? "bg-red-900 text-red-200"
-                      : ""
-                  }`}
-                  style={feedback?.type !== "WRONG_ANSWER" ? { color: "var(--muted-text)" } : undefined}
+                  className="text-xs px-2 py-1 rounded transition-colors"
+                  style={feedback?.type === "WRONG_ANSWER" ? { backgroundColor: "var(--error-bg)", color: "var(--error-text)" } : { color: "var(--muted-text)" }}
                   onMouseEnter={(e) => { if (feedback?.type !== "WRONG_ANSWER") { e.currentTarget.style.backgroundColor = "var(--subtle-bg)"; e.currentTarget.style.color = "var(--conv-text)"; } }}
                   onMouseLeave={(e) => { if (feedback?.type !== "WRONG_ANSWER") { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "var(--muted-text)"; } }}
                   title="Mark as wrong"
@@ -248,12 +240,8 @@ export function MessageBubble({
                 <button
                   onClick={() => { setShowCorrection(!showCorrection); setShowWrongForm(false); }}
                   disabled={!conversationId}
-                  className={`text-xs px-2 py-1 rounded transition-colors ${
-                    feedback?.type === "CORRECTION"
-                      ? "bg-amber-800 text-amber-200"
-                      : ""
-                  }`}
-                  style={feedback?.type !== "CORRECTION" ? { color: "var(--muted-text)" } : undefined}
+                  className="text-xs px-2 py-1 rounded transition-colors"
+                  style={feedback?.type === "CORRECTION" ? { backgroundColor: "var(--subtle-bg)", color: "var(--surface-text)" } : { color: "var(--muted-text)" }}
                   onMouseEnter={(e) => { if (feedback?.type !== "CORRECTION") { e.currentTarget.style.backgroundColor = "var(--subtle-bg)"; e.currentTarget.style.color = "var(--conv-text)"; } }}
                   onMouseLeave={(e) => { if (feedback?.type !== "CORRECTION") { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "var(--muted-text)"; } }}
                   title="Submit correction"
@@ -291,7 +279,8 @@ export function MessageBubble({
                   <button
                     onClick={() => submitFeedback("WRONG_ANSWER", { reason: wrongReason })}
                     disabled={saving || !wrongReason}
-                    className="px-3 py-1 text-xs rounded bg-red-700 text-white hover:bg-red-600 disabled:opacity-50"
+                    className="px-3 py-1 text-xs rounded disabled:opacity-50"
+                    style={{ backgroundColor: "var(--error-bg, #b91c1c)", color: "#fff" }}
                   >
                     Submit
                   </button>
@@ -334,7 +323,8 @@ export function MessageBubble({
                   <button
                     onClick={() => submitFeedback("CORRECTION", { correction: correctionText })}
                     disabled={saving || !correctionText.trim()}
-                    className="px-3 py-1 text-xs rounded bg-amber-700 text-white hover:bg-amber-600 disabled:opacity-50"
+                    className="px-3 py-1 text-xs rounded disabled:opacity-50"
+                    style={{ backgroundColor: "var(--btn-primary-bg, #b45309)", color: "var(--btn-primary-text, #fff)" }}
                   >
                     Submit
                   </button>

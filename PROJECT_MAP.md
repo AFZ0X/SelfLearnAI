@@ -874,3 +874,42 @@ npm test               # ✅ 83 tests passed (5 files)
 - Admin cannot ban self
 - Admin cannot demote self if zero admins remain
 - Hidden prompts and secrets are never exposed in conversation review
+
+## [STABILITY_POLISH_PASS_STATUS]
+
+**Status**: Complete
+
+### Fixes Implemented
+
+| # | Fix | Files Changed |
+|---|-----|---------------|
+| 1 | Explicit memory save from chat — improved Arabic regex patterns, content extraction | `src/app/api/chat/route.ts` |
+| 2 | Chat internal scrolling — dashboard layout overflow fix | `src/app/(dashboard)/layout.tsx` |
+| 3 | Duplicate empty conversations — client-side dedup, confirmation dialog, title validation | `src/components/chat/ChatPage.tsx`, `src/components/chat/Sidebar.tsx` |
+| 4 | Global light/dark theme consistency — replaced hardcoded colors with CSS variables, added error/warning CSS vars | `src/app/globals.css`, `src/components/chat/MessageBubble.tsx`, `src/components/chat/ChatWindow.tsx`, `src/components/dashboard/WarningBanner.tsx`, `src/app/(dashboard)/dashboard/warnings/page.tsx`, `src/components/memory/MemoryPageClient.tsx` |
+| 5 | Admin warning visibility — verified existing implementation | (already complete) |
+| 6 | Conversation rename/delete controls — show controls for all conversations, not just active | `src/components/chat/Sidebar.tsx` |
+| 7 | Account settings page — new page with profile, password change, logout | `src/app/(dashboard)/dashboard/account/page.tsx`, `AccountPageClient.tsx`, `src/app/api/me/route.ts`, `src/app/api/me/password/route.ts`, `src/components/dashboard/DashboardSidebar.tsx` |
+| 8 | Admin error logs page — in-memory log store + admin UI | `src/lib/safety/safety-event-logger.ts`, `src/app/api/admin/logs/route.ts`, `src/app/(dashboard)/dashboard/admin/logs/page.tsx`, `src/app/(dashboard)/dashboard/admin/AdminDashboardClient.tsx` |
+| 9 | User data export — JSON download with all user data | `src/app/api/me/export/route.ts`, `src/app/(dashboard)/dashboard/account/export/page.tsx` |
+| 10 | Clear Memory action — delete all user memories + embeddings | `src/app/api/memories/clear/route.ts`, `src/components/memory/MemoryPageClient.tsx` |
+
+### New API Routes
+- `GET/PATCH /api/me` — user profile
+- `PATCH /api/me/password` — change password
+- `GET /api/me/export` — export user data as JSON
+- `DELETE /api/memories/clear` — clear all user memories
+- `GET /api/admin/logs` — admin system logs
+
+### New Pages
+- `/dashboard/account` — account settings
+- `/dashboard/account/export` — data export
+- `/dashboard/admin/logs` — admin system logs
+
+### Verification
+- `npx prisma validate` — PASS
+- `npx prisma generate` — PASS
+- `npx tsc --noEmit` — PASS
+- `npm run lint` — PASS (0 errors, 3 pre-existing warnings)
+- `npm run build` — PASS (41 pages generated)
+- `npm test` — PASS (83 tests passed)

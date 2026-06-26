@@ -118,7 +118,7 @@ export function Sidebar({
               <span className="flex-1 truncate">{conv.title}</span>
             )}
 
-            {isActive && editingId !== conv.id && (
+            {editingId !== conv.id && (
               <div className="hidden group-hover:flex items-center gap-0.5">
                 <button
                   onClick={(e) => { e.stopPropagation(); startRename(conv); }}
@@ -130,7 +130,12 @@ export function Sidebar({
                   Rename
                 </button>
                 <button
-                  onClick={(e) => { e.stopPropagation(); onDelete(conv.id); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm("Delete this conversation?")) {
+                      onDelete(conv.id);
+                    }
+                  }}
                   className="px-1.5 py-0.5 text-xs text-red-400 hover:text-red-300 rounded"
                   onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--conv-item-hover-bg)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}

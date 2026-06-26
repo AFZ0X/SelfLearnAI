@@ -52,8 +52,14 @@ export function ChatPage({ provider, initialConversations }: ChatPageProps) {
       });
       if (res.ok) {
         const data = await res.json();
-        setConversations((prev) => [data.conversation, ...prev]);
-        setActiveId(data.conversation.id);
+        const conv = data.conversation;
+        if (conv) {
+          setConversations((prev) => {
+            if (prev.some((c) => c.id === conv.id)) return prev;
+            return [conv, ...prev];
+          });
+          setActiveId(conv.id);
+        }
       }
     } catch {
       // ignore
@@ -63,15 +69,17 @@ export function ChatPage({ provider, initialConversations }: ChatPageProps) {
   }, [creating, conversations]);
 
   async function handleRename(id: string, title: string) {
+    const trimmed = title.trim();
+    if (!trimmed || trimmed.length > 200) return;
     try {
       const res = await fetch(`/api/conversations/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({ title: trimmed }),
       });
       if (res.ok) {
         setConversations((prev) =>
-          prev.map((c) => (c.id === id ? { ...c, title } : c))
+          prev.map((c) => (c.id === id ? { ...c, title: trimmed } : c))
         );
       }
     } catch {
@@ -85,10 +93,14 @@ export function ChatPage({ provider, initialConversations }: ChatPageProps) {
         method: "DELETE",
       });
       if (res.ok) {
-        setConversations((prev) => prev.filter((c) => c.id !== id));
-        if (activeId === id) {
-          setActiveId(null);
-        }
+        setConversations((prev) => {
+          const remaining = prev.filter((c) => c.id !== id);
+          if (activeId === id) {
+            const next = remaining[0];
+            setActiveId(next ? next.id : null);
+          }
+          return remaining;
+        });
       }
     } catch {
       // ignore

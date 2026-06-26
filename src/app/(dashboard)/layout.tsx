@@ -17,9 +17,11 @@ export default async function DashboardLayout({
         userEmail={user?.email}
         isAdmin={user?.role === "ADMIN"}
       />
-      <div className="flex flex-1 min-w-0 flex-col overflow-y-auto">
+      <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
         <WarningBanner />
-        {children}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          {children}
+        </div>
       </div>
     </div>
   );
