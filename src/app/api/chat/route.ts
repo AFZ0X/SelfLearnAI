@@ -6,6 +6,7 @@ import { getConversation } from "@/lib/db/conversations";
 import { createMessage } from "@/lib/db/messages";
 import { MemoryRetrievalService } from "@/lib/ai/retrieval/MemoryRetrievalService";
 import { PromptContextBuilder } from "@/lib/ai/retrieval/PromptContextBuilder";
+import { ResponseStyleService } from "@/lib/ai/retrieval/ResponseStyleService";
 import { WebSearchService } from "@/lib/ai/web/WebSearchService";
 import { WebFetchService, type FetchedPage } from "@/lib/ai/web/WebFetchService";
 import { SourceSummarizer, type SourceSummary } from "@/lib/ai/web/SourceSummarizer";
@@ -142,6 +143,23 @@ async function getUserWebSearchSetting(userId: string): Promise<boolean> {
   } catch {
   }
   return true;
+}
+
+async function getUserResponseStyleSetting(userId: string): Promise<string> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { settings: true },
+    });
+    if (user?.settings && typeof user.settings === "object") {
+      const settings = user.settings as Record<string, unknown>;
+      if (typeof settings.responseStyle === "string") {
+        return settings.responseStyle;
+      }
+    }
+  } catch {
+  }
+  return "SHORT";
 }
 
 async function saveUserWebSearchSetting(userId: string, enabled: boolean): Promise<void> {
@@ -519,6 +537,24 @@ export async function POST(request: NextRequest) {
     }
 
     if (traceId) {
+      stepId = (await traceService.startStep(traceId, "Response_Style"))?.id ?? null;
+    }
+    const styleService = new ResponseStyleService();
+    const stylePreference = await getUserResponseStyleSetting(userId);
+    const styleResult = styleService.detectStyle(userContent || "", stylePreference);
+    const hasWeakEvidence = searchOutcome.sufficiencyResult?.confidence === "LOW";
+    if (stepId) {
+      await traceService.completeStep(stepId, {
+        responseMode: styleResult.mode,
+        userPreference: stylePreference,
+        userWantsShort: styleResult.userWantsShort,
+        userWantsDetailed: styleResult.userWantsDetailed,
+        userWantsAction: styleResult.userWantsAction,
+      });
+      stepId = null;
+    }
+
+    if (traceId) {
       stepId = (await traceService.startStep(traceId, "Prompt_Builder"))?.id ?? null;
     }
     const promptBuilder = new PromptContextBuilder();
@@ -527,8 +563,10 @@ export async function POST(request: NextRequest) {
       webContext: webContextStr || undefined,
       webSearchUsed: searchOutcome.webSearchUsed,
       forcedSearch: forcedSearch || undefined,
+      responseStyle: styleResult.mode,
+      hasWeakEvidence,
     });
-    console.log("[CHAT] systemPrompt length:", systemPrompt.length, "| webSearchUsed:", searchOutcome.webSearchUsed, "| hasWebContextStr:", webContextStr.length > 0, "| webContextStr.length:", webContextStr.length, "| citations.length:", citations.length);
+    console.log("[CHAT] systemPrompt length:", systemPrompt.length, "| webSearchUsed:", searchOutcome.webSearchUsed, "| hasWebContextStr:", webContextStr.length > 0, "| webContextStr.length:", webContextStr.length, "| citations.length:", citations.length, "| styleMode:", styleResult.mode);
 
     if (saveActionResult.handled) {
       if (saveActionResult.action === "saved") {
@@ -697,6 +735,7 @@ export async function POST(request: NextRequest) {
       ...(searchOutcome.classification ? { queryType: searchOutcome.classification.type } : {}),
       ...(searchOutcome.sufficiencyResult ? { evidenceConfidence: searchOutcome.sufficiencyResult.confidence } : {}),
       ...(searchOutcome.rejectionSummary ? { rejectedSourcesCount: searchOutcome.rejectionSummary.total } : {}),
+      responseMode: styleResult.mode,
     });
   } catch {
     if (traceId) {

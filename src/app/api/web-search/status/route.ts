@@ -12,6 +12,7 @@ export async function GET() {
   const providerStatus = getProviderStatus();
 
   let webSearchEnabled = true;
+  let responseStyle = "SHORT";
   try {
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
@@ -21,6 +22,9 @@ export async function GET() {
       const settings = user.settings as Record<string, unknown>;
       if (typeof settings.webSearchEnabled === "boolean") {
         webSearchEnabled = settings.webSearchEnabled;
+      }
+      if (typeof settings.responseStyle === "string") {
+        responseStyle = settings.responseStyle;
       }
     }
   } catch {
@@ -44,6 +48,7 @@ export async function GET() {
     configured: searchConfigured,
     configError: providerStatus.error || null,
     webSearchEnabled,
+    responseStyle,
     usingMock: providerStatus.usingMock,
     productionSafe: providerStatus.productionSafe,
     missingVariables,

@@ -3,9 +3,24 @@
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useState, useEffect } from "react";
 
+type ResponseStyle = "SHORT" | "NORMAL" | "DETAILED";
+
+const STYLE_LABELS: Record<ResponseStyle, string> = {
+  SHORT: "Short (default)",
+  NORMAL: "Normal",
+  DETAILED: "Detailed",
+};
+
+const STYLE_DESCRIPTIONS: Record<ResponseStyle, string> = {
+  SHORT: "Concise answers, 1–5 lines, direct to the point.",
+  NORMAL: "Balanced answers with brief context.",
+  DETAILED: "Full explanations when needed.",
+};
+
 export function SettingsPageClient() {
   const { theme, setTheme } = useTheme();
   const [webSearchEnabled, setWebSearchEnabled] = useState(true);
+  const [responseStyle, setResponseStyle] = useState<ResponseStyle>("SHORT");
   const [providerName, setProviderName] = useState("Mock");
   const [providerConfigured, setProviderConfigured] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -18,6 +33,9 @@ export function SettingsPageClient() {
         setProviderConfigured(data.configured);
         if (typeof data.webSearchEnabled === "boolean") {
           setWebSearchEnabled(data.webSearchEnabled);
+        }
+        if (data.responseStyle && ["SHORT", "NORMAL", "DETAILED"].includes(data.responseStyle)) {
+          setResponseStyle(data.responseStyle);
         }
       })
       .catch(() => {});
@@ -34,6 +52,22 @@ export function SettingsPageClient() {
       });
     } catch {
       setWebSearchEnabled(!enabled);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveResponseStyle(style: ResponseStyle) {
+    setSaving(true);
+    setResponseStyle(style);
+    try {
+      await fetch("/api/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: { responseStyle: style } }),
+      });
+    } catch {
+      setResponseStyle(responseStyle);
     } finally {
       setSaving(false);
     }
@@ -123,6 +157,35 @@ export function SettingsPageClient() {
           >
             {providerConfigured ? "Configured" : "API key missing"}
           </span>
+        </div>
+      </div>
+
+      <div
+        className="rounded-xl border p-6"
+        style={{
+          backgroundColor: "var(--card-bg)",
+          borderColor: "var(--card-border)",
+        }}
+      >
+        <h3 className="font-semibold text-sm mb-1" style={{ color: "var(--surface-text)" }}>Response Style</h3>
+        <p className="text-sm mb-4" style={{ color: "var(--surface-text-secondary)" }}>Controls how concise or detailed the assistant&apos;s answers are.</p>
+        <div className="flex gap-2">
+          {(Object.entries(STYLE_LABELS) as [ResponseStyle, string][]).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => saveResponseStyle(key)}
+              disabled={saving}
+              className="flex-1 px-3 py-3 rounded-xl border text-sm font-medium transition-all duration-200"
+              style={{
+                borderColor: responseStyle === key ? "var(--input-border)" : "var(--card-border)",
+                backgroundColor: responseStyle === key ? "var(--sidebar-active-bg)" : "transparent",
+                color: responseStyle === key ? "var(--sidebar-active-text)" : "var(--surface-text-secondary)",
+              }}
+            >
+              <div className="font-medium">{label}</div>
+              <div className="text-[11px] mt-0.5 opacity-70">{STYLE_DESCRIPTIONS[key]}</div>
+            </button>
+          ))}
         </div>
       </div>
     </div>
