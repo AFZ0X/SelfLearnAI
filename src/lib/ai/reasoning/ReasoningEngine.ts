@@ -59,7 +59,7 @@ export class ReasoningEngine {
     hasExplicitSearchTrigger: boolean;
     responseStyle: ResponseMode;
     citationsCount: number;
-    hasWebContext: boolean;
+    webContext?: string;
     hasWeakEvidence: boolean;
   }): Promise<ReasoningOutput> {
     const events: ReasoningEvent[] = [];
@@ -103,12 +103,14 @@ export class ReasoningEngine {
       );
     });
 
+    const hasWebContext = !!options.webContext;
+
     const verification = this.runStep("Self_Verification", events, () => {
       return this.verifier.verify(
         taskClassification,
         reasoningPlan,
         confidence,
-        options.hasWebContext,
+        hasWebContext,
         evidence.memoryUsed,
         options.citationsCount
       );
@@ -116,11 +118,7 @@ export class ReasoningEngine {
 
     const draftOptions: DraftOptions = {
       memoryContext: evidence.memoryUsed ? evidence.memories : undefined,
-      webContext: options.webSearchOutcome?.sufficiencyResult?.controlledResponse
-        ? undefined
-        : options.hasWebContext
-          ? undefined
-          : undefined,
+      webContext: options.webSearchOutcome?.sufficiencyResult?.controlledResponse ? undefined : options.webContext,
       webSearchUsed: options.webSearchOutcome?.webSearchUsed ?? false,
       forcedSearch: options.hasExplicitSearchTrigger,
       responseStyle: options.responseStyle,

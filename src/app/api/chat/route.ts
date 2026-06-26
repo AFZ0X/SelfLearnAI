@@ -556,7 +556,7 @@ export async function POST(request: NextRequest) {
       hasExplicitSearchTrigger,
       responseStyle: styleResult.mode,
       citationsCount: citations.length,
-      hasWebContext: webContextStr.length > 0,
+      webContext: webContextStr || undefined,
       hasWeakEvidence,
     });
 
