@@ -60,8 +60,8 @@ const FACT_PATTERNS: { pattern: RegExp; key: ProfileKey; confidence: number }[] 
   { pattern: /i study\s+(.+)/i, key: "education", confidence: 0.85 },
   { pattern: /i(?:'| a)?m (?:a|an)\s+(.+)/i, key: "job", confidence: 0.7 },
 
-  { pattern: /أنا\s+(.+)/i, key: "name", confidence: 0.7 },
-  { pattern: /i(?:'| a)?m\s+([a-zA-Z]+)/i, key: "name", confidence: 0.7 },
+  { pattern: /أنا\s+(.+)/i, key: "name", confidence: 0.65 },
+  { pattern: /i(?:'| a)?m\s+([a-zA-Z]+)/i, key: "name", confidence: 0.65 },
 
   { pattern: /أفضل\s+(.+)/i, key: "preferences", confidence: 0.8 },
   { pattern: /i prefer\s+(.+)/i, key: "preferences", confidence: 0.8 },

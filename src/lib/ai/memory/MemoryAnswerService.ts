@@ -1,9 +1,13 @@
 import { MemoryRetrievalServiceV2, type RetrievedMemoryV2 } from "./MemoryRetrievalServiceV2";
 import { MemoryUpdateService } from "./MemoryUpdateService";
+import { ProfileFactExtractor } from "./ProfileFactExtractor";
+import { NameExtractorService } from "./NameExtractorService";
 
 export class MemoryAnswerService {
   private retrieval = new MemoryRetrievalServiceV2();
   private update = new MemoryUpdateService();
+  private profileExtractor = new ProfileFactExtractor();
+  private nameExtractor = new NameExtractorService();
 
   async answerFromMemory(
     userId: string,
@@ -14,21 +18,31 @@ export class MemoryAnswerService {
       return { answer: null, memoryUsed: false, retrievalMode: "ignored" };
     }
 
-    const result = await this.retrieval.retrieve(userId, queryText);
+    // ONLY answer directly for explicit profile queries (e.g. "وش اسمي؟", "كم عمري؟")
+    // NEVER use vector search results for direct answers — they may be irrelevant
+    const profileQuery = this.profileExtractor.detectQuery(queryText);
+    const isNameQuery = this.nameExtractor.isNameQuery(queryText);
 
-    if (!result.memoryUsed || result.profileFacts.length === 0) {
-      return { answer: null, memoryUsed: false, retrievalMode: result.retrievalMode };
+    if (!profileQuery && !isNameQuery) {
+      return { answer: null, memoryUsed: false, retrievalMode: "none" };
     }
 
-    const fact = result.profileFacts[0];
-    await this.update.touch(fact.id);
+    const key = profileQuery?.key || "name";
+    const exact = await this.retrieval.lookupExact(userId, key);
+    if (exact) {
+      await this.update.touch(exact.id);
+      const answer = this.buildAnswer(exact, queryText);
+      return { answer, memoryUsed: true, retrievalMode: "exact" };
+    }
 
-    const answer = this.buildAnswer(fact, queryText);
-    return { answer, memoryUsed: true, retrievalMode: result.retrievalMode };
+    return { answer: null, memoryUsed: false, retrievalMode: "exact" };
   }
 
   private buildAnswer(fact: RetrievedMemoryV2, queryText: string): string {
-    const value = fact.text;
+    // Extract clean value from summary ("key: value") or fall back to text
+    const value = fact.summary?.includes(": ")
+      ? fact.summary.split(": ").slice(1).join(": ")
+      : fact.text;
     const isArabic = /[\u0600-\u06FF]/.test(queryText);
 
     switch (fact.memoryKey) {
@@ -63,6 +77,10 @@ export class MemoryAnswerService {
       default:
         return isArabic ? `المعلومة المحفوظة: ${value}.` : `Saved info: ${value}.`;
     }
+  }
+
+  async lookupExact(userId: string, key: string): Promise<RetrievedMemoryV2 | null> {
+    return this.retrieval.lookupExact(userId, key);
   }
 
   buildUnknownAnswer(queryText: string, key?: string): string {

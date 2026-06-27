@@ -140,7 +140,6 @@ async function handleExplicitSaveCommand(
     source: "chat",
     confidence: 1.0,
     tags: ["saved"],
-    memoryType: "GENERAL_NOTE",
   });
 
   try {
@@ -329,8 +328,12 @@ export async function POST(request: NextRequest) {
     const retrievalService = new MemoryRetrievalServiceV2();
     const ignoreMemory = userContent ? extractionService.isIgnoreMemoryQuery(userContent) : false;
 
+    // Memory gating: skip memory for greetings and non-personal messages
+    const isGreeting = intent.type === "greeting";
+    const shouldUseMemory = userContent && !ignoreMemory && !isGreeting;
+
     let directAnswer: { answer: string; retrievalMode: string } | null = null;
-    if (userContent && !ignoreMemory) {
+    if (shouldUseMemory) {
       try {
         const da = await answerService.answerFromMemory(userId, userContent, false);
         if (da.answer) {
@@ -359,13 +362,17 @@ export async function POST(request: NextRequest) {
       stepId = (await traceService.startStep(traceId, "Memory_Retrieval"))?.id ?? null;
     }
     let retrievalResult: Awaited<ReturnType<typeof retrievalService.retrieve>>;
-    try {
-      retrievalResult = await retrievalService.retrieve(
-        userId,
-        userContent || ""
-      );
-    } catch (e) {
-      logError("memory retrieval failed", e);
+    if (shouldUseMemory) {
+      try {
+        retrievalResult = await retrievalService.retrieve(
+          userId,
+          userContent || ""
+        );
+      } catch (e) {
+        logError("memory retrieval failed", e);
+        retrievalResult = { memories: [], profileFacts: [], memoryUsed: false, retrievalMode: "none", confidence: 0 };
+      }
+    } else {
       retrievalResult = { memories: [], profileFacts: [], memoryUsed: false, retrievalMode: "none", confidence: 0 };
     }
     if (stepId) {
@@ -389,27 +396,30 @@ export async function POST(request: NextRequest) {
         logError("profile memory process failed", e);
       }
       if (profileResult) {
-      profileFactKey = profileResult.key;
-      profileFactAction = profileResult.action;
-      profileConflictResolved = profileResult.conflictResolved;
-      if ((profileResult.action === "saved" || profileResult.action === "found") && profileResult.value && profileResult.memoryId) {
+        const pr = profileResult;
+      profileFactKey = pr.key;
+      profileFactAction = pr.action;
+      profileConflictResolved = pr.conflictResolved;
+      if ((pr.action === "saved" || pr.action === "found") && pr.value && pr.memoryId) {
         const alreadyInMemories = retrievalResult.memories.some(
-          (m) => m.id === profileResult.memoryId || m.tags.includes(profileResult.key || "")
+          (m) => m.id === pr.memoryId || m.tags.includes(pr.key || "")
         );
         if (!alreadyInMemories) {
           retrievalResult.memories.unshift({
-            id: profileResult.memoryId,
-            text: profileResult.value,
-            summary: `${profileResult.key}: ${profileResult.value}`,
-            tags: profileResult.key ? ["profile", profileResult.key] : ["profile"],
+            id: pr.memoryId,
+            text: pr.value,
+            summary: `${pr.key}: ${pr.value}`,
+            tags: pr.key ? ["profile", pr.key] : ["profile"],
+            status: "active",
             similarity: 1.0,
             relevanceLabel: "high",
-            memoryKey: profileResult.key,
+            memoryKey: pr.key,
             retrievalMode: "exact",
           });
           retrievalResult.memoryUsed = true;
         }
       }
+    }
     }
 
     let saveActionResult: SaveActionResult = { handled: false };
@@ -808,11 +818,13 @@ export async function POST(request: NextRequest) {
     const showWebSearchUI = searchOutcome.webSearchUsed && !isMockProvider;
     const showCitations = citations.length > 0 && !isMockProvider;
 
+    const memoryActuallyUsed = reasoningOutput.toolDecision.useMemory && retrievalResult.memoryUsed;
+
     return NextResponse.json({
       role: "assistant",
       content: result.content,
-      memoryUsed: retrievalResult.memoryUsed,
-      ...(retrievalResult.memoryUsed ? { memoriesUsed } : {}),
+      memoryUsed: memoryActuallyUsed,
+      ...(memoryActuallyUsed ? { memoriesUsed } : {}),
       webSearchUsed: showWebSearchUI,
       ...(showCitations ? { citations } : {}),
       usingMockProvider: isMockProvider || undefined,
