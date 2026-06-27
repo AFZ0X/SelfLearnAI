@@ -25,10 +25,6 @@ export class MemoryUpdateService {
     }
 
     if (existing.text === newValue) {
-      await prisma.memory.update({
-        where: { id: existing.id },
-        data: { useCount: { increment: 1 }, lastUsedAt: new Date() },
-      });
       return { updated: true, oldValue: existing.text, newValue, superseded: false };
     }
 
@@ -43,11 +39,8 @@ export class MemoryUpdateService {
     return { updated: false, oldValue: existing.text, newValue, superseded: false };
   }
 
-  async touch(memoryId: string): Promise<void> {
-    await prisma.memory.update({
-      where: { id: memoryId },
-      data: { lastUsedAt: new Date(), useCount: { increment: 1 } },
-    });
+  async touch(_memoryId: string): Promise<void> {
+    return;
   }
 
   async updateConfidence(memoryId: string, confidence: number): Promise<void> {

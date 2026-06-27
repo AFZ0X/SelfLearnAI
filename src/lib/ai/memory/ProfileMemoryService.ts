@@ -18,15 +18,11 @@ export interface ProfileMemoryResult {
 export interface ProfileFactData {
   id: string;
   text: string;
-  value: string | null;
   summary: string | null;
   tags: string[];
   memoryKey: string | null;
-  memoryType: string | null;
   status: string;
   confidence: number | null;
-  importance: number;
-  useCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -132,9 +128,9 @@ export class ProfileMemoryService {
     const memory = await prisma.memory.findFirst({
       where: { userId, memoryKey: key, status: "ACTIVE" },
       select: {
-        id: true, text: true, value: true, summary: true, tags: true,
-        memoryKey: true, memoryType: true, status: true, confidence: true,
-        importance: true, useCount: true, createdAt: true, updatedAt: true,
+        id: true, text: true, summary: true, tags: true,
+        memoryKey: true, status: true, confidence: true,
+        createdAt: true, updatedAt: true,
       },
       orderBy: { updatedAt: "desc" },
     });
@@ -145,11 +141,11 @@ export class ProfileMemoryService {
     const memories = await prisma.memory.findMany({
       where: { userId, memoryKey: { not: null }, status: "ACTIVE" },
       select: {
-        id: true, text: true, value: true, summary: true, tags: true,
-        memoryKey: true, memoryType: true, status: true, confidence: true,
-        importance: true, useCount: true, createdAt: true, updatedAt: true,
+        id: true, text: true, summary: true, tags: true,
+        memoryKey: true, status: true, confidence: true,
+        createdAt: true, updatedAt: true,
       },
-      orderBy: [{ importance: "desc" }, { updatedAt: "desc" }],
+      orderBy: { updatedAt: "desc" },
     });
     return memories;
   }

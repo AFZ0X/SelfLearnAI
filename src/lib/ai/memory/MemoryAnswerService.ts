@@ -28,7 +28,7 @@ export class MemoryAnswerService {
   }
 
   private buildAnswer(fact: RetrievedMemoryV2, queryText: string): string {
-    const value = fact.value || fact.text;
+    const value = fact.text;
     const isArabic = /[\u0600-\u06FF]/.test(queryText);
 
     switch (fact.memoryKey) {

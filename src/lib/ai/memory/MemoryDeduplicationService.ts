@@ -31,8 +31,6 @@ export class MemoryDeduplicationService {
     await prisma.memory.update({
       where: { id: existing.id },
       data: {
-        useCount: { increment: 1 },
-        lastUsedAt: new Date(),
         updatedAt: new Date(),
         confidence: { increment: 0.05 },
       },

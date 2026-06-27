@@ -8,13 +8,10 @@ import { NameExtractorService } from "./NameExtractorService";
 export interface RetrievedMemoryV2 {
   id: string;
   text: string;
-  value: string | null;
   summary: string | null;
   tags: string[];
   memoryKey: string | null;
-  memoryType: string | null;
   status: string;
-  importance: number;
   similarity: number;
   relevanceLabel: "high" | "medium" | "low";
   retrievalMode: "exact" | "structured" | "vector" | "conversation";
@@ -94,8 +91,8 @@ export class MemoryRetrievalServiceV2 {
     const memory = await prisma.memory.findFirst({
       where: { userId, memoryKey: key, status: "ACTIVE" },
       select: {
-        id: true, text: true, value: true, summary: true, tags: true,
-        memoryKey: true, memoryType: true, status: true, importance: true,
+        id: true, text: true, summary: true, tags: true,
+        memoryKey: true, status: true,
       },
       orderBy: { updatedAt: "desc" },
     });
@@ -114,10 +111,10 @@ export class MemoryRetrievalServiceV2 {
     const memories = await prisma.memory.findMany({
       where: { userId, memoryKey: { not: null }, status: "ACTIVE" },
       select: {
-        id: true, text: true, value: true, summary: true, tags: true,
-        memoryKey: true, memoryType: true, status: true, importance: true,
+        id: true, text: true, summary: true, tags: true,
+        memoryKey: true, status: true,
       },
-      orderBy: [{ importance: "desc" }, { updatedAt: "desc" }],
+      orderBy: { updatedAt: "desc" },
     });
 
     return memories.map((m) => ({
@@ -201,8 +198,8 @@ export class MemoryRetrievalServiceV2 {
     const memories = await prisma.memory.findMany({
       where: { id: { in: memoryIds }, userId, status: "ACTIVE" },
       select: {
-        id: true, text: true, value: true, summary: true, tags: true,
-        memoryKey: true, memoryType: true, status: true, importance: true,
+        id: true, text: true, summary: true, tags: true,
+        memoryKey: true, status: true,
       },
     });
 
@@ -238,7 +235,7 @@ export class MemoryRetrievalServiceV2 {
 
     return {
       memories: result,
-      profileFacts: result.filter((m) => m.memoryKey && m.memoryType === "PROFILE_FACT"),
+      profileFacts: result.filter((m) => m.memoryKey),
       memoryUsed: result.length > 0,
     };
   }

@@ -8,20 +8,14 @@ export interface MemoryResponse {
   userId: string;
   type: string;
   text: string;
-  value: string | null;
   summary: string | null;
   source: string | null;
   confidence: number | null;
-  importance: number;
   visibility: string;
   tags: string[];
   memoryKey: string | null;
-  memoryType: string | null;
   status: string;
   supersededById: string | null;
-  lastUsedAt: Date | null;
-  useCount: number;
-  expiresAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,15 +23,12 @@ export interface MemoryResponse {
 export interface MemoryCreateData {
   type?: string;
   text: string;
-  value?: string;
   summary?: string;
   source?: string;
   confidence?: number;
-  importance?: number;
   visibility?: string;
   tags?: string[];
   memoryKey?: string;
-  memoryType?: string;
   status?: string;
   supersededById?: string;
 }
@@ -103,20 +94,14 @@ export async function listMemories(userId: string, options: ListMemoriesOptions 
         userId: true,
         type: true,
         text: true,
-        value: true,
         summary: true,
         source: true,
         confidence: true,
-        importance: true,
         visibility: true,
         tags: true,
         memoryKey: true,
-        memoryType: true,
         status: true,
         supersededById: true,
-        lastUsedAt: true,
-        useCount: true,
-        expiresAt: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -151,13 +136,10 @@ export async function createMemory(
       text: data.text.trim(),
       summary: data.summary?.trim() || null,
       source: data.source?.trim() || null,
-      value: data.value?.trim() || null,
       confidence: typeof data.confidence === "number" ? data.confidence : null,
-      importance: typeof data.importance === "number" ? data.importance : 0,
       visibility: data.visibility || "private",
       tags: Array.isArray(data.tags) ? data.tags : [],
       memoryKey: data.memoryKey?.trim() || null,
-      memoryType: data.memoryType?.trim() || null,
       status: data.status || "ACTIVE",
       supersededById: data.supersededById || null,
     },
@@ -166,20 +148,14 @@ export async function createMemory(
       userId: true,
       type: true,
       text: true,
-      value: true,
       summary: true,
       source: true,
       confidence: true,
-      importance: true,
       visibility: true,
       tags: true,
       memoryKey: true,
-      memoryType: true,
       status: true,
       supersededById: true,
-      lastUsedAt: true,
-      useCount: true,
-      expiresAt: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -197,20 +173,14 @@ export async function getMemory(
       userId: true,
       type: true,
       text: true,
-      value: true,
       summary: true,
       source: true,
       confidence: true,
-      importance: true,
       visibility: true,
       tags: true,
       memoryKey: true,
-      memoryType: true,
       status: true,
       supersededById: true,
-      lastUsedAt: true,
-      useCount: true,
-      expiresAt: true,
       createdAt: true,
       updatedAt: true,
     },

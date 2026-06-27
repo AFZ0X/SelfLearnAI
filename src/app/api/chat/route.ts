@@ -331,9 +331,13 @@ export async function POST(request: NextRequest) {
 
     let directAnswer: { answer: string; retrievalMode: string } | null = null;
     if (userContent && !ignoreMemory) {
-      const da = await answerService.answerFromMemory(userId, userContent, false);
-      if (da.answer) {
-        directAnswer = { answer: da.answer, retrievalMode: da.retrievalMode };
+      try {
+        const da = await answerService.answerFromMemory(userId, userContent, false);
+        if (da.answer) {
+          directAnswer = { answer: da.answer, retrievalMode: da.retrievalMode };
+        }
+      } catch (e) {
+        logError("direct memory answer failed", e);
       }
     }
 
@@ -354,10 +358,16 @@ export async function POST(request: NextRequest) {
     if (traceId) {
       stepId = (await traceService.startStep(traceId, "Memory_Retrieval"))?.id ?? null;
     }
-    const retrievalResult = await retrievalService.retrieve(
-      userId,
-      userContent || ""
-    );
+    let retrievalResult: Awaited<ReturnType<typeof retrievalService.retrieve>>;
+    try {
+      retrievalResult = await retrievalService.retrieve(
+        userId,
+        userContent || ""
+      );
+    } catch (e) {
+      logError("memory retrieval failed", e);
+      retrievalResult = { memories: [], profileFacts: [], memoryUsed: false, retrievalMode: "none", confidence: 0 };
+    }
     if (stepId) {
       await traceService.completeStep(stepId, {
         memoriesFound: retrievalResult.memories.length,
@@ -371,8 +381,14 @@ export async function POST(request: NextRequest) {
     let profileFactKey: string | null = null;
     let profileFactAction: string | null = null;
     let profileConflictResolved = false;
+    let profileResult: Awaited<ReturnType<typeof profileService.process>> | null = null;
     if (userContent) {
-      const profileResult = await profileService.process(userId, userContent);
+      try {
+        profileResult = await profileService.process(userId, userContent);
+      } catch (e) {
+        logError("profile memory process failed", e);
+      }
+      if (profileResult) {
       profileFactKey = profileResult.key;
       profileFactAction = profileResult.action;
       profileConflictResolved = profileResult.conflictResolved;
@@ -388,11 +404,7 @@ export async function POST(request: NextRequest) {
             tags: profileResult.key ? ["profile", profileResult.key] : ["profile"],
             similarity: 1.0,
             relevanceLabel: "high",
-            value: profileResult.value,
             memoryKey: profileResult.key,
-            memoryType: "PROFILE_FACT",
-            status: "ACTIVE",
-            importance: 10,
             retrievalMode: "exact",
           });
           retrievalResult.memoryUsed = true;
@@ -402,7 +414,11 @@ export async function POST(request: NextRequest) {
 
     let saveActionResult: SaveActionResult = { handled: false };
     if (userContent) {
-      saveActionResult = await handleExplicitSaveCommand(userId, userContent);
+      try {
+        saveActionResult = await handleExplicitSaveCommand(userId, userContent);
+      } catch (e) {
+        logError("explicit save command failed", e);
+      }
     }
 
     if (traceId) {
