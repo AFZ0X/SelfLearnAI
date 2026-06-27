@@ -10,7 +10,7 @@ export default async function MemoryPage() {
     redirect("/login");
   }
 
-  const memories = await listMemories(session.user.id);
+  const { memories } = await listMemories(session.user.id);
 
   const serialized = memories.map((m) => ({
     id: m.id,

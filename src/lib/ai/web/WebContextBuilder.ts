@@ -177,16 +177,16 @@ ${constraintsStr}`;
   private detectConflicts(sources: WebSearchResult[]): number {
     let count = 0;
     const texts = sources.map((s) => (s.snippet + " " + s.title).toLowerCase());
-    const patterns: Array<{ regex: RegExp; terms: string[] }> = [
-      { regex: /won|lost|defeated|victory|loss/, terms: ["won", "lost"] },
-      { regex: /higher|lower|increased|decreased|up|down/, terms: ["higher", "lower", "increased", "decreased", "up", "down"] },
+    const opposingPairs: [RegExp, string[], string[]][] = [
+      [/won|lost|defeated|victory|loss/, ["won", "victory", "defeated"], ["lost", "loss"]],
+      [/higher|lower|increased|decreased|up|down/, ["higher", "increased", "up"], ["lower", "decreased", "down"]],
     ];
-    for (const { regex, terms } of patterns) {
+    for (const [regex, posTerms, negTerms] of opposingPairs) {
       const matched = texts.filter((t) => regex.test(t));
       if (matched.length >= 2) {
-        const hasPositive = matched.some((t) => terms.some((term) => t.includes(term)));
-        const hasNegative = matched.some((t) => terms.some((term) => t.includes(term) && !t.includes(term)));
-        if (hasPositive !== hasNegative) count++;
+        const hasPositive = matched.some((t) => posTerms.some((term) => t.includes(term)));
+        const hasNegative = matched.some((t) => negTerms.some((term) => t.includes(term)));
+        if (hasPositive && hasNegative) count++;
       }
     }
     const numbers = texts.flatMap((t) => {

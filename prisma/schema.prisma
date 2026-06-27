@@ -119,14 +119,21 @@ model Memory {
   userId    String
   type      MemoryType @default(USER)
   text      String
+  value     String?
   summary   String?
   source    String?
   confidence Float?
+  importance Int       @default(0)
   visibility String   @default("private")
   tags      String[]
   memoryKey String?
+  memoryType String?
   status    String     @default("ACTIVE")
   supersededById String?
+  lastUsedAt DateTime?
+  useCount   Int       @default(0)
+  expiresAt  DateTime?
+  metadata   Json      @default("{}")
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
@@ -135,6 +142,8 @@ model Memory {
 
   @@index([userId])
   @@index([userId, memoryKey, status])
+  @@index([userId, memoryType])
+  @@index([userId, status, memoryKey])
 }
 
 model MemoryEmbedding {

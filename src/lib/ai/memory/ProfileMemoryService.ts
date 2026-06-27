@@ -4,6 +4,10 @@ import { saveEmbedding } from "@/lib/db/embeddings";
 import { ProfileFactExtractor, type ProfileKey, type ProfileFact, type ProfileQuery } from "./ProfileFactExtractor";
 import { MemoryConflictResolver } from "./MemoryConflictResolver";
 
+function logError(context: string, error: unknown): void {
+  console.error(`[ProfileMemoryService] ${context}:`, error instanceof Error ? error.message : String(error));
+}
+
 export interface ProfileMemoryResult {
   action: "saved" | "found" | "not_found" | "none";
   key: ProfileKey | null;
@@ -52,7 +56,7 @@ export class ProfileMemoryService {
   ): Promise<ProfileMemoryResult> {
     const existing = await this.resolver.getActive(userId, fact.key);
 
-    if (existing && existing.text === fact.value) {
+    if (existing && existing.text.normalize("NFC") === fact.value.normalize("NFC")) {
       return {
         action: "found",
         key: fact.key,
@@ -63,33 +67,47 @@ export class ProfileMemoryService {
       };
     }
 
-    const memory = await prisma.memory.create({
-      data: {
-        userId,
-        type: "USER",
-        text: fact.value,
-        summary: `${fact.key}: ${fact.value}`,
-        source: "chat",
-        confidence: fact.confidence,
-        visibility: "private",
-        tags: ["profile", fact.key],
-        memoryKey: fact.key,
-        status: "ACTIVE",
-      },
-      select: {
-        id: true,
-        text: true,
-        summary: true,
-        tags: true,
-        memoryKey: true,
-        status: true,
-        confidence: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    const memory = await prisma.$transaction(async (tx) => {
+      const mem = await tx.memory.create({
+        data: {
+          userId,
+          type: "USER",
+          text: fact.value,
+          summary: `${fact.key}: ${fact.value}`,
+          source: "chat",
+          confidence: fact.confidence,
+          visibility: "private",
+          tags: ["profile", fact.key],
+          memoryKey: fact.key,
+          status: "ACTIVE",
+        },
+        select: {
+          id: true,
+          text: true,
+          summary: true,
+          tags: true,
+          memoryKey: true,
+          status: true,
+          confidence: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
 
-    const conflict = await this.resolver.resolve(userId, fact.key, memory.id);
+      const prevActive = await tx.memory.findFirst({
+        where: { userId, memoryKey: fact.key, status: "ACTIVE", id: { not: mem.id } },
+        select: { id: true, text: true },
+      });
+
+      if (prevActive) {
+        await tx.memory.update({
+          where: { id: prevActive.id },
+          data: { status: "SUPERSEDED", supersededById: mem.id, confidence: 0.1 },
+        });
+      }
+
+      return { memory: mem, conflict: prevActive };
+    });
 
     const model = process.env.EMBEDDING_PROVIDER === "openai"
       ? process.env.OPENAI_EMBEDDING_MODEL || "text-embedding-3-small"
@@ -97,17 +115,18 @@ export class ProfileMemoryService {
     try {
       const provider = getEmbeddingProvider();
       const embedding = await provider.generateEmbedding(fact.text);
-      await saveEmbedding(memory.id, embedding, model);
-    } catch {
+      await saveEmbedding(memory.memory.id, embedding, model);
+    } catch (e) {
+      logError("embedding generation failed", e);
     }
 
     return {
       action: "saved",
       key: fact.key,
       value: fact.value,
-      memoryId: memory.id,
-      conflictResolved: !!conflict,
-      oldValueSuperseded: conflict?.oldValue ?? null,
+      memoryId: memory.memory.id,
+      conflictResolved: !!memory.conflict,
+      oldValueSuperseded: memory.conflict?.text ?? null,
     };
   }
 

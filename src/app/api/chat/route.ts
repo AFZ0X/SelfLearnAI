@@ -13,7 +13,7 @@ import { ResponseStyleService } from "@/lib/ai/retrieval/ResponseStyleService";
 import { WebSearchService } from "@/lib/ai/web/WebSearchService";
 import { ReasoningEngine } from "@/lib/ai/reasoning/ReasoningEngine";
 import { WebFetchService, type FetchedPage } from "@/lib/ai/web/WebFetchService";
-import { SourceSummarizer, type SourceSummary } from "@/lib/ai/web/SourceSummarizer";
+import { SourceSummarizer } from "@/lib/ai/web/SourceSummarizer";
 import { WebContextBuilder } from "@/lib/ai/web/WebContextBuilder";
 import { prisma } from "@/lib/db/prisma";
 import { LearningExtractionService } from "@/lib/ai/learning/LearningExtractionService";
@@ -31,6 +31,10 @@ import { getProviderStatus } from "@/lib/ai/search/SearchProvider";
 
 const MAX_MESSAGE_LENGTH = 4000;
 const MAX_MESSAGES = 50;
+
+function logError(context: string, error: unknown): void {
+  console.error(`[Chat] ${context}:`, error instanceof Error ? error.message : String(error));
+}
 
 function detectIntent(text: string): { type: string; confidence: number } {
   if (!text?.trim()) return { type: "unknown", confidence: 0 };
@@ -126,13 +130,14 @@ async function handleExplicitSaveCommand(
         ? process.env.OPENAI_EMBEDDING_MODEL || "text-embedding-3-small"
         : "mock-v1";
     await saveEmbedding(memory.id, embedding, model);
-  } catch {
+  } catch (e) {
+    logError("embedding generation failed", e);
   }
 
   return { handled: true, action: "saved", memory: { id: memory.id, text: memory.text } };
 }
 
-async function getUserWebSearchSetting(userId: string): Promise<boolean> {
+async function getUserSettings(userId: string): Promise<{ webSearchEnabled: boolean; responseStyle: string }> {
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -140,30 +145,15 @@ async function getUserWebSearchSetting(userId: string): Promise<boolean> {
     });
     if (user?.settings && typeof user.settings === "object") {
       const settings = user.settings as Record<string, unknown>;
-      if (typeof settings.webSearchEnabled === "boolean") {
-        return settings.webSearchEnabled;
-      }
+      return {
+        webSearchEnabled: typeof settings.webSearchEnabled === "boolean" ? settings.webSearchEnabled : true,
+        responseStyle: typeof settings.responseStyle === "string" ? settings.responseStyle : "SHORT",
+      };
     }
-  } catch {
+  } catch (e) {
+    logError("getUserSettings", e);
   }
-  return true;
-}
-
-async function getUserResponseStyleSetting(userId: string): Promise<string> {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { settings: true },
-    });
-    if (user?.settings && typeof user.settings === "object") {
-      const settings = user.settings as Record<string, unknown>;
-      if (typeof settings.responseStyle === "string") {
-        return settings.responseStyle;
-      }
-    }
-  } catch {
-  }
-  return "SHORT";
+  return { webSearchEnabled: true, responseStyle: "SHORT" };
 }
 
 async function saveUserWebSearchSetting(userId: string, enabled: boolean): Promise<void> {
@@ -181,7 +171,8 @@ async function saveUserWebSearchSetting(userId: string, enabled: boolean): Promi
         settings: { ...currentSettings, webSearchEnabled: enabled },
       },
     });
-  } catch {
+  } catch (e) {
+    logError("saveUserWebSearchSetting", e);
   }
 }
 
@@ -373,9 +364,8 @@ export async function POST(request: NextRequest) {
       stepId = null;
     }
 
-    const webSearchEnabled = await getUserWebSearchSetting(userId);
-    console.log("[CHAT] webSearchEnabled:", webSearchEnabled, "| userId:", userId);
-
+    const userSettings = await getUserSettings(userId);
+    const webSearchEnabled = userSettings.webSearchEnabled;
     const searchDecisionStart = Date.now();
     const webSearchService = new WebSearchService();
     const memoryConfidence = retrievalResult.memories.length > 0
@@ -384,18 +374,8 @@ export async function POST(request: NextRequest) {
 
     let searchOutcome;
     if (webSearchEnabled) {
-      console.log("[CHAT] calling webSearchService.searchWithDecision");
       searchOutcome = await webSearchService.searchWithDecision(userContent || "", memoryConfidence);
-      console.log("[CHAT] search outcome:", JSON.stringify({
-        webSearchUsed: searchOutcome.webSearchUsed,
-        resultsCount: searchOutcome.results.length,
-        searchFailed: searchOutcome.searchFailed,
-        originalDecision: searchOutcome.originalDecision,
-        decisionResult: searchOutcome.decisionResult?.decision,
-        usingMock: searchOutcome.usingMock,
-      }));
     } else {
-      console.log("[CHAT] web search disabled by user setting");
       searchOutcome = { results: [], webSearchUsed: false, decisionResult: undefined, usingMock: false };
     }
     const searchDurationMs = Date.now() - searchDecisionStart;
@@ -477,7 +457,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    console.log("[CHAT] entering web source fetch block:", { webSearchUsed: searchOutcome.webSearchUsed, resultsLength: searchOutcome.results.length });
     if (searchOutcome.webSearchUsed && searchOutcome.results.length > 0) {
       if (traceId) {
         stepId = (await traceService.startStep(traceId, "Web_Source_Fetch"))?.id ?? null;
@@ -486,19 +465,19 @@ export async function POST(request: NextRequest) {
       const summarizer = new SourceSummarizer();
       const contextBuilder = new WebContextBuilder();
 
-      const fetchedPages: FetchedPage[] = [];
-      const summaries: SourceSummary[] = [];
-
-      for (const result of searchOutcome.results) {
-        let page: FetchedPage;
-        try {
-          page = await fetchService.fetchPage(result.url);
-        } catch {
-          page = { url: result.url, title: result.title, text: result.snippet, fetchedAt: result.fetchedAt };
-        }
-        fetchedPages.push(page);
-        summaries.push(summarizer.summarize(page.text));
-      }
+      const pageResults = await Promise.all(
+        searchOutcome.results.map(async (result) => {
+          try {
+            const page = await fetchService.fetchPage(result.url);
+            return { page, summary: summarizer.summarize(page.text) };
+          } catch {
+            const fallback: FetchedPage = { url: result.url, title: result.title, text: result.snippet, fetchedAt: result.fetchedAt };
+            return { page: fallback, summary: summarizer.summarize(fallback.text) };
+          }
+        })
+      );
+      const fetchedPages = pageResults.map((r) => r.page);
+      const summaries = pageResults.map((r) => r.summary);
 
       const totalChars = fetchedPages.reduce((sum, p) => sum + (p.text?.length || 0), 0);
       if (stepId) {
@@ -521,9 +500,7 @@ export async function POST(request: NextRequest) {
       );
       webContextStr = built.webContext;
       citations = built.citations;
-      console.log("[CHAT] webContextStr length:", webContextStr.length, "| citations count:", citations.length, "| validation:", JSON.stringify(built.validation));
       if (!webContextStr) {
-        console.log("[CHAT] webContextStr empty after buildContext — all sources filtered. Resetting webSearchUsed to false.");
         searchOutcome.webSearchUsed = false;
       }
       if (stepId) {
@@ -575,8 +552,7 @@ export async function POST(request: NextRequest) {
       stepId = (await traceService.startStep(traceId, "Reasoning_Engine"))?.id ?? null;
     }
     const styleService = new ResponseStyleService();
-    const stylePreference = await getUserResponseStyleSetting(userId);
-    const styleResult = styleService.detectStyle(userContent || "", stylePreference);
+    const styleResult = styleService.detectStyle(userContent || "", userSettings.responseStyle);
     const hasWeakEvidence = searchOutcome.sufficiencyResult?.confidence === "LOW";
     const hasExplicitSearchTrigger =
       originalDecision === "FORCED_SEARCH" ||
@@ -601,7 +577,8 @@ export async function POST(request: NextRequest) {
 
     if (saveActionResult.handled) {
       if (saveActionResult.action === "saved") {
-        systemPrompt += `\n\n[SYSTEM NOTE: A new memory was saved. The saved content is: "${saveActionResult.memory.text}" You may refer to this when responding. For example, if the user saved their name, you can recall it later.]`;
+        const safeText = saveActionResult.memory.text.replace(/["\n\r]/g, " ").slice(0, 200);
+        systemPrompt += `\n\n[SYSTEM NOTE: A new memory was saved. The saved content is: "${safeText}" You may refer to this when responding. For example, if the user saved their name, you can recall it later.]`;
       } else if (saveActionResult.action === "needs_approval") {
         systemPrompt += `\n\n[SYSTEM NOTE: The user asked to save something to memory but it requires approval. Explain that it needs to be approved from the Learning page first.]`;
       } else if (saveActionResult.action === "rejected") {
@@ -612,7 +589,7 @@ export async function POST(request: NextRequest) {
     if (stepId) {
       const rcMeta: Record<string, unknown> = {
         responseMode: styleResult.mode,
-        userPreference: stylePreference,
+        userPreference: userSettings.responseStyle,
         userWantsShort: styleResult.userWantsShort,
         userWantsDetailed: styleResult.userWantsDetailed,
         userWantsAction: styleResult.userWantsAction,
@@ -635,15 +612,12 @@ export async function POST(request: NextRequest) {
       await traceService.completeStep(stepId, rcMeta);
       stepId = null;
     }
-    console.log("[CHAT] systemPrompt length:", systemPrompt.length, "| webSearchUsed:", searchOutcome.webSearchUsed, "| hasWebContextStr:", webContextStr.length > 0, "| webContextStr.length:", webContextStr.length, "| citations.length:", citations.length, "| styleMode:", styleResult.mode, "| plan:", reasoningOutput.reasoningPlan.planType, "| confidence:", reasoningOutput.confidence.label);
-
     if (traceId) {
       stepId = (await traceService.startStep(traceId, "LLM_Provider"))?.id ?? null;
     }
     let provider;
     try {
       provider = getProvider();
-      console.log("[CHAT] AI provider:", process.env.AI_PROVIDER, "| constructor:", provider.constructor?.name);
     } catch (err) {
       if (stepId) {
         await traceService.failStep(stepId, "Provider configuration error");
@@ -660,11 +634,9 @@ export async function POST(request: NextRequest) {
 
     let result;
     try {
-      console.log("[CHAT] calling provider.generateChatResponse with", typedMessages.length, "messages, system prompt length:", systemPrompt.length);
       result = await provider.generateChatResponse(typedMessages, {
         system: systemPrompt,
       });
-      console.log("[CHAT] LLM response length:", result.content.length, "| response preview:", result.content.slice(0, 100));
     } catch (err) {
       if (stepId) {
         await traceService.failStep(stepId, "AI provider error");
@@ -724,7 +696,8 @@ export async function POST(request: NextRequest) {
           configService
         );
         candidatesExtracted = result_.stored;
-      } catch {
+      } catch (e) {
+        logError("LearningExtractionService.processAndStore", e);
       }
     }
     if (stepId) {
@@ -790,13 +763,15 @@ export async function POST(request: NextRequest) {
       confidenceLabel: reasoningOutput.confidence.label,
       confidenceScore: reasoningOutput.confidence.score,
     });
-  } catch {
+  } catch (e) {
+    logError("POST /api/chat", e);
     if (traceId) {
       await traceService.failTrace(traceId);
     }
+    const isClientError = e instanceof SyntaxError || (e instanceof Error && (e as Error).message?.includes("JSON"));
     return NextResponse.json(
       { error: "Invalid request." },
-      { status: 400 }
+      { status: isClientError ? 400 : 500 }
     );
   }
 }

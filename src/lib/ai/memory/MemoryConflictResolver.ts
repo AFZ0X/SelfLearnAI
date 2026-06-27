@@ -46,14 +46,6 @@ export class MemoryConflictResolver {
     };
   }
 
-  async supersedeAllByKey(userId: string, key: string): Promise<number> {
-    const result = await prisma.memory.updateMany({
-      where: { userId, memoryKey: key, status: "ACTIVE" },
-      data: { status: "SUPERSEDED", confidence: 0.1 },
-    });
-    return result.count;
-  }
-
   async getActive(userId: string, key: string): Promise<{ id: string; text: string } | null> {
     const memory = await prisma.memory.findFirst({
       where: { userId, memoryKey: key, status: "ACTIVE" },

@@ -39,9 +39,6 @@ const FACT_PATTERNS: { pattern: RegExp; key: ProfileKey; confidence: number }[] 
   { pattern: /i(?:'| a)?m\s+(\d+)\s*$/i, key: "age", confidence: 0.85 },
   { pattern: /my age is\s+(\d+)/i, key: "age", confidence: 0.95 },
   { pattern: /my\s+age\s+(\d+)/i, key: "age", confidence: 0.9 },
-  { pattern: /أنا\s+(.+)/i, key: "name", confidence: 0.7 },
-  { pattern: /i(?:'| a)?m\s+([a-zA-Z]+)/i, key: "name", confidence: 0.7 },
-
   { pattern: /ساكن\s+في\s+(.+)/i, key: "city", confidence: 0.9 },
   { pattern: /ساكن\s+(.+)/i, key: "city", confidence: 0.85 },
   { pattern: /أنا\s+من\s+(.+)/i, key: "city", confidence: 0.8 },
@@ -62,6 +59,9 @@ const FACT_PATTERNS: { pattern: RegExp; key: ProfileKey; confidence: number }[] 
   { pattern: /i work as\s+(.+)/i, key: "job", confidence: 0.9 },
   { pattern: /i study\s+(.+)/i, key: "education", confidence: 0.85 },
   { pattern: /i(?:'| a)?m (?:a|an)\s+(.+)/i, key: "job", confidence: 0.7 },
+
+  { pattern: /أنا\s+(.+)/i, key: "name", confidence: 0.7 },
+  { pattern: /i(?:'| a)?m\s+([a-zA-Z]+)/i, key: "name", confidence: 0.7 },
 
   { pattern: /أفضل\s+(.+)/i, key: "preferences", confidence: 0.8 },
   { pattern: /i prefer\s+(.+)/i, key: "preferences", confidence: 0.8 },

@@ -60,7 +60,7 @@ export class NameExtractorService {
 
   async findExistingNameMemory(userId: string): Promise<NameMemoryData | null> {
     const memory = await prisma.memory.findFirst({
-      where: { userId, tags: { has: "name" } },
+      where: { userId, memoryKey: "name", status: "ACTIVE" },
       select: {
         id: true,
         text: true,
@@ -116,7 +116,8 @@ export class NameExtractorService {
           ? process.env.OPENAI_EMBEDDING_MODEL || "text-embedding-3-small"
           : "mock-v1";
         await saveEmbedding(updated.id, embedding, model);
-      } catch {
+      } catch (e) {
+        console.error("[NameExtractorService] embedding generation failed:", e instanceof Error ? e.message : String(e));
       }
 
       return updated;
@@ -154,7 +155,8 @@ export class NameExtractorService {
         ? process.env.OPENAI_EMBEDDING_MODEL || "text-embedding-3-small"
         : "mock-v1";
       await saveEmbedding(memory.id, embedding, model);
-    } catch {
+    } catch (e) {
+      console.error("[NameExtractorService] embedding generation failed:", e instanceof Error ? e.message : String(e));
     }
 
     return memory;

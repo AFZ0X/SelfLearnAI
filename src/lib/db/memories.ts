@@ -60,27 +60,56 @@ function containsSensitiveData(text: string): boolean {
   return SENSITIVE_PATTERNS.some((pattern) => pattern.test(text));
 }
 
-export async function listMemories(userId: string): Promise<MemoryResponse[]> {
-  return prisma.memory.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      userId: true,
-      type: true,
-      text: true,
-      summary: true,
-      source: true,
-      confidence: true,
-      visibility: true,
-      tags: true,
-      memoryKey: true,
-      status: true,
-      supersededById: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
+export interface ListMemoriesOptions {
+  page?: number;
+  limit?: number;
+  status?: string;
+  memoryKey?: string;
+}
+
+export interface PaginatedMemories {
+  memories: MemoryResponse[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export async function listMemories(userId: string, options: ListMemoriesOptions = {}): Promise<PaginatedMemories> {
+  const page = Math.max(1, options.page || 1);
+  const limit = Math.min(100, Math.max(1, options.limit || 50));
+  const skip = (page - 1) * limit;
+
+  const where: Record<string, unknown> = { userId };
+  if (options.status) where.status = options.status;
+  if (options.memoryKey) where.memoryKey = options.memoryKey;
+
+  const [memories, total] = await Promise.all([
+    prisma.memory.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+      select: {
+        id: true,
+        userId: true,
+        type: true,
+        text: true,
+        summary: true,
+        source: true,
+        confidence: true,
+        visibility: true,
+        tags: true,
+        memoryKey: true,
+        status: true,
+        supersededById: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    }),
+    prisma.memory.count({ where }),
+  ]);
+
+  return { memories, total, page, totalPages: Math.ceil(total / limit) };
 }
 
 export async function createMemory(
@@ -168,15 +197,12 @@ export async function deleteMemory(
   memoryId: string,
   userId: string
 ): Promise<boolean> {
-  const existing = await prisma.memory.findUnique({
-    where: { id: memoryId },
-    select: { userId: true },
-  });
-
-  if (!existing || existing.userId !== userId) {
+  try {
+    const result = await prisma.memory.deleteMany({
+      where: { id: memoryId, userId },
+    });
+    return result.count > 0;
+  } catch {
     return false;
   }
-
-  await prisma.memory.delete({ where: { id: memoryId } });
-  return true;
 }

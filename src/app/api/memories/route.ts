@@ -14,8 +14,8 @@ export async function GET() {
     return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   }
 
-  const memories = await listMemories(session.user.id);
-  return NextResponse.json({ memories });
+  const result = await listMemories(session.user.id);
+  return NextResponse.json({ memories: result.memories, total: result.total, page: result.page, totalPages: result.totalPages });
 }
 
 export async function POST(request: NextRequest) {
