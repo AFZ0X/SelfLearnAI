@@ -242,11 +242,21 @@
   --font-mono: var(--font-geist-mono);
 }
 
-* {
+*, *::before, *::after {
   border-color: var(--divider);
 }
 
+html {
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
@@ -316,4 +326,43 @@ body {
 @keyframes slide-in-left {
   from { opacity: 0; transform: translateX(-8px); }
   to { opacity: 1; transform: translateX(0); }
+}
+
+/* Responsive sidebar drawer */
+.dashboard-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  transform: translateX(-100%);
+}
+
+.dashboard-sidebar[data-open="true"] {
+  transform: translateX(0);
+}
+
+@media (min-width: 768px) {
+  .dashboard-sidebar {
+    position: static;
+    transform: translateX(0);
+  }
+}
+
+/* Responsive conversation sidebar */
+@media (max-width: 767px) {
+  .conv-sidebar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 20;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+  .conv-sidebar[data-open="true"] {
+    transform: translateX(0);
+  }
+  .chat-main {
+    width: 100%;
+    min-width: 0;
+  }
 }

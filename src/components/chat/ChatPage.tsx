@@ -21,6 +21,7 @@ export function ChatPage({ provider, initialConversations }: ChatPageProps) {
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   async function fetchConversations() {
     try {
@@ -114,21 +115,32 @@ export function ChatPage({ provider, initialConversations }: ChatPageProps) {
   }
 
   return (
-    <div className="flex flex-1 min-h-0">
+    <div className="flex flex-1 min-h-0 relative">
+      {/* Mobile overlay for conversation sidebar */}
+      {sidebarOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-10"
+          style={{ backgroundColor: "var(--overlay-bg)" }}
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
       <Sidebar
         conversations={conversations}
         activeId={activeId}
-        onSelect={setActiveId}
-        onNew={handleNew}
+        onSelect={(id) => { setActiveId(id); setSidebarOpen(false); }}
+        onNew={() => { handleNew(); setSidebarOpen(false); }}
         onRename={handleRename}
         onDelete={handleDelete}
         creating={creating}
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={() => setSidebarOpen((v) => !v)}
       />
-      <div className="flex flex-1 flex-col min-w-0 min-h-0">
+      <div className="flex flex-1 flex-col min-w-0 min-h-0 chat-main">
         <ChatWindow
           conversationId={activeId}
           provider={provider}
           onConversationCreated={handleConversationCreated}
+          onToggleSidebar={() => setSidebarOpen((v) => !v)}
         />
       </div>
     </div>

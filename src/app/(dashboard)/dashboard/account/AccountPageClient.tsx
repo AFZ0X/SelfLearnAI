@@ -219,7 +219,10 @@ export function AccountPageClient() {
             Export My Data
           </a>
           <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={async () => {
+              await signOut({ redirect: false, callbackUrl: "/login" });
+              window.location.href = "/login";
+            }}
             className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150"
             style={{ backgroundColor: "var(--error-bg)", color: "var(--error-text)" }}
             onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.8"; }}

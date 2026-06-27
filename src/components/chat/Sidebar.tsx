@@ -17,6 +17,8 @@ interface ConvSidebarProps {
   onRename: (id: string, title: string) => void;
   onDelete: (id: string) => void;
   creating?: boolean;
+  sidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 function getDateGroup(dateStr: string): string {
@@ -54,6 +56,8 @@ export function Sidebar({
   onRename,
   onDelete,
   creating = false,
+  sidebarOpen = false,
+  onToggleSidebar,
 }: ConvSidebarProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
@@ -112,14 +116,15 @@ export function Sidebar({
 
   return (
     <aside
-      className="flex flex-col shrink-0 h-full"
+      className="conv-sidebar flex flex-col shrink-0 h-full"
+      data-open={sidebarOpen}
       style={{
         width: "320px",
         backgroundColor: "var(--conv-bg)",
         borderRight: "1px solid var(--conv-border)",
       }}
     >
-      {/* Header with new button */}
+      {/* Header with new button and mobile toggle */}
       <div className="flex items-center gap-2 px-3 h-14 shrink-0" style={{ borderBottom: "1px solid var(--conv-border)" }}>
         <button
           onClick={onNew}
@@ -133,6 +138,16 @@ export function Sidebar({
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
           {creating ? "Creating..." : "New chat"}
+        </button>
+        <button
+          onClick={onToggleSidebar}
+          className="md:hidden ml-auto w-7 h-7 rounded flex items-center justify-center"
+          style={{ color: "var(--conv-text-muted)" }}
+          aria-label="Close sidebar"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
       </div>
 

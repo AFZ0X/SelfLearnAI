@@ -38,12 +38,14 @@ interface ChatWindowProps {
   conversationId: string | null;
   provider?: string;
   onConversationCreated?: (id: string) => void;
+  onToggleSidebar?: () => void;
 }
 
 export function ChatWindow({
   conversationId,
   provider,
   onConversationCreated,
+  onToggleSidebar,
 }: ChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -210,6 +212,16 @@ export function ChatWindow({
         className="flex items-center gap-3 px-6 h-14 shrink-0"
         style={{ borderBottom: "1px solid var(--header-border)", backgroundColor: "var(--header-bg)" }}
       >
+        <button
+          onClick={onToggleSidebar}
+          className="md:hidden w-7 h-7 rounded flex items-center justify-center shrink-0"
+          style={{ color: "var(--muted-text)" }}
+          aria-label="Toggle conversation list"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
         <div className="flex-1 min-w-0">
           <h1 className="font-semibold text-sm truncate" style={{ color: "var(--surface-text)" }}>
             {conversationId ? convTitle : "New conversation"}
