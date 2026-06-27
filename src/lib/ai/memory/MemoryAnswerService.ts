@@ -1,4 +1,4 @@
-import { MemoryRetrievalServiceV2, type RetrievedMemoryV2, type RetrievalResultV2 } from "./MemoryRetrievalServiceV2";
+import { MemoryRetrievalServiceV2, type RetrievedMemoryV2 } from "./MemoryRetrievalServiceV2";
 import { MemoryUpdateService } from "./MemoryUpdateService";
 
 export class MemoryAnswerService {

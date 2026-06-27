@@ -13,8 +13,6 @@ export class MemoryUpdateService {
     userId: string,
     key: string,
     newValue: string,
-    memoryType: string,
-    importance: number
   ): Promise<UpdateResult> {
     const existing = await prisma.memory.findFirst({
       where: { userId, memoryKey: key, status: "ACTIVE" },

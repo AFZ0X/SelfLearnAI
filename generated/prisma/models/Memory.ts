@@ -28,10 +28,14 @@ export type AggregateMemory = {
 
 export type MemoryAvgAggregateOutputType = {
   confidence: number | null
+  importance: number | null
+  useCount: number | null
 }
 
 export type MemorySumAggregateOutputType = {
   confidence: number | null
+  importance: number | null
+  useCount: number | null
 }
 
 export type MemoryMinAggregateOutputType = {
@@ -39,13 +43,19 @@ export type MemoryMinAggregateOutputType = {
   userId: string | null
   type: $Enums.MemoryType | null
   text: string | null
+  value: string | null
   summary: string | null
   source: string | null
   confidence: number | null
+  importance: number | null
   visibility: string | null
   memoryKey: string | null
+  memoryType: string | null
   status: string | null
   supersededById: string | null
+  lastUsedAt: Date | null
+  useCount: number | null
+  expiresAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -55,13 +65,19 @@ export type MemoryMaxAggregateOutputType = {
   userId: string | null
   type: $Enums.MemoryType | null
   text: string | null
+  value: string | null
   summary: string | null
   source: string | null
   confidence: number | null
+  importance: number | null
   visibility: string | null
   memoryKey: string | null
+  memoryType: string | null
   status: string | null
   supersededById: string | null
+  lastUsedAt: Date | null
+  useCount: number | null
+  expiresAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -71,14 +87,21 @@ export type MemoryCountAggregateOutputType = {
   userId: number
   type: number
   text: number
+  value: number
   summary: number
   source: number
   confidence: number
+  importance: number
   visibility: number
   tags: number
   memoryKey: number
+  memoryType: number
   status: number
   supersededById: number
+  lastUsedAt: number
+  useCount: number
+  expiresAt: number
+  metadata: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -87,10 +110,14 @@ export type MemoryCountAggregateOutputType = {
 
 export type MemoryAvgAggregateInputType = {
   confidence?: true
+  importance?: true
+  useCount?: true
 }
 
 export type MemorySumAggregateInputType = {
   confidence?: true
+  importance?: true
+  useCount?: true
 }
 
 export type MemoryMinAggregateInputType = {
@@ -98,13 +125,19 @@ export type MemoryMinAggregateInputType = {
   userId?: true
   type?: true
   text?: true
+  value?: true
   summary?: true
   source?: true
   confidence?: true
+  importance?: true
   visibility?: true
   memoryKey?: true
+  memoryType?: true
   status?: true
   supersededById?: true
+  lastUsedAt?: true
+  useCount?: true
+  expiresAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -114,13 +147,19 @@ export type MemoryMaxAggregateInputType = {
   userId?: true
   type?: true
   text?: true
+  value?: true
   summary?: true
   source?: true
   confidence?: true
+  importance?: true
   visibility?: true
   memoryKey?: true
+  memoryType?: true
   status?: true
   supersededById?: true
+  lastUsedAt?: true
+  useCount?: true
+  expiresAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -130,14 +169,21 @@ export type MemoryCountAggregateInputType = {
   userId?: true
   type?: true
   text?: true
+  value?: true
   summary?: true
   source?: true
   confidence?: true
+  importance?: true
   visibility?: true
   tags?: true
   memoryKey?: true
+  memoryType?: true
   status?: true
   supersededById?: true
+  lastUsedAt?: true
+  useCount?: true
+  expiresAt?: true
+  metadata?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -234,14 +280,21 @@ export type MemoryGroupByOutputType = {
   userId: string
   type: $Enums.MemoryType
   text: string
+  value: string | null
   summary: string | null
   source: string | null
   confidence: number | null
+  importance: number
   visibility: string
   tags: string[]
   memoryKey: string | null
+  memoryType: string | null
   status: string
   supersededById: string | null
+  lastUsedAt: Date | null
+  useCount: number
+  expiresAt: Date | null
+  metadata: runtime.JsonValue
   createdAt: Date
   updatedAt: Date
   _count: MemoryCountAggregateOutputType | null
@@ -274,14 +327,21 @@ export type MemoryWhereInput = {
   userId?: Prisma.StringFilter<"Memory"> | string
   type?: Prisma.EnumMemoryTypeFilter<"Memory"> | $Enums.MemoryType
   text?: Prisma.StringFilter<"Memory"> | string
+  value?: Prisma.StringNullableFilter<"Memory"> | string | null
   summary?: Prisma.StringNullableFilter<"Memory"> | string | null
   source?: Prisma.StringNullableFilter<"Memory"> | string | null
   confidence?: Prisma.FloatNullableFilter<"Memory"> | number | null
+  importance?: Prisma.IntFilter<"Memory"> | number
   visibility?: Prisma.StringFilter<"Memory"> | string
   tags?: Prisma.StringNullableListFilter<"Memory">
   memoryKey?: Prisma.StringNullableFilter<"Memory"> | string | null
+  memoryType?: Prisma.StringNullableFilter<"Memory"> | string | null
   status?: Prisma.StringFilter<"Memory"> | string
   supersededById?: Prisma.StringNullableFilter<"Memory"> | string | null
+  lastUsedAt?: Prisma.DateTimeNullableFilter<"Memory"> | Date | string | null
+  useCount?: Prisma.IntFilter<"Memory"> | number
+  expiresAt?: Prisma.DateTimeNullableFilter<"Memory"> | Date | string | null
+  metadata?: Prisma.JsonFilter<"Memory">
   createdAt?: Prisma.DateTimeFilter<"Memory"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Memory"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -293,14 +353,21 @@ export type MemoryOrderByWithRelationInput = {
   userId?: Prisma.SortOrder
   type?: Prisma.SortOrder
   text?: Prisma.SortOrder
+  value?: Prisma.SortOrderInput | Prisma.SortOrder
   summary?: Prisma.SortOrderInput | Prisma.SortOrder
   source?: Prisma.SortOrderInput | Prisma.SortOrder
   confidence?: Prisma.SortOrderInput | Prisma.SortOrder
+  importance?: Prisma.SortOrder
   visibility?: Prisma.SortOrder
   tags?: Prisma.SortOrder
   memoryKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  memoryType?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   supersededById?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastUsedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  useCount?: Prisma.SortOrder
+  expiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  metadata?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -315,14 +382,21 @@ export type MemoryWhereUniqueInput = Prisma.AtLeast<{
   userId?: Prisma.StringFilter<"Memory"> | string
   type?: Prisma.EnumMemoryTypeFilter<"Memory"> | $Enums.MemoryType
   text?: Prisma.StringFilter<"Memory"> | string
+  value?: Prisma.StringNullableFilter<"Memory"> | string | null
   summary?: Prisma.StringNullableFilter<"Memory"> | string | null
   source?: Prisma.StringNullableFilter<"Memory"> | string | null
   confidence?: Prisma.FloatNullableFilter<"Memory"> | number | null
+  importance?: Prisma.IntFilter<"Memory"> | number
   visibility?: Prisma.StringFilter<"Memory"> | string
   tags?: Prisma.StringNullableListFilter<"Memory">
   memoryKey?: Prisma.StringNullableFilter<"Memory"> | string | null
+  memoryType?: Prisma.StringNullableFilter<"Memory"> | string | null
   status?: Prisma.StringFilter<"Memory"> | string
   supersededById?: Prisma.StringNullableFilter<"Memory"> | string | null
+  lastUsedAt?: Prisma.DateTimeNullableFilter<"Memory"> | Date | string | null
+  useCount?: Prisma.IntFilter<"Memory"> | number
+  expiresAt?: Prisma.DateTimeNullableFilter<"Memory"> | Date | string | null
+  metadata?: Prisma.JsonFilter<"Memory">
   createdAt?: Prisma.DateTimeFilter<"Memory"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Memory"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -334,14 +408,21 @@ export type MemoryOrderByWithAggregationInput = {
   userId?: Prisma.SortOrder
   type?: Prisma.SortOrder
   text?: Prisma.SortOrder
+  value?: Prisma.SortOrderInput | Prisma.SortOrder
   summary?: Prisma.SortOrderInput | Prisma.SortOrder
   source?: Prisma.SortOrderInput | Prisma.SortOrder
   confidence?: Prisma.SortOrderInput | Prisma.SortOrder
+  importance?: Prisma.SortOrder
   visibility?: Prisma.SortOrder
   tags?: Prisma.SortOrder
   memoryKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  memoryType?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   supersededById?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastUsedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  useCount?: Prisma.SortOrder
+  expiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  metadata?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.MemoryCountOrderByAggregateInput
@@ -359,14 +440,21 @@ export type MemoryScalarWhereWithAggregatesInput = {
   userId?: Prisma.StringWithAggregatesFilter<"Memory"> | string
   type?: Prisma.EnumMemoryTypeWithAggregatesFilter<"Memory"> | $Enums.MemoryType
   text?: Prisma.StringWithAggregatesFilter<"Memory"> | string
+  value?: Prisma.StringNullableWithAggregatesFilter<"Memory"> | string | null
   summary?: Prisma.StringNullableWithAggregatesFilter<"Memory"> | string | null
   source?: Prisma.StringNullableWithAggregatesFilter<"Memory"> | string | null
   confidence?: Prisma.FloatNullableWithAggregatesFilter<"Memory"> | number | null
+  importance?: Prisma.IntWithAggregatesFilter<"Memory"> | number
   visibility?: Prisma.StringWithAggregatesFilter<"Memory"> | string
   tags?: Prisma.StringNullableListFilter<"Memory">
   memoryKey?: Prisma.StringNullableWithAggregatesFilter<"Memory"> | string | null
+  memoryType?: Prisma.StringNullableWithAggregatesFilter<"Memory"> | string | null
   status?: Prisma.StringWithAggregatesFilter<"Memory"> | string
   supersededById?: Prisma.StringNullableWithAggregatesFilter<"Memory"> | string | null
+  lastUsedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Memory"> | Date | string | null
+  useCount?: Prisma.IntWithAggregatesFilter<"Memory"> | number
+  expiresAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Memory"> | Date | string | null
+  metadata?: Prisma.JsonWithAggregatesFilter<"Memory">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Memory"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Memory"> | Date | string
 }
@@ -375,14 +463,21 @@ export type MemoryCreateInput = {
   id?: string
   type?: $Enums.MemoryType
   text: string
+  value?: string | null
   summary?: string | null
   source?: string | null
   confidence?: number | null
+  importance?: number
   visibility?: string
   tags?: Prisma.MemoryCreatetagsInput | string[]
   memoryKey?: string | null
+  memoryType?: string | null
   status?: string
   supersededById?: string | null
+  lastUsedAt?: Date | string | null
+  useCount?: number
+  expiresAt?: Date | string | null
+  metadata?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutMemoriesInput
@@ -394,14 +489,21 @@ export type MemoryUncheckedCreateInput = {
   userId: string
   type?: $Enums.MemoryType
   text: string
+  value?: string | null
   summary?: string | null
   source?: string | null
   confidence?: number | null
+  importance?: number
   visibility?: string
   tags?: Prisma.MemoryCreatetagsInput | string[]
   memoryKey?: string | null
+  memoryType?: string | null
   status?: string
   supersededById?: string | null
+  lastUsedAt?: Date | string | null
+  useCount?: number
+  expiresAt?: Date | string | null
+  metadata?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   embedding?: Prisma.MemoryEmbeddingUncheckedCreateNestedOneWithoutMemoryInput
@@ -411,14 +513,21 @@ export type MemoryUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumMemoryTypeFieldUpdateOperationsInput | $Enums.MemoryType
   text?: Prisma.StringFieldUpdateOperationsInput | string
+  value?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  importance?: Prisma.IntFieldUpdateOperationsInput | number
   visibility?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.MemoryUpdatetagsInput | string[]
   memoryKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  memoryType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   supersededById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  useCount?: Prisma.IntFieldUpdateOperationsInput | number
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  metadata?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutMemoriesNestedInput
@@ -430,14 +539,21 @@ export type MemoryUncheckedUpdateInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumMemoryTypeFieldUpdateOperationsInput | $Enums.MemoryType
   text?: Prisma.StringFieldUpdateOperationsInput | string
+  value?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  importance?: Prisma.IntFieldUpdateOperationsInput | number
   visibility?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.MemoryUpdatetagsInput | string[]
   memoryKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  memoryType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   supersededById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  useCount?: Prisma.IntFieldUpdateOperationsInput | number
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  metadata?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   embedding?: Prisma.MemoryEmbeddingUncheckedUpdateOneWithoutMemoryNestedInput
@@ -448,14 +564,21 @@ export type MemoryCreateManyInput = {
   userId: string
   type?: $Enums.MemoryType
   text: string
+  value?: string | null
   summary?: string | null
   source?: string | null
   confidence?: number | null
+  importance?: number
   visibility?: string
   tags?: Prisma.MemoryCreatetagsInput | string[]
   memoryKey?: string | null
+  memoryType?: string | null
   status?: string
   supersededById?: string | null
+  lastUsedAt?: Date | string | null
+  useCount?: number
+  expiresAt?: Date | string | null
+  metadata?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -464,14 +587,21 @@ export type MemoryUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumMemoryTypeFieldUpdateOperationsInput | $Enums.MemoryType
   text?: Prisma.StringFieldUpdateOperationsInput | string
+  value?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  importance?: Prisma.IntFieldUpdateOperationsInput | number
   visibility?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.MemoryUpdatetagsInput | string[]
   memoryKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  memoryType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   supersededById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  useCount?: Prisma.IntFieldUpdateOperationsInput | number
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  metadata?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -481,14 +611,21 @@ export type MemoryUncheckedUpdateManyInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumMemoryTypeFieldUpdateOperationsInput | $Enums.MemoryType
   text?: Prisma.StringFieldUpdateOperationsInput | string
+  value?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  importance?: Prisma.IntFieldUpdateOperationsInput | number
   visibility?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.MemoryUpdatetagsInput | string[]
   memoryKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  memoryType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   supersededById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  useCount?: Prisma.IntFieldUpdateOperationsInput | number
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  metadata?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -516,20 +653,29 @@ export type MemoryCountOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   type?: Prisma.SortOrder
   text?: Prisma.SortOrder
+  value?: Prisma.SortOrder
   summary?: Prisma.SortOrder
   source?: Prisma.SortOrder
   confidence?: Prisma.SortOrder
+  importance?: Prisma.SortOrder
   visibility?: Prisma.SortOrder
   tags?: Prisma.SortOrder
   memoryKey?: Prisma.SortOrder
+  memoryType?: Prisma.SortOrder
   status?: Prisma.SortOrder
   supersededById?: Prisma.SortOrder
+  lastUsedAt?: Prisma.SortOrder
+  useCount?: Prisma.SortOrder
+  expiresAt?: Prisma.SortOrder
+  metadata?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type MemoryAvgOrderByAggregateInput = {
   confidence?: Prisma.SortOrder
+  importance?: Prisma.SortOrder
+  useCount?: Prisma.SortOrder
 }
 
 export type MemoryMaxOrderByAggregateInput = {
@@ -537,13 +683,19 @@ export type MemoryMaxOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   type?: Prisma.SortOrder
   text?: Prisma.SortOrder
+  value?: Prisma.SortOrder
   summary?: Prisma.SortOrder
   source?: Prisma.SortOrder
   confidence?: Prisma.SortOrder
+  importance?: Prisma.SortOrder
   visibility?: Prisma.SortOrder
   memoryKey?: Prisma.SortOrder
+  memoryType?: Prisma.SortOrder
   status?: Prisma.SortOrder
   supersededById?: Prisma.SortOrder
+  lastUsedAt?: Prisma.SortOrder
+  useCount?: Prisma.SortOrder
+  expiresAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -553,19 +705,27 @@ export type MemoryMinOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   type?: Prisma.SortOrder
   text?: Prisma.SortOrder
+  value?: Prisma.SortOrder
   summary?: Prisma.SortOrder
   source?: Prisma.SortOrder
   confidence?: Prisma.SortOrder
+  importance?: Prisma.SortOrder
   visibility?: Prisma.SortOrder
   memoryKey?: Prisma.SortOrder
+  memoryType?: Prisma.SortOrder
   status?: Prisma.SortOrder
   supersededById?: Prisma.SortOrder
+  lastUsedAt?: Prisma.SortOrder
+  useCount?: Prisma.SortOrder
+  expiresAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type MemorySumOrderByAggregateInput = {
   confidence?: Prisma.SortOrder
+  importance?: Prisma.SortOrder
+  useCount?: Prisma.SortOrder
 }
 
 export type MemoryScalarRelationFilter = {
@@ -631,6 +791,14 @@ export type NullableFloatFieldUpdateOperationsInput = {
   divide?: number
 }
 
+export type IntFieldUpdateOperationsInput = {
+  set?: number
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type MemoryUpdatetagsInput = {
   set?: string[]
   push?: string | string[]
@@ -654,14 +822,21 @@ export type MemoryCreateWithoutUserInput = {
   id?: string
   type?: $Enums.MemoryType
   text: string
+  value?: string | null
   summary?: string | null
   source?: string | null
   confidence?: number | null
+  importance?: number
   visibility?: string
   tags?: Prisma.MemoryCreatetagsInput | string[]
   memoryKey?: string | null
+  memoryType?: string | null
   status?: string
   supersededById?: string | null
+  lastUsedAt?: Date | string | null
+  useCount?: number
+  expiresAt?: Date | string | null
+  metadata?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   embedding?: Prisma.MemoryEmbeddingCreateNestedOneWithoutMemoryInput
@@ -671,14 +846,21 @@ export type MemoryUncheckedCreateWithoutUserInput = {
   id?: string
   type?: $Enums.MemoryType
   text: string
+  value?: string | null
   summary?: string | null
   source?: string | null
   confidence?: number | null
+  importance?: number
   visibility?: string
   tags?: Prisma.MemoryCreatetagsInput | string[]
   memoryKey?: string | null
+  memoryType?: string | null
   status?: string
   supersededById?: string | null
+  lastUsedAt?: Date | string | null
+  useCount?: number
+  expiresAt?: Date | string | null
+  metadata?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   embedding?: Prisma.MemoryEmbeddingUncheckedCreateNestedOneWithoutMemoryInput
@@ -718,14 +900,21 @@ export type MemoryScalarWhereInput = {
   userId?: Prisma.StringFilter<"Memory"> | string
   type?: Prisma.EnumMemoryTypeFilter<"Memory"> | $Enums.MemoryType
   text?: Prisma.StringFilter<"Memory"> | string
+  value?: Prisma.StringNullableFilter<"Memory"> | string | null
   summary?: Prisma.StringNullableFilter<"Memory"> | string | null
   source?: Prisma.StringNullableFilter<"Memory"> | string | null
   confidence?: Prisma.FloatNullableFilter<"Memory"> | number | null
+  importance?: Prisma.IntFilter<"Memory"> | number
   visibility?: Prisma.StringFilter<"Memory"> | string
   tags?: Prisma.StringNullableListFilter<"Memory">
   memoryKey?: Prisma.StringNullableFilter<"Memory"> | string | null
+  memoryType?: Prisma.StringNullableFilter<"Memory"> | string | null
   status?: Prisma.StringFilter<"Memory"> | string
   supersededById?: Prisma.StringNullableFilter<"Memory"> | string | null
+  lastUsedAt?: Prisma.DateTimeNullableFilter<"Memory"> | Date | string | null
+  useCount?: Prisma.IntFilter<"Memory"> | number
+  expiresAt?: Prisma.DateTimeNullableFilter<"Memory"> | Date | string | null
+  metadata?: Prisma.JsonFilter<"Memory">
   createdAt?: Prisma.DateTimeFilter<"Memory"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Memory"> | Date | string
 }
@@ -734,14 +923,21 @@ export type MemoryCreateWithoutEmbeddingInput = {
   id?: string
   type?: $Enums.MemoryType
   text: string
+  value?: string | null
   summary?: string | null
   source?: string | null
   confidence?: number | null
+  importance?: number
   visibility?: string
   tags?: Prisma.MemoryCreatetagsInput | string[]
   memoryKey?: string | null
+  memoryType?: string | null
   status?: string
   supersededById?: string | null
+  lastUsedAt?: Date | string | null
+  useCount?: number
+  expiresAt?: Date | string | null
+  metadata?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutMemoriesInput
@@ -752,14 +948,21 @@ export type MemoryUncheckedCreateWithoutEmbeddingInput = {
   userId: string
   type?: $Enums.MemoryType
   text: string
+  value?: string | null
   summary?: string | null
   source?: string | null
   confidence?: number | null
+  importance?: number
   visibility?: string
   tags?: Prisma.MemoryCreatetagsInput | string[]
   memoryKey?: string | null
+  memoryType?: string | null
   status?: string
   supersededById?: string | null
+  lastUsedAt?: Date | string | null
+  useCount?: number
+  expiresAt?: Date | string | null
+  metadata?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -784,14 +987,21 @@ export type MemoryUpdateWithoutEmbeddingInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumMemoryTypeFieldUpdateOperationsInput | $Enums.MemoryType
   text?: Prisma.StringFieldUpdateOperationsInput | string
+  value?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  importance?: Prisma.IntFieldUpdateOperationsInput | number
   visibility?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.MemoryUpdatetagsInput | string[]
   memoryKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  memoryType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   supersededById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  useCount?: Prisma.IntFieldUpdateOperationsInput | number
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  metadata?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutMemoriesNestedInput
@@ -802,14 +1012,21 @@ export type MemoryUncheckedUpdateWithoutEmbeddingInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumMemoryTypeFieldUpdateOperationsInput | $Enums.MemoryType
   text?: Prisma.StringFieldUpdateOperationsInput | string
+  value?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  importance?: Prisma.IntFieldUpdateOperationsInput | number
   visibility?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.MemoryUpdatetagsInput | string[]
   memoryKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  memoryType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   supersededById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  useCount?: Prisma.IntFieldUpdateOperationsInput | number
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  metadata?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -818,14 +1035,21 @@ export type MemoryCreateManyUserInput = {
   id?: string
   type?: $Enums.MemoryType
   text: string
+  value?: string | null
   summary?: string | null
   source?: string | null
   confidence?: number | null
+  importance?: number
   visibility?: string
   tags?: Prisma.MemoryCreatetagsInput | string[]
   memoryKey?: string | null
+  memoryType?: string | null
   status?: string
   supersededById?: string | null
+  lastUsedAt?: Date | string | null
+  useCount?: number
+  expiresAt?: Date | string | null
+  metadata?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -834,14 +1058,21 @@ export type MemoryUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumMemoryTypeFieldUpdateOperationsInput | $Enums.MemoryType
   text?: Prisma.StringFieldUpdateOperationsInput | string
+  value?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  importance?: Prisma.IntFieldUpdateOperationsInput | number
   visibility?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.MemoryUpdatetagsInput | string[]
   memoryKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  memoryType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   supersededById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  useCount?: Prisma.IntFieldUpdateOperationsInput | number
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  metadata?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   embedding?: Prisma.MemoryEmbeddingUpdateOneWithoutMemoryNestedInput
@@ -851,14 +1082,21 @@ export type MemoryUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumMemoryTypeFieldUpdateOperationsInput | $Enums.MemoryType
   text?: Prisma.StringFieldUpdateOperationsInput | string
+  value?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  importance?: Prisma.IntFieldUpdateOperationsInput | number
   visibility?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.MemoryUpdatetagsInput | string[]
   memoryKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  memoryType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   supersededById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  useCount?: Prisma.IntFieldUpdateOperationsInput | number
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  metadata?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   embedding?: Prisma.MemoryEmbeddingUncheckedUpdateOneWithoutMemoryNestedInput
@@ -868,14 +1106,21 @@ export type MemoryUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumMemoryTypeFieldUpdateOperationsInput | $Enums.MemoryType
   text?: Prisma.StringFieldUpdateOperationsInput | string
+  value?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  importance?: Prisma.IntFieldUpdateOperationsInput | number
   visibility?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.MemoryUpdatetagsInput | string[]
   memoryKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  memoryType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   supersededById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  useCount?: Prisma.IntFieldUpdateOperationsInput | number
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  metadata?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -887,14 +1132,21 @@ export type MemorySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   userId?: boolean
   type?: boolean
   text?: boolean
+  value?: boolean
   summary?: boolean
   source?: boolean
   confidence?: boolean
+  importance?: boolean
   visibility?: boolean
   tags?: boolean
   memoryKey?: boolean
+  memoryType?: boolean
   status?: boolean
   supersededById?: boolean
+  lastUsedAt?: boolean
+  useCount?: boolean
+  expiresAt?: boolean
+  metadata?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -906,14 +1158,21 @@ export type MemorySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   userId?: boolean
   type?: boolean
   text?: boolean
+  value?: boolean
   summary?: boolean
   source?: boolean
   confidence?: boolean
+  importance?: boolean
   visibility?: boolean
   tags?: boolean
   memoryKey?: boolean
+  memoryType?: boolean
   status?: boolean
   supersededById?: boolean
+  lastUsedAt?: boolean
+  useCount?: boolean
+  expiresAt?: boolean
+  metadata?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -924,14 +1183,21 @@ export type MemorySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   userId?: boolean
   type?: boolean
   text?: boolean
+  value?: boolean
   summary?: boolean
   source?: boolean
   confidence?: boolean
+  importance?: boolean
   visibility?: boolean
   tags?: boolean
   memoryKey?: boolean
+  memoryType?: boolean
   status?: boolean
   supersededById?: boolean
+  lastUsedAt?: boolean
+  useCount?: boolean
+  expiresAt?: boolean
+  metadata?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -942,19 +1208,26 @@ export type MemorySelectScalar = {
   userId?: boolean
   type?: boolean
   text?: boolean
+  value?: boolean
   summary?: boolean
   source?: boolean
   confidence?: boolean
+  importance?: boolean
   visibility?: boolean
   tags?: boolean
   memoryKey?: boolean
+  memoryType?: boolean
   status?: boolean
   supersededById?: boolean
+  lastUsedAt?: boolean
+  useCount?: boolean
+  expiresAt?: boolean
+  metadata?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type MemoryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "type" | "text" | "summary" | "source" | "confidence" | "visibility" | "tags" | "memoryKey" | "status" | "supersededById" | "createdAt" | "updatedAt", ExtArgs["result"]["memory"]>
+export type MemoryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "type" | "text" | "value" | "summary" | "source" | "confidence" | "importance" | "visibility" | "tags" | "memoryKey" | "memoryType" | "status" | "supersededById" | "lastUsedAt" | "useCount" | "expiresAt" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["memory"]>
 export type MemoryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   embedding?: boolean | Prisma.Memory$embeddingArgs<ExtArgs>
@@ -977,14 +1250,21 @@ export type $MemoryPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     userId: string
     type: $Enums.MemoryType
     text: string
+    value: string | null
     summary: string | null
     source: string | null
     confidence: number | null
+    importance: number
     visibility: string
     tags: string[]
     memoryKey: string | null
+    memoryType: string | null
     status: string
     supersededById: string | null
+    lastUsedAt: Date | null
+    useCount: number
+    expiresAt: Date | null
+    metadata: runtime.JsonValue
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["memory"]>
@@ -1416,14 +1696,21 @@ export interface MemoryFieldRefs {
   readonly userId: Prisma.FieldRef<"Memory", 'String'>
   readonly type: Prisma.FieldRef<"Memory", 'MemoryType'>
   readonly text: Prisma.FieldRef<"Memory", 'String'>
+  readonly value: Prisma.FieldRef<"Memory", 'String'>
   readonly summary: Prisma.FieldRef<"Memory", 'String'>
   readonly source: Prisma.FieldRef<"Memory", 'String'>
   readonly confidence: Prisma.FieldRef<"Memory", 'Float'>
+  readonly importance: Prisma.FieldRef<"Memory", 'Int'>
   readonly visibility: Prisma.FieldRef<"Memory", 'String'>
   readonly tags: Prisma.FieldRef<"Memory", 'String[]'>
   readonly memoryKey: Prisma.FieldRef<"Memory", 'String'>
+  readonly memoryType: Prisma.FieldRef<"Memory", 'String'>
   readonly status: Prisma.FieldRef<"Memory", 'String'>
   readonly supersededById: Prisma.FieldRef<"Memory", 'String'>
+  readonly lastUsedAt: Prisma.FieldRef<"Memory", 'DateTime'>
+  readonly useCount: Prisma.FieldRef<"Memory", 'Int'>
+  readonly expiresAt: Prisma.FieldRef<"Memory", 'DateTime'>
+  readonly metadata: Prisma.FieldRef<"Memory", 'Json'>
   readonly createdAt: Prisma.FieldRef<"Memory", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Memory", 'DateTime'>
 }

@@ -1,4 +1,4 @@
-import { ProfileFactExtractor, type ProfileFact, type ProfileKey } from "./ProfileFactExtractor";
+import { ProfileFactExtractor, type ProfileFact } from "./ProfileFactExtractor";
 import { NameExtractorService } from "./NameExtractorService";
 import {
   MEMORY_TYPES,

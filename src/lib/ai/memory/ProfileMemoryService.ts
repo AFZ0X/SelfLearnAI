@@ -1,12 +1,10 @@
 import { prisma } from "@/lib/db/prisma";
-import { getEmbeddingProvider } from "@/lib/ai/embeddings/EmbeddingProvider";
-import { saveEmbedding } from "@/lib/db/embeddings";
 import { ProfileFactExtractor, type ProfileKey, type ProfileFact, type ProfileQuery } from "./ProfileFactExtractor";
 import { MemoryConflictResolver } from "./MemoryConflictResolver";
-
-function logError(context: string, error: unknown): void {
-  console.error(`[ProfileMemoryService] ${context}:`, error instanceof Error ? error.message : String(error));
-}
+import { MemoryWriteService } from "./MemoryWriteService";
+import { MemoryUpdateService } from "./MemoryUpdateService";
+import { MemoryDeduplicationService } from "./MemoryDeduplicationService";
+import { MemoryAuditService } from "./MemoryAuditService";
 
 export interface ProfileMemoryResult {
   action: "saved" | "found" | "not_found" | "none";
@@ -20,11 +18,15 @@ export interface ProfileMemoryResult {
 export interface ProfileFactData {
   id: string;
   text: string;
+  value: string | null;
   summary: string | null;
   tags: string[];
   memoryKey: string | null;
+  memoryType: string | null;
   status: string;
   confidence: number | null;
+  importance: number;
+  useCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,6 +34,10 @@ export interface ProfileFactData {
 export class ProfileMemoryService {
   private extractor = new ProfileFactExtractor();
   private resolver = new MemoryConflictResolver();
+  private writeService = new MemoryWriteService();
+  private updateService = new MemoryUpdateService();
+  private dedupService = new MemoryDeduplicationService();
+  private audit = new MemoryAuditService();
 
   async process(
     userId: string,
@@ -57,6 +63,8 @@ export class ProfileMemoryService {
     const existing = await this.resolver.getActive(userId, fact.key);
 
     if (existing && existing.text.normalize("NFC") === fact.value.normalize("NFC")) {
+      await this.updateService.touch(existing.id);
+      this.audit.record({ type: "memoryUpdated", key: fact.key, memoryType: "PROFILE_FACT" });
       return {
         action: "found",
         key: fact.key,
@@ -67,66 +75,29 @@ export class ProfileMemoryService {
       };
     }
 
-    const memory = await prisma.$transaction(async (tx) => {
-      const mem = await tx.memory.create({
-        data: {
-          userId,
-          type: "USER",
-          text: fact.value,
-          summary: `${fact.key}: ${fact.value}`,
-          source: "chat",
-          confidence: fact.confidence,
-          visibility: "private",
-          tags: ["profile", fact.key],
-          memoryKey: fact.key,
-          status: "ACTIVE",
-        },
-        select: {
-          id: true,
-          text: true,
-          summary: true,
-          tags: true,
-          memoryKey: true,
-          status: true,
-          confidence: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      });
-
-      const prevActive = await tx.memory.findFirst({
-        where: { userId, memoryKey: fact.key, status: "ACTIVE", id: { not: mem.id } },
-        select: { id: true, text: true },
-      });
-
-      if (prevActive) {
-        await tx.memory.update({
-          where: { id: prevActive.id },
-          data: { status: "SUPERSEDED", supersededById: mem.id, confidence: 0.1 },
-        });
-      }
-
-      return { memory: mem, conflict: prevActive };
-    });
-
-    const model = process.env.EMBEDDING_PROVIDER === "openai"
-      ? process.env.OPENAI_EMBEDDING_MODEL || "text-embedding-3-small"
-      : "mock-v1";
-    try {
-      const provider = getEmbeddingProvider();
-      const embedding = await provider.generateEmbedding(fact.text);
-      await saveEmbedding(memory.memory.id, embedding, model);
-    } catch (e) {
-      logError("embedding generation failed", e);
-    }
-
-    return {
-      action: "saved",
+    const writeResult = await this.writeService.write({
+      userId,
       key: fact.key,
       value: fact.value,
-      memoryId: memory.memory.id,
-      conflictResolved: !!memory.conflict,
-      oldValueSuperseded: memory.conflict?.text ?? null,
+      text: fact.text,
+      source: "chat",
+      confidence: fact.confidence,
+      tags: ["profile", fact.key],
+    });
+
+    if (writeResult.superseded) {
+      this.audit.record({ type: "memoryConflictResolved", key: fact.key, memoryType: "PROFILE_FACT", superseded: true, oldValue: writeResult.oldValue || undefined });
+    }
+
+    this.audit.record({ type: writeResult.deduplicated ? "memoryUpdated" : "memorySaved", key: fact.key });
+
+    return {
+      action: writeResult.deduplicated ? "found" : "saved",
+      key: fact.key as ProfileKey,
+      value: fact.value,
+      memoryId: writeResult.memoryId,
+      conflictResolved: writeResult.superseded,
+      oldValueSuperseded: writeResult.oldValue,
     };
   }
 
@@ -136,6 +107,7 @@ export class ProfileMemoryService {
   ): Promise<ProfileMemoryResult> {
     const active = await this.resolver.getActive(userId, query.key);
     if (active) {
+      this.audit.record({ type: "memoryRetrieved", key: query.key, retrievalMode: "exact" });
       return {
         action: "found",
         key: query.key,
@@ -160,15 +132,9 @@ export class ProfileMemoryService {
     const memory = await prisma.memory.findFirst({
       where: { userId, memoryKey: key, status: "ACTIVE" },
       select: {
-        id: true,
-        text: true,
-        summary: true,
-        tags: true,
-        memoryKey: true,
-        status: true,
-        confidence: true,
-        createdAt: true,
-        updatedAt: true,
+        id: true, text: true, value: true, summary: true, tags: true,
+        memoryKey: true, memoryType: true, status: true, confidence: true,
+        importance: true, useCount: true, createdAt: true, updatedAt: true,
       },
       orderBy: { updatedAt: "desc" },
     });
@@ -179,18 +145,24 @@ export class ProfileMemoryService {
     const memories = await prisma.memory.findMany({
       where: { userId, memoryKey: { not: null }, status: "ACTIVE" },
       select: {
-        id: true,
-        text: true,
-        summary: true,
-        tags: true,
-        memoryKey: true,
-        status: true,
-        confidence: true,
-        createdAt: true,
-        updatedAt: true,
+        id: true, text: true, value: true, summary: true, tags: true,
+        memoryKey: true, memoryType: true, status: true, confidence: true,
+        importance: true, useCount: true, createdAt: true, updatedAt: true,
       },
-      orderBy: { updatedAt: "desc" },
+      orderBy: [{ importance: "desc" }, { updatedAt: "desc" }],
     });
     return memories;
+  }
+
+  getAuditEvents() {
+    return this.audit.getEvents();
+  }
+
+  getSafeAuditMetadata(): Record<string, unknown> {
+    return this.audit.getSafeMetadata();
+  }
+
+  clearAudit(): void {
+    this.audit.clear();
   }
 }

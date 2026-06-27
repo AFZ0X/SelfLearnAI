@@ -4,7 +4,10 @@ import { getProvider } from "@/lib/ai/providers/AIProvider";
 import type { ChatMessage } from "@/lib/ai/providers/AIProvider";
 import { getConversation } from "@/lib/db/conversations";
 import { createMessage } from "@/lib/db/messages";
-import { MemoryRetrievalService } from "@/lib/ai/retrieval/MemoryRetrievalService";
+import { MemoryRetrievalServiceV2 } from "@/lib/ai/memory/MemoryRetrievalServiceV2";
+import { MemoryAnswerService } from "@/lib/ai/memory/MemoryAnswerService";
+import { MemoryExtractionServiceV2 } from "@/lib/ai/memory/MemoryExtractionServiceV2";
+import { MemoryWriteService } from "@/lib/ai/memory/MemoryWriteService";
 
 import { ProfileMemoryService } from "@/lib/ai/memory/ProfileMemoryService";
 import { ConversationContextBuilder } from "@/lib/ai/context/ConversationContextBuilder";
@@ -114,17 +117,35 @@ async function handleExplicitSaveCommand(
     }
   }
 
+  const extractionService = new MemoryExtractionServiceV2();
+  const writeService = new MemoryWriteService();
+
+  const extracted = extractionService.extract(memoryText);
+  if (extracted) {
+    const writeResult = await writeService.write({
+      userId,
+      key: extracted.key,
+      value: extracted.value,
+      text: memoryText,
+      source: "explicit_save",
+      confidence: extracted.confidence,
+      tags: ["saved", extracted.key],
+    });
+    return { handled: true, action: "saved", memory: { id: writeResult.memoryId, text: memoryText } };
+  }
+
   const memory = await createMemory(userId, {
     text: memoryText,
     summary: memoryText.slice(0, 150),
     source: "chat",
     confidence: 1.0,
     tags: ["saved"],
+    memoryType: "GENERAL_NOTE",
   });
 
   try {
     const embeddingProvider = getEmbeddingProvider();
-    const embedding = await embeddingProvider.generateEmbedding(userContent);
+    const embedding = await embeddingProvider.generateEmbedding(memoryText);
     const model =
       process.env.EMBEDDING_PROVIDER === "openai"
         ? process.env.OPENAI_EMBEDDING_MODEL || "text-embedding-3-small"
@@ -302,11 +323,38 @@ export async function POST(request: NextRequest) {
       stepId = null;
     }
 
+    const extractionService = new MemoryExtractionServiceV2();
+    const answerService = new MemoryAnswerService();
+    const profileService = new ProfileMemoryService();
+    const retrievalService = new MemoryRetrievalServiceV2();
+    const ignoreMemory = userContent ? extractionService.isIgnoreMemoryQuery(userContent) : false;
+
+    let directAnswer: { answer: string; retrievalMode: string } | null = null;
+    if (userContent && !ignoreMemory) {
+      const da = await answerService.answerFromMemory(userId, userContent, false);
+      if (da.answer) {
+        directAnswer = { answer: da.answer, retrievalMode: da.retrievalMode };
+      }
+    }
+
+    if (directAnswer) {
+      return NextResponse.json({
+        role: "assistant",
+        content: directAnswer.answer,
+        memoryUsed: true,
+        responseMode: "SHORT",
+        retrievalMode: directAnswer.retrievalMode,
+        reasoningPlan: "MEMORY_ONLY",
+        reasoningSummary: "Direct profile answer from exact memory lookup",
+        confidenceLabel: "HIGH",
+        confidenceScore: 1.0,
+      });
+    }
+
     if (traceId) {
       stepId = (await traceService.startStep(traceId, "Memory_Retrieval"))?.id ?? null;
     }
-    const retrievalService = new MemoryRetrievalService();
-    const retrievalResult = await retrievalService.retrieveRelevantMemories(
+    const retrievalResult = await retrievalService.retrieve(
       userId,
       userContent || ""
     );
@@ -314,14 +362,12 @@ export async function POST(request: NextRequest) {
       await traceService.completeStep(stepId, {
         memoriesFound: retrievalResult.memories.length,
         memoryUsed: retrievalResult.memoryUsed,
-        memoryConfidence: retrievalResult.memories.length > 0
-          ? Math.max(...retrievalResult.memories.map((m) => m.similarity || 0))
-          : 0,
+        memoryConfidence: retrievalResult.confidence,
+        retrievalMode: retrievalResult.retrievalMode,
       });
       stepId = null;
     }
 
-    const profileService = new ProfileMemoryService();
     let profileFactKey: string | null = null;
     let profileFactAction: string | null = null;
     let profileConflictResolved = false;
@@ -342,6 +388,12 @@ export async function POST(request: NextRequest) {
             tags: profileResult.key ? ["profile", profileResult.key] : ["profile"],
             similarity: 1.0,
             relevanceLabel: "high",
+            value: profileResult.value,
+            memoryKey: profileResult.key,
+            memoryType: "PROFILE_FACT",
+            status: "ACTIVE",
+            importance: 10,
+            retrievalMode: "exact",
           });
           retrievalResult.memoryUsed = true;
         }
@@ -561,9 +613,12 @@ export async function POST(request: NextRequest) {
     const currentDateContext = buildCurrentDateContext();
 
     const reasoningEngine = new ReasoningEngine();
+    const memoryForReasoning = ignoreMemory
+      ? { memories: [], profileFacts: [], memoryUsed: false, retrievalMode: "ignored" as const, confidence: 0 }
+      : retrievalResult;
     const reasoningOutput = await reasoningEngine.reason({
       query: userContent || "",
-      memoryRetrievalResult: retrievalResult,
+      memoryRetrievalResult: memoryForReasoning,
       webSearchOutcome: searchOutcome.webSearchUsed ? searchOutcome : undefined,
       hasExplicitSearchTrigger,
       responseStyle: styleResult.mode,
@@ -608,6 +663,9 @@ export async function POST(request: NextRequest) {
         profileFactKey: profileFactKey || undefined,
         profileFactAction: profileFactAction || undefined,
         profileConflictResolved: profileConflictResolved || undefined,
+        retrievalMode: retrievalResult.retrievalMode,
+        memoryUsed: retrievalResult.memoryUsed,
+        memoryKeysUsed: retrievalResult.profileFacts.map((f) => f.memoryKey).filter(Boolean) as string[] || undefined,
       };
       await traceService.completeStep(stepId, rcMeta);
       stepId = null;
@@ -762,6 +820,11 @@ export async function POST(request: NextRequest) {
       reasoningSummary: reasoningOutput.planSummary,
       confidenceLabel: reasoningOutput.confidence.label,
       confidenceScore: reasoningOutput.confidence.score,
+      retrievalMode: retrievalResult.retrievalMode,
+      memoryKeysUsed: retrievalResult.profileFacts.length > 0
+        ? retrievalResult.profileFacts.map((f) => f.memoryKey).filter(Boolean)
+        : undefined,
+      ignoreMemory: ignoreMemory || undefined,
     });
   } catch (e) {
     logError("POST /api/chat", e);

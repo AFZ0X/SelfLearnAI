@@ -6,7 +6,6 @@ import { MemoryUpdateService } from "./MemoryUpdateService";
 import { MemoryImportanceScorer } from "./MemoryImportanceScorer";
 import {
   getMemoryTypeForKey,
-  getLifespanForKey,
   getImportanceForKey,
   isSingleValueKey,
   type MemoryTypeV2,
@@ -46,8 +45,6 @@ export class MemoryWriteService {
     const { userId, key, value, text, source, confidence } = request;
     const memoryType = request.memoryType || getMemoryTypeForKey(key);
     const importance = request.importance ?? getImportanceForKey(key);
-    const lifespan = request.lifespan || getLifespanForKey(key);
-
     const dedupResult = await this.dedup.findDuplicate(userId, key, value);
     if (dedupResult) {
       await this.update.touch(dedupResult.id);
@@ -60,7 +57,7 @@ export class MemoryWriteService {
       };
     }
 
-    const updateResult = await this.update.updateFact(userId, key, value, memoryType, importance);
+    const updateResult = await this.update.updateFact(userId, key, value);
 
     const isMultiValueKey = !isSingleValueKey(key);
     const createNew = !updateResult.updated || updateResult.superseded || isMultiValueKey;

@@ -388,14 +388,6 @@ export type MemoryEmbeddingUncheckedUpdateOneWithoutMemoryNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.MemoryEmbeddingUpdateToOneWithWhereWithoutMemoryInput, Prisma.MemoryEmbeddingUpdateWithoutMemoryInput>, Prisma.MemoryEmbeddingUncheckedUpdateWithoutMemoryInput>
 }
 
-export type IntFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type MemoryEmbeddingCreateWithoutMemoryInput = {
   id?: string
   model: string
